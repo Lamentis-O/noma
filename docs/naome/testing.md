@@ -9,6 +9,7 @@ Status: Initialized
 | Swift app source | Xcode simulator build plus NAOME changed-file gates | `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data build` | PR build gate; default simulator is latest available iPhone 17 Pro. |
 | Xcode project/assets | Xcode project listing, Xcode simulator build, NAOME gates | See Known Checks | Project listing and build are verified. |
 | npm/package tooling | npm install plus NAOME gates | `npm install` | Verified during NAOME package installation. |
+| GitHub Actions CI | Ubuntu NAOME checks plus macOS iOS build and test jobs | `.github/workflows/ci.yml` | PR CI runs on GitHub-hosted `ubuntu-latest` and `macos-26` runners. |
 | NAOME harness/docs | Harness health plus NAOME gates | `node .naome/bin/check-harness-health.js` | Verified on 2026-05-15. |
 | XCTest/UI test edits | iPhone 17 Pro simulator test run plus NAOME gates | `xcodebuild test -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data` | Test command is the intended path for future test edits; build gate is the current PR minimum. |
 | AI, API usage, subscriptions, payments, and premium entitlements | Build plus targeted unit/integration tests and human review | To be defined with each feature | These areas are high risk and require strict verification before merge. |
@@ -28,7 +29,7 @@ and stale-policy issues before the task grows. It does not replace the final
 | npm-install | `npm install` | `.` | fast | 2026-05-15 |
 | xcode-list | `xcodebuild -list -project Noma.xcodeproj` | `.` | fast | 2026-05-15 |
 | xcode-build-ios-simulator | `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data build` | `.` | medium | 2026-05-15 |
-| xcode-test-iphone-17-pro | `xcodebuild test -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data` | `.` | medium | null |
+| xcode-test-iphone-17-pro | `xcodebuild test -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data` | `.` | medium | 2026-05-15 |
 | diff-check | `git diff --check` | `.` | fast | null |
 | naome-harness-health | `node .naome/bin/check-harness-health.js` | `.` | fast | 2026-05-15 |
 | naome-task-state | `node .naome/bin/check-task-state.js` | `.` | fast | null |
@@ -36,6 +37,19 @@ and stale-policy issues before the task grows. It does not replace the final
 | repository-semantic-check | `node .naome/bin/naome.js semantic check --changed` | `.` | fast | null |
 | ui-style-check | `node .naome/bin/naome.js ui check --changed --json` | `.` | fast | null |
 | architecture-fitness-check | `node .naome/bin/naome.js arch validate --changed-only` | `.` | fast | null |
+
+## Continuous Integration
+
+Pull requests and pushes to `main` run `.github/workflows/ci.yml`.
+
+- `NAOME checks` installs npm dependencies on `ubuntu-latest`, validates harness
+  health, runs path-based quality and semantic checks for the committed diff,
+  runs architecture fitness, and checks diff whitespace.
+- `iOS build and tests` runs on `macos-26`, lists the Xcode project, selects the
+  latest available `iPhone 17 Pro` simulator with an iPhone fallback, builds the
+  app, and runs XCTest/UI tests.
+- The workflow uses read-only repository permissions and does not require
+  secrets, signing assets, OpenAI keys, or payment credentials.
 
 ## Verification Phases
 
@@ -52,6 +66,7 @@ phase is failing or missing.
 | iOS tests | `NomaTests/**/*.swift`, `NomaUITests/**/*.swift` | `xcode-build-ios-simulator`, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check`; simulator test command still needs confirmation |
 | Xcode project | `Noma.xcodeproj/**` | `xcode-list`, `xcode-build-ios-simulator`, `repository-quality-check`, `architecture-fitness-check`, `diff-check` |
 | npm tooling | `package.json`, `package-lock.json`, `.gitignore` | `npm-install`, `repository-quality-check`, `repository-semantic-check`, `diff-check` |
+| GitHub Actions CI | `.github/workflows/**` | `naome-harness-health`, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check`; workflow also runs iOS build and tests remotely |
 | NAOME harness/docs | `.naome/**`, `.naomeignore`, `AGENTS.md`, `docs/naome/**` | `naome-harness-health`, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check` |
 | AI/API/subscription/payment work | future API, auth, entitlement, payment, subscription, usage, and premium paths | `xcode-build-ios-simulator`, targeted tests, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check`, and human review |
 
@@ -75,6 +90,7 @@ phase is failing or missing.
 - `NomaUITests/NomaUITests.swift`
 - `package.json`
 - `package-lock.json`
+- `.github/workflows/ci.yml`
 - Command: `npm install`
 - Command: `xcodebuild -list -project Noma.xcodeproj`
 - Command: `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data build`
@@ -86,6 +102,5 @@ phase is failing or missing.
 
 ## Open Questions
 
-- Confirm whether CI should run npm, NAOME, and Xcode checks.
 - Define targeted test plans when OpenAI API, subscription, payment, premium
   entitlement, or API usage features are introduced.

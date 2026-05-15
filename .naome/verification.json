@@ -55,6 +55,18 @@
         "NomaTests/NomaTests.swift",
         "NomaUITests/NomaUITests.swift"
       ],
+      "lastVerified": "2026-05-15"
+    },
+    {
+      "id": "github-actions-ci",
+      "command": "GitHub Actions workflow: .github/workflows/ci.yml",
+      "cwd": ".",
+      "purpose": "Run pull-request CI with Ubuntu NAOME checks and macOS iOS build/test checks.",
+      "cost": "remote",
+      "source": "CI workflow",
+      "evidence": [
+        ".github/workflows/ci.yml"
+      ],
       "lastVerified": null
     },
     {
@@ -272,6 +284,24 @@
         "diff-check"
       ],
       "recommendedChecks": [],
+      "humanReview": false
+    },
+    {
+      "id": "ci-workflows",
+      "description": "GitHub Actions workflow changes.",
+      "paths": [
+        ".github/workflows/**"
+      ],
+      "requiredChecks": [
+        "naome-harness-health",
+        "repository-quality-check",
+        "repository-semantic-check",
+        "architecture-fitness-check",
+        "diff-check"
+      ],
+      "recommendedChecks": [
+        "github-actions-ci"
+      ],
       "humanReview": false
     },
     {

@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  naome:
+    name: NAOME checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check harness health
+        run: node .naome/bin/check-harness-health.js
+
+      - name: Check changed paths
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base_ref="${{ github.event.pull_request.base.sha }}"
+          else
+            base_ref="${{ github.event.before }}"
+            if [[ "$base_ref" =~ ^0+$ ]]; then
+              base_ref="$(git rev-list --max-parents=0 HEAD)"
+            fi
+          fi
+
+          mapfile -t changed_paths < <(git diff --name-only --diff-filter=ACMRT "$base_ref...HEAD")
+          if [[ "${#changed_paths[@]}" -eq 0 ]]; then
+            echo "No changed paths to check."
+            exit 0
+          fi
+
+          for path in "${changed_paths[@]}"; do
+            if [[ ! -f "$path" ]]; then
+              continue
+            fi
+
+            case "$path" in
+              .naome/archive/*|.naome/cache/*|.naome/tasks/*|node_modules/*)
+                continue
+                ;;
+            esac
+
+            node .naome/bin/naome.js quality check --path "$path"
+            node .naome/bin/naome.js semantic check --path "$path"
+          done
+
+      - name: Check architecture fitness
+        run: node .naome/bin/naome.js arch validate
+
+      - name: Check diff whitespace
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base_ref="${{ github.event.pull_request.base.sha }}"
+          else
+            base_ref="${{ github.event.before }}"
+            if [[ "$base_ref" =~ ^0+$ ]]; then
+              base_ref="$(git rev-list --max-parents=0 HEAD)"
+            fi
+          fi
+
+          git diff --check "$base_ref...HEAD"
+
+  ios:
+    name: iOS build and tests
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Show Xcode project
+        run: xcodebuild -list -project Noma.xcodeproj
+
+      - name: Select iPhone simulator
+        id: simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          device_id="$(xcrun simctl list devices available | awk -F '[()]' '/iPhone 17 Pro \(/ { id=$2 } END { print id }')"
+          if [[ -z "$device_id" ]]; then
+            device_id="$(xcrun simctl list devices available | awk -F '[()]' '/iPhone .* \(/ { id=$2 } END { print id }')"
+          fi
+          if [[ -z "$device_id" ]]; then
+            echo "No available iPhone simulator found." >&2
+            xcrun simctl list devices available
+            exit 1
+          fi
+
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+
+      - name: Build app
+        run: >
+          xcodebuild
+          -project Noma.xcodeproj
+          -scheme Noma
+          -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}'
+          -derivedDataPath "$RUNNER_TEMP/noma-derived-data"
+          build
+
+      - name: Run tests
+        run: >
+          xcodebuild test
+          -project Noma.xcodeproj
+          -scheme Noma
+          -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}'
+          -derivedDataPath "$RUNNER_TEMP/noma-derived-data"
