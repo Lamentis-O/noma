@@ -10,6 +10,7 @@
       "fileGlobs": ["Noma/**/*.swift"],
       "tokens": {
         "textStyles": [
+          { "id": "typography.title3", "swiftui": ".title3" },
           { "id": "typography.headline", "swiftui": ".headline" },
           { "id": "typography.subheadline", "swiftui": ".subheadline" },
           { "id": "typography.body", "swiftui": ".body" }
@@ -19,6 +20,7 @@
           { "id": "spacing.sm", "value": 8, "swiftui": "NomaSpacing.sm" },
           { "id": "spacing.md", "value": 12, "swiftui": "NomaSpacing.md" },
           { "id": "spacing.lg", "value": 16, "swiftui": "NomaSpacing.lg" },
+          { "id": "spacing.buttonHorizontal", "value": 24, "swiftui": "NomaSpacing.buttonHorizontal" },
           { "id": "spacing.xl", "value": 32, "swiftui": "NomaSpacing.xl" },
           { "id": "spacing.keyboardAccessoryOverlap", "value": -20, "swiftui": "NomaSpacing.keyboardAccessoryOverlap" },
           { "id": "size.scrollDismissSentinel", "value": 1, "swiftui": "NomaSize.scrollDismissSentinel" },
@@ -73,6 +75,7 @@
           "allowedLiterals": [
             { "value": 0, "contexts": [".padding", ".safeAreaPadding", ".frame", ".offset", ".cornerRadius", ".contentMargins", ".safeAreaInset", "spacing", "CGFloat"] },
             { "value": 1, "contexts": ["geometry-sentinel", "separator", "scaleEffect"] },
+            { "value": 1.5, "contexts": ["NomaScale", "CGFloat"] },
             { "value": 0.96, "contexts": ["NomaScale", "CGFloat"] }
           ]
         },

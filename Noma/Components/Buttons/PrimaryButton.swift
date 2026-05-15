@@ -18,10 +18,10 @@ struct PrimaryButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.headline)
+                .font(.title3.weight(.bold))
                 .foregroundStyle(.primaryBackground)
-                .padding(.horizontal, NomaSpacing.lg)
-                .padding(.vertical, NomaSpacing.sm)
+                .padding(.horizontal, NomaSpacing.buttonHorizontal)
+                .padding(.vertical, NomaSpacing.md)
                 .background {
                     Capsule().fill(color)
                 }

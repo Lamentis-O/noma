@@ -9,6 +9,7 @@ enum NomaSpacing {
     static let sm: NomaMetric.Value = 8
     static let md: NomaMetric.Value = 12
     static let lg: NomaMetric.Value = 16
+    static let buttonHorizontal: NomaMetric.Value = 24
     static let xl: NomaMetric.Value = 32
     static let keyboardAccessoryOverlap: NomaMetric.Value = -20
 }
@@ -33,6 +34,7 @@ enum NomaOpacity {
 
 enum NomaScale {
     static let pressedControl: CGFloat = 0.96
+    static let hintIcon: CGFloat = 1.5
 }
 
 extension ShapeStyle where Self == Color {

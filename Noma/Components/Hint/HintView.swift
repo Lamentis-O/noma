@@ -29,13 +29,14 @@ struct HintView: View {
             if let systemImage {
                 Image(systemName: systemImage)
                     .font(.title.weight(.bold))
+                    .scaleEffect(NomaScale.hintIcon)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
             }
 
             if let title {
                 Text(title)
-                    .font(.headline)
+                    .font(.title3.weight(.bold))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
                     .padding(.top, systemImage == nil ? 0 : NomaSpacing.xl)
@@ -43,10 +44,10 @@ struct HintView: View {
 
             if let subtitle {
                 Text(subtitle)
-                    .font(.subheadline)
+                    .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.top, title == nil ? 0 : NomaSpacing.lg)
+                    .padding(.top, title == nil ? 0 : NomaSpacing.sm)
             }
 
             if let cta {
