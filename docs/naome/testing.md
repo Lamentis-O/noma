@@ -42,10 +42,10 @@ and stale-policy issues before the task grows. It does not replace the final
 
 Pull requests and pushes to `main` run `.github/workflows/ci.yml`.
 
-- `NAOME checks` installs npm dependencies on `ubuntu-latest`, syncs the local
-  NAOME harness, validates harness health, runs path-based quality and semantic
-  checks for the committed diff, runs architecture fitness, and checks diff
-  whitespace.
+- `NAOME checks` installs npm dependencies from the public npm registry on
+  `ubuntu-latest`, syncs the local NAOME harness, validates harness health,
+  runs path-based quality and semantic checks for the committed diff, runs
+  architecture fitness, and checks diff whitespace.
 - `iOS build and tests` runs on `macos-26`, lists the Xcode project, selects the
   latest available `iPhone 17 Pro` simulator with an iPhone fallback, builds the
   app, and runs XCTest/UI tests.
@@ -64,7 +64,7 @@ phase is failing or missing.
 | Change type | Paths | Required checks |
 |---|---|---|
 | iOS app source | `Noma/**/*.swift`, `Noma/Assets.xcassets/**` | `xcode-build-ios-simulator`, `repository-quality-check`, `repository-semantic-check`, `ui-style-check`, `architecture-fitness-check`, `diff-check` |
-| iOS tests | `NomaTests/**/*.swift`, `NomaUITests/**/*.swift` | `xcode-build-ios-simulator`, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check`; simulator test command still needs confirmation |
+| iOS tests | `NomaTests/**/*.swift`, `NomaUITests/**/*.swift` | `xcode-build-ios-simulator`, `xcode-test-iphone-17-pro`, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check` |
 | Xcode project | `Noma.xcodeproj/**` | `xcode-list`, `xcode-build-ios-simulator`, `repository-quality-check`, `architecture-fitness-check`, `diff-check` |
 | npm tooling | `package.json`, `package-lock.json`, `.gitignore` | `npm-install`, `repository-quality-check`, `repository-semantic-check`, `diff-check` |
 | GitHub Actions CI | `.github/workflows/**` | `naome-harness-health`, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check`; workflow also runs iOS build and tests remotely |
@@ -114,11 +114,10 @@ phase is failing or missing.
 
 ## UI Contract
 
-`.naome/ui-contract.json` defines platform profiles, token ids, component ids,
-and rule ids for UI style checks. The built-in `ios-swiftui` profile is passive
-until Swift files are selected or changed. Findings from `ui-style-check` use
-stable `ruleId`, `suggestedTokenIds`, `suggestedComponentIds`, and `reasonCode`
-fields so agents can repair only the affected paths.
+`.naome/ui-contract.json` is intentionally passive until Noma has real SwiftUI
+design-system symbols. Do not add template token or component names that do not
+compile in the app. Once those app symbols exist, register their token ids,
+component ids, and UI style rules here before feature UI work depends on them.
 
 ### First-Run iOS/SwiftUI Bootstrap
 

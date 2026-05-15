@@ -222,6 +222,7 @@
       ],
       "requiredChecks": [
         "xcode-build-ios-simulator",
+        "xcode-test-iphone-17-pro",
         "repository-quality-check",
         "repository-semantic-check",
         "architecture-fitness-check",
