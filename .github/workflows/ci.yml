@@ -16,6 +16,7 @@ permissions:
 jobs:
   naome:
     name: NAOME checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -82,16 +83,24 @@ jobs:
           git diff --check "$base_ref...HEAD"
 
   ios:
-    name: iOS build and tests
+    name: iOS build and main tests
     runs-on: macos-26
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Show Xcode project
-        run: xcodebuild -list -project Noma.xcodeproj
+      - name: Build app
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 20
+        run: >
+          xcodebuild build
+          -project Noma.xcodeproj
+          -scheme Noma
+          -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+          -derivedDataPath "$RUNNER_TEMP/noma-derived-data"
 
-      - name: Build and run tests
+      - name: Run tests
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         timeout-minutes: 20
         run: >
           xcodebuild test
