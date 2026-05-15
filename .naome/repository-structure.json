@@ -2,7 +2,16 @@
   "schema": "naome.repository-structure.v1",
   "version": 1,
   "status": "ready",
-  "enabledAdapters": [],
+  "enabledAdapters": [
+    "ios-app-structure",
+    "ios-resources",
+    "javascript-typescript",
+    "swift",
+    "swift-package",
+    "swiftui",
+    "xcode",
+    "xctest"
+  ],
   "sourceRoots": [
     "src/**",
     "app/**",

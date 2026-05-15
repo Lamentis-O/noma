@@ -1,13 +1,16 @@
 # Testing And Verification
 
-Status: Uninitialized
+Status: Partial
 
 ## Verification Map
 
 | Change type | Required proof | Command | Notes |
 |---|---|---|---|
-| NAOME baseline | Built-in harness proof | See Known Checks | Seeded by installer; extend during first-run intake. |
-| Repository-specific work | Unknown | Unknown | Fill during first-run intake. |
+| Swift app source | Xcode simulator build plus NAOME changed-file gates | `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'generic/platform=iOS Simulator' -derivedDataPath /private/tmp/noma-derived-data build` | Verified on 2026-05-15 outside the sandbox. |
+| Xcode project/assets | Xcode project listing, Xcode simulator build, NAOME gates | See Known Checks | Project listing and build are verified. |
+| npm/package tooling | npm install plus NAOME gates | `npm install` | Verified during NAOME package installation. |
+| NAOME harness/docs | Harness health plus NAOME gates | `node .naome/bin/check-harness-health.js` | Verified on 2026-05-15. |
+| XCTest/UI test edits | Not fully confirmed | Unknown | Repo has test targets, but a default simulator test destination is not yet confirmed. |
 
 ## Early Feedback
 
@@ -21,8 +24,11 @@ and stale-policy issues before the task grows. It does not replace the final
 
 | Check id | Command | Cwd | Cost | Last verified |
 |---|---|---|---|---|
+| npm-install | `npm install` | `.` | fast | 2026-05-15 |
+| xcode-list | `xcodebuild -list -project Noma.xcodeproj` | `.` | fast | 2026-05-15 |
+| xcode-build-ios-simulator | `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'generic/platform=iOS Simulator' -derivedDataPath /private/tmp/noma-derived-data build` | `.` | medium | 2026-05-15 |
 | diff-check | `git diff --check` | `.` | fast | null |
-| naome-harness-health | `node .naome/bin/check-harness-health.js` | `.` | fast | null |
+| naome-harness-health | `node .naome/bin/check-harness-health.js` | `.` | fast | 2026-05-15 |
 | naome-task-state | `node .naome/bin/check-task-state.js` | `.` | fast | null |
 | repository-quality-check | `node .naome/bin/naome.js quality check --changed` | `.` | fast | null |
 | repository-semantic-check | `node .naome/bin/naome.js semantic check --changed` | `.` | fast | null |
@@ -40,70 +46,38 @@ phase is failing or missing.
 
 | Change type | Paths | Required checks |
 |---|---|---|
-| Unknown | Unknown | Unknown |
+| iOS app source | `Noma/**/*.swift`, `Noma/Assets.xcassets/**` | `xcode-build-ios-simulator`, `repository-quality-check`, `repository-semantic-check`, `ui-style-check`, `architecture-fitness-check`, `diff-check` |
+| iOS tests | `NomaTests/**/*.swift`, `NomaUITests/**/*.swift` | `xcode-build-ios-simulator`, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check`; simulator test command still needs confirmation |
+| Xcode project | `Noma.xcodeproj/**` | `xcode-list`, `xcode-build-ios-simulator`, `repository-quality-check`, `architecture-fitness-check`, `diff-check` |
+| npm tooling | `package.json`, `package-lock.json`, `.gitignore` | `npm-install`, `repository-quality-check`, `repository-semantic-check`, `diff-check` |
+| NAOME harness/docs | `.naome/**`, `.naomeignore`, `AGENTS.md`, `docs/naome/**` | `naome-harness-health`, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check` |
 
 ## Release Gates
 
 | Check id | Required when |
 |---|---|
-| Unknown | Before release, when applicable. |
+| xcode-build-ios-simulator | Before shipping or merging app/source/project changes. |
+| naome-harness-health | Before normal NAOME-routed work and before merging harness changes. |
 
 ## Evidence
 
 - `.naome/verification.json`
-- `.naome/ui-contract.json`
-- `.naome/bin/check-harness-health.js`
-- `.naome/bin/check-task-state.js`
-- `.naome/task-contract.schema.json`
-- `docs/naome/architecture-fitness.md`
+- `.naome/repository-model.json`
+- `.naome/repository-quality.json`
+- `.naome/repository-structure.json`
+- `Noma.xcodeproj/project.pbxproj`
+- `Noma/NomaApp.swift`
+- `Noma/ContentView.swift`
+- `NomaTests/NomaTests.swift`
+- `NomaUITests/NomaUITests.swift`
+- `package.json`
+- `package-lock.json`
+- Command: `npm install`
+- Command: `xcodebuild -list -project Noma.xcodeproj`
+- Command: `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'generic/platform=iOS Simulator' -derivedDataPath /private/tmp/noma-derived-data build`
 
-## Rules
+## Open Questions
 
-- Mirror durable entries in `.naome/verification.json`.
-- Use only commands proven by repository files, CI, or user confirmation.
-- Preserve the JSON keys from `.naome/verification.json`.
-- When intake is complete, set verification `status` to `ready`.
-- Use only costs: `fast`, `medium`, `slow`, `expensive`, `ci-only`, `unknown`.
-- Use dates as `YYYY-MM-DD` or `null`.
-- Keep instruction files under 200 lines. `.naome/verification.json` is machine
-  state instead; keep it schema-valid and bounded to 20 checks, 12 change types,
-  and 12 release gates.
-- Store long command output as a compact summary that preserves command, cwd,
-  exit code, relevant lines, affected paths, and artifacts.
-- When intake defines change types, include `repository-quality-check`,
-  `repository-semantic-check`, and `architecture-fitness-check` as required
-  checks for source, structure, documentation, harness, template, and CI
-  changes.
-- Before completion, select proof from the Verification Map when possible.
-- Report exact commands and results. Do not claim proof that did not run.
-
-## UI Contract
-
-`.naome/ui-contract.json` defines platform profiles, token ids, component ids,
-and rule ids for UI style checks. The built-in `ios-swiftui` profile is passive
-until Swift files are selected or changed. Findings from `ui-style-check` use
-stable `ruleId`, `suggestedTokenIds`, `suggestedComponentIds`, and `reasonCode`
-fields so agents can repair only the affected paths.
-
-### First-Run iOS/SwiftUI Bootstrap
-
-1. Open `.naome/ui-contract.json` and replace template token/component names
-   with the repository's real SwiftUI design-system names. This project-owned
-   contract file is editable when the active task scope includes it.
-2. Confirm the app exposes matching Swift symbols for the listed typography,
-   spacing, radius, color, and component ids before feature UI work starts.
-3. Before creating or editing a SwiftUI file, run
-   `node .naome/bin/naome.js task preflight --path <SwiftUI path> --json` and
-   follow the returned UI scope hints and `ui-style-check` command.
-4. After a targeted edit, use
-   `node .naome/bin/naome.js ui check --path <SwiftUI path> --json` for
-   diagnosis before recording task proof.
-5. For active task proof, run
-   `node .naome/bin/naome.js task run-check --check ui-style-check --record-proof --json`.
-   This records the check receipt that `agent-snapshot` and `commit-preflight`
-   require.
-6. Refresh `node .naome/bin/naome.js task agent-snapshot --json` to confirm the
-   recorded proof and next action, then finish with
-   `node .naome/bin/naome.js task commit-preflight --json`.
-7. If no SwiftUI paths are selected or changed, the UI contract remains
-   informational and must not block non-iOS work.
+- Confirm the default simulator destination for running `NomaTests` and
+  `NomaUITests`.
+- Confirm whether CI should run npm, NAOME, and Xcode checks.

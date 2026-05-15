@@ -1,9 +1,48 @@
 {
   "schema": "naome.verification.v1",
   "version": 1,
-  "status": "uninitialized",
-  "lastUpdated": null,
+  "status": "ready",
+  "lastUpdated": "2026-05-15",
   "checks": [
+    {
+      "id": "npm-install",
+      "command": "npm install",
+      "cwd": ".",
+      "purpose": "Install and verify repository npm dependencies from the committed lockfile.",
+      "cost": "fast",
+      "source": "package.json and package-lock.json",
+      "evidence": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "lastVerified": "2026-05-15"
+    },
+    {
+      "id": "xcode-list",
+      "command": "xcodebuild -list -project Noma.xcodeproj",
+      "cwd": ".",
+      "purpose": "Verify the Xcode project exposes the expected targets and scheme.",
+      "cost": "fast",
+      "source": "Xcode project intake",
+      "evidence": [
+        "Noma.xcodeproj/project.pbxproj"
+      ],
+      "lastVerified": "2026-05-15"
+    },
+    {
+      "id": "xcode-build-ios-simulator",
+      "command": "xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'generic/platform=iOS Simulator' -derivedDataPath /private/tmp/noma-derived-data build",
+      "cwd": ".",
+      "purpose": "Compile the Noma iOS app for the iOS Simulator.",
+      "cost": "medium",
+      "source": "Xcode project intake",
+      "evidence": [
+        "Noma.xcodeproj/project.pbxproj",
+        "Noma/NomaApp.swift",
+        "Noma/ContentView.swift"
+      ],
+      "lastVerified": "2026-05-15"
+    },
     {
       "id": "diff-check",
       "command": "git diff --check",
@@ -24,7 +63,7 @@
       "evidence": [
         ".naome/bin/check-harness-health.js"
       ],
-      "lastVerified": null
+      "lastVerified": "2026-05-15"
     },
     {
       "id": "naome-task-state",
@@ -86,7 +125,6 @@
       "cost": "fast",
       "source": "NAOME built-in",
       "evidence": [
-        "naome.arch.yaml",
         "docs/naome/architecture-fitness.md"
       ],
       "lastVerified": null
@@ -112,6 +150,15 @@
       ]
     },
     {
+      "id": "focused-tests",
+      "order": 30,
+      "checkIds": [
+        "npm-install",
+        "xcode-list",
+        "xcode-build-ios-simulator"
+      ]
+    },
+    {
       "id": "diff-check",
       "order": 60,
       "checkIds": [
@@ -119,11 +166,103 @@
       ]
     }
   ],
-  "changeTypes": [],
+  "changeTypes": [
+    {
+      "id": "ios-app-source",
+      "description": "SwiftUI app source or asset changes.",
+      "paths": [
+        "Noma/**/*.swift",
+        "Noma/Assets.xcassets/**"
+      ],
+      "requiredChecks": [
+        "xcode-build-ios-simulator",
+        "repository-quality-check",
+        "repository-semantic-check",
+        "ui-style-check",
+        "architecture-fitness-check",
+        "diff-check"
+      ],
+      "recommendedChecks": [],
+      "humanReview": false
+    },
+    {
+      "id": "ios-tests",
+      "description": "Unit-test or UI-test source changes.",
+      "paths": [
+        "NomaTests/**/*.swift",
+        "NomaUITests/**/*.swift"
+      ],
+      "requiredChecks": [
+        "xcode-build-ios-simulator",
+        "repository-quality-check",
+        "repository-semantic-check",
+        "architecture-fitness-check",
+        "diff-check"
+      ],
+      "recommendedChecks": [],
+      "humanReview": true
+    },
+    {
+      "id": "xcode-project",
+      "description": "Xcode project and scheme configuration changes.",
+      "paths": [
+        "Noma.xcodeproj/**"
+      ],
+      "requiredChecks": [
+        "xcode-list",
+        "xcode-build-ios-simulator",
+        "repository-quality-check",
+        "architecture-fitness-check",
+        "diff-check"
+      ],
+      "recommendedChecks": [],
+      "humanReview": true
+    },
+    {
+      "id": "npm-tooling",
+      "description": "Repository npm manifest, lockfile, or dependency ignore changes.",
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        ".gitignore"
+      ],
+      "requiredChecks": [
+        "npm-install",
+        "repository-quality-check",
+        "repository-semantic-check",
+        "diff-check"
+      ],
+      "recommendedChecks": [],
+      "humanReview": false
+    },
+    {
+      "id": "naome-harness",
+      "description": "NAOME harness, repository agent instructions, or NAOME documentation changes.",
+      "paths": [
+        ".naome/**",
+        ".naomeignore",
+        "AGENTS.md",
+        "docs/naome/**"
+      ],
+      "requiredChecks": [
+        "naome-harness-health",
+        "repository-quality-check",
+        "repository-semantic-check",
+        "architecture-fitness-check",
+        "diff-check"
+      ],
+      "recommendedChecks": [],
+      "humanReview": false
+    }
+  ],
   "releaseGates": [
     {
-      "checkId": "architecture-fitness-check",
-      "requiredWhen": "Before release or any source, manifest, alias, config, or structure change that can affect architecture."
+      "checkId": "xcode-build-ios-simulator",
+      "requiredWhen": "Before release or merge of app source, asset, test, or Xcode project changes."
+    },
+    {
+      "checkId": "naome-harness-health",
+      "requiredWhen": "Before normal NAOME-routed work and before release or merge of harness changes."
     }
   ]
 }

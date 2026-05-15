@@ -1,55 +1,59 @@
 # Architecture
 
-Status: Uninitialized
+Status: Partial
 
 ## Observed Structure
 
-- Unknown.
+- `NomaApp` is the SwiftUI app entry point and presents `ContentView`.
+- `ContentView` currently contains the starter SwiftUI view.
+- Assets live under `Noma/Assets.xcassets`.
+- Unit tests and UI tests are separate Xcode targets.
+- npm tooling is repository-level and currently exists to install NAOME.
 
 ## Known Boundaries
 
-- NAOME information falls into durable project state, generated projection,
-  local runtime state, run evidence, and product source.
-- Durable project state is committed repository or package state needed to
-  reinstall or reconstruct the harness.
-- `.naome/task-state.json` is the local generated task-state projection.
-- `.naome/tmp/` and `.naome/tasks/` are local runtime state and must not be
-  committed.
-- Per-check proof files are local run evidence. Prefer compact proof batches in
-  the local task-state projection when many release checks share the same
-  evidence paths.
-- Prompt routing uses fenced `naome-prompt-envelope-v1` JSON envelopes as the
-  deterministic routing input. Raw natural-language prompts are audit text and
-  must not be treated as workflow authority until an agent normalizes them into
-  canonical fields such as `requestKind`, `mutationIntent`,
-  `publicationIntent`, `requestedActions`, `workflowAction`, `taskIntent`, and
-  `risk`. Legacy `naome-intent-v2` envelopes are not supported. Unknown
-  envelope values require prompt normalization, conflicting fields block as
-  ambiguous, and `referencedPaths` is the primary context-selection source for
-  prompt-mentioned files.
+- Keep application source in `Noma/`.
+- Keep unit tests in `NomaTests/` and UI tests in `NomaUITests/`.
+- Keep Xcode project configuration in `Noma.xcodeproj/`.
+- Keep NAOME harness state in `.naome/` and NAOME docs in `docs/naome/`.
+- Do not read or use paths matched by `.naomeignore`.
+- `node_modules/` is local dependency output and is ignored.
 
 ## Assumed Boundaries
 
-- Unknown.
+- No app-specific feature modules exist yet.
+- No durable design system exists yet; SwiftUI UI work should first align
+  `.naome/ui-contract.json` with real project tokens and components.
 
 ## Dependency Rules
 
-- Unknown.
+- App source currently depends on SwiftUI only.
+- `@lamentis/naome` is repository tooling, not app runtime code.
 
 ## Generated Or External Code
 
-- Generated NAOME projections must be reproducible from durable state.
+- Xcode build products and DerivedData are generated output and should remain
+  outside commits.
+- `node_modules/` is generated dependency output and should remain outside
+  commits.
+- NAOME machine-owned files should be refreshed through `naome sync`.
 
 ## Evidence
 
-- Unknown.
-
-## Evidence Requirements
-
-- Claims about generated artifacts, harness files, skill directories, or
-  automation policy require exact local evidence paths.
+- `Noma/NomaApp.swift`
+- `Noma/ContentView.swift`
+- `Noma/Assets.xcassets/Contents.json`
+- `NomaTests/NomaTests.swift`
+- `NomaUITests/NomaUITests.swift`
+- `NomaUITests/NomaUITestsLaunchTests.swift`
+- `Noma.xcodeproj/project.pbxproj`
+- `package.json`
+- `.gitignore`
+- `.naomeignore`
+- `.naome/repository-model.json`
+- `.naome/ui-contract.json`
 
 ## Open Architecture Questions
 
-- Which modules or directories are authoritative boundaries?
-- Which shortcuts should agents avoid?
+- What are the intended app features and domain boundaries?
+- Should the app use a dedicated design system before significant UI work?

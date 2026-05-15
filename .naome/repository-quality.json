@@ -11,7 +11,16 @@
     "duplicateBlockLines": 10,
     "nearDuplicateSimilarity": 0.9
   },
-  "enabledAdapters": [],
+  "enabledAdapters": [
+    "ios-app-structure",
+    "ios-resources",
+    "javascript-typescript",
+    "swift",
+    "swift-package",
+    "swiftui",
+    "xcode",
+    "xctest"
+  ],
   "disabledChecks": [],
   "ignoredPaths": [
     ".naome/tasks/**"

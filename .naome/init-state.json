@@ -1,9 +1,9 @@
 {
   "initialized": false,
-  "intakeStatus": "not_started",
+  "intakeStatus": "needs_user_context",
   "initializedAt": null,
   "initializedBy": null,
-  "blockedReason": null,
+  "blockedReason": "First-run intake captured repository structure, tooling, and verified build checks, but product purpose and default simulator test destination are not yet human-confirmed.",
   "requiredDocs": [
     "docs/naome/repo-profile.md",
     "docs/naome/testing.md",

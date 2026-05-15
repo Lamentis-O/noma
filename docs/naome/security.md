@@ -1,38 +1,51 @@
 # Security And Risk
 
-Status: Uninitialized
+Status: Partial
 
 ## Sensitive Areas
 
-- Unknown.
+- No authentication, customer data, network clients, billing, persistence, or
+  production configuration were found during intake.
+- Xcode signing settings and provisioning profiles can become sensitive when
+  distribution is added.
+- npm package changes can affect repository tooling and should preserve the
+  lockfile.
 
 ## Secrets And Credentials
 
-- Unknown.
+- No repository secret files were found during intake.
+- Do not commit local Xcode credentials, provisioning profiles, npm tokens, or
+  environment files if they are introduced later.
 
 ## High-Risk Changes
 
-- Unknown.
+- Adding auth, payments, data storage, networking, or telemetry.
+- Changing bundle identifiers, signing, entitlements, or deployment settings.
+- Changing `.naomeignore`, NAOME harness files, or agent instructions.
+- Changing npm dependencies without updating and reviewing `package-lock.json`.
 
 ## Human Review Required
 
-- Unknown.
+- Any future auth, billing, secret handling, persistence, network, signing, or
+  deployment work.
+- Any change that weakens NAOME boundaries or asks agents to inspect ignored
+  paths.
 
 ## Evidence
 
-- Unknown.
-
-## Evidence Requirements
-
-- Claims about credentialed automation, agent instruction files, skill
-  directories, generated artifacts, or harness files require exact local
-  evidence paths.
-- Claims must not cite files matched by `.naomeignore`.
+- `Noma.xcodeproj/project.pbxproj`
+- `Noma/NomaApp.swift`
+- `Noma/ContentView.swift`
+- `package.json`
+- `package-lock.json`
+- `.gitignore`
+- `.naomeignore`
+- `AGENTS.md`
 
 ## NAOME Ignore Boundary
 
-`.naomeignore` defines repository paths that agents must not read. The default
-entry is `.naome/archive/` so historical snapshots never become active context.
+`.naomeignore` defines repository paths that agents must not read. Current
+ignored paths are `.naome/archive/`, `.naome/cache/`, and `.naome/tasks/`.
 
 Rules:
 
@@ -50,11 +63,3 @@ reports missing files, symlinks, integrity drift, or a missing archive ignore
 boundary. Git commits do not bless harness drift; machine-owned files must match
 the packaged hashes embedded in the health checker. Repair only with the
 installer or an explicit human decision.
-
-## Agent Rules
-
-- Do not expose secrets.
-- Do not inspect paths matched by `.naomeignore`.
-- Do not modify production credentials.
-- Do not weaken auth, authorization, billing, data retention, or encryption
-  without explicit user direction and verification.
