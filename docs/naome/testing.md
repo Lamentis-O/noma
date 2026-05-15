@@ -46,9 +46,10 @@ Pull requests and pushes to `main` run `.github/workflows/ci.yml`.
   `ubuntu-latest`, syncs the local NAOME harness, validates harness health,
   runs path-based quality and semantic checks for the committed diff, runs
   architecture fitness, and checks diff whitespace.
-- `iOS build and tests` runs on `macos-26`, lists the Xcode project, selects the
-  latest available `iPhone 17 Pro` simulator with an iPhone fallback, builds the
-  app, and runs XCTest/UI tests.
+- `iOS build and tests` runs on `macos-26`, lists the Xcode project, and runs
+  `xcodebuild test` against the `iPhone 17 Pro` simulator. The test command
+  builds the app before running XCTest/UI tests, so CI avoids a separate
+  duplicate build step.
 - The workflow uses read-only repository permissions and does not require
   secrets, signing assets, OpenAI keys, or payment credentials.
 
