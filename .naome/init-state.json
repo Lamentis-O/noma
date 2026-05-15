@@ -1,0 +1,13 @@
+{
+  "initialized": false,
+  "intakeStatus": "not_started",
+  "initializedAt": null,
+  "initializedBy": null,
+  "blockedReason": null,
+  "requiredDocs": [
+    "docs/naome/repo-profile.md",
+    "docs/naome/testing.md",
+    "docs/naome/architecture.md",
+    "docs/naome/security.md"
+  ]
+}

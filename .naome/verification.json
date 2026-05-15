@@ -1,0 +1,129 @@
+{
+  "schema": "naome.verification.v1",
+  "version": 1,
+  "status": "uninitialized",
+  "lastUpdated": null,
+  "checks": [
+    {
+      "id": "diff-check",
+      "command": "git diff --check",
+      "cwd": ".",
+      "purpose": "Reject whitespace errors in the current diff.",
+      "cost": "fast",
+      "source": "NAOME built-in",
+      "evidence": [],
+      "lastVerified": null
+    },
+    {
+      "id": "naome-harness-health",
+      "command": "node .naome/bin/check-harness-health.js",
+      "cwd": ".",
+      "purpose": "Validate the installed NAOME harness before feature work or task completion.",
+      "cost": "fast",
+      "source": "NAOME built-in",
+      "evidence": [
+        ".naome/bin/check-harness-health.js"
+      ],
+      "lastVerified": null
+    },
+    {
+      "id": "naome-task-state",
+      "command": "node .naome/bin/check-task-state.js",
+      "cwd": ".",
+      "purpose": "Validate the NAOME task-state contract for the current repository.",
+      "cost": "fast",
+      "source": "NAOME built-in",
+      "evidence": [
+        ".naome/bin/check-task-state.js",
+        ".naome/task-contract.schema.json"
+      ],
+      "lastVerified": null
+    },
+    {
+      "id": "repository-quality-check",
+      "command": "node .naome/bin/naome.js quality check --changed",
+      "cwd": ".",
+      "purpose": "Validate changed files against deterministic NAOME repository quality rules.",
+      "cost": "fast",
+      "source": "NAOME built-in",
+      "evidence": [
+        ".naome/repository-quality.json",
+        ".naome/repository-structure.json",
+        ".naome/repository-quality-baseline.json"
+      ],
+      "lastVerified": null
+    },
+    {
+      "id": "repository-semantic-check",
+      "command": "node .naome/bin/naome.js semantic check --changed",
+      "cwd": ".",
+      "purpose": "Validate changed files against deterministic NAOME semantic cleanup rules.",
+      "cost": "fast",
+      "source": "NAOME built-in",
+      "evidence": [
+        ".naome/repository-quality.json",
+        ".naome/repository-quality-baseline.json"
+      ],
+      "lastVerified": null
+    },
+    {
+      "id": "ui-style-check",
+      "command": "node .naome/bin/naome.js ui check --changed --json",
+      "cwd": ".",
+      "purpose": "Validate changed SwiftUI files against the NAOME UI contract.",
+      "cost": "fast",
+      "source": "NAOME built-in",
+      "evidence": [
+        ".naome/ui-contract.json"
+      ],
+      "lastVerified": null
+    },
+    {
+      "id": "architecture-fitness-check",
+      "command": "node .naome/bin/naome.js arch validate --changed-only",
+      "cwd": ".",
+      "purpose": "Validate changed files against deterministic NAOME architecture fitness rules.",
+      "cost": "fast",
+      "source": "NAOME built-in",
+      "evidence": [
+        "naome.arch.yaml",
+        "docs/naome/architecture-fitness.md"
+      ],
+      "lastVerified": null
+    }
+  ],
+  "phases": [
+    {
+      "id": "shape-health",
+      "order": 10,
+      "checkIds": [
+        "naome-harness-health",
+        "naome-task-state"
+      ]
+    },
+    {
+      "id": "quality",
+      "order": 20,
+      "checkIds": [
+        "repository-quality-check",
+        "repository-semantic-check",
+        "ui-style-check",
+        "architecture-fitness-check"
+      ]
+    },
+    {
+      "id": "diff-check",
+      "order": 60,
+      "checkIds": [
+        "diff-check"
+      ]
+    }
+  ],
+  "changeTypes": [],
+  "releaseGates": [
+    {
+      "checkId": "architecture-fitness-check",
+      "requiredWhen": "Before release or any source, manifest, alias, config, or structure change that can affect architecture."
+    }
+  ]
+}
