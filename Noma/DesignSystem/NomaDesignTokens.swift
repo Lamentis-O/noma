@@ -30,3 +30,11 @@ enum NomaTiming {
 enum NomaOpacity {
     static let disabledControlBackground = 0.18
 }
+
+enum NomaScale {
+    static let pressedControl: CGFloat = 0.96
+}
+
+extension ShapeStyle where Self == Color {
+    static var primaryBackground: Color { Color(.systemBackground) }
+}

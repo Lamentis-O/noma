@@ -11,6 +11,7 @@
       "tokens": {
         "textStyles": [
           { "id": "typography.headline", "swiftui": ".headline" },
+          { "id": "typography.subheadline", "swiftui": ".subheadline" },
           { "id": "typography.body", "swiftui": ".body" }
         ],
         "spacing": [
@@ -28,11 +29,20 @@
         ],
         "colors": [
           { "id": "color.text.primary", "swiftui": "Color.primary" },
+          { "id": "color.text.secondary", "swiftui": "Color.secondary" },
+          { "id": "color.text.primaryBackground", "swiftui": ".primaryBackground" },
           { "id": "color.background.primary", "swiftui": "Color(.systemBackground)" },
           { "id": "color.control.active", "swiftui": "Color(.label)" }
         ]
       },
       "components": [
+        {
+          "id": "component.primary-button",
+          "name": "PrimaryButton",
+          "swiftuiType": "PrimaryButton",
+          "adHocPatterns": ["Capsule().fill"],
+          "severity": "warning"
+        },
         {
           "id": "component.primary-glass-button",
           "name": "PrimaryGlassButton",
@@ -46,6 +56,13 @@
           "swiftuiType": "ReminderInputBar",
           "adHocPatterns": ["TextField("],
           "severity": "warning"
+        },
+        {
+          "id": "component.hint-view",
+          "name": "HintView",
+          "swiftuiType": "HintView",
+          "adHocPatterns": [".font(.title.weight(.bold))"],
+          "severity": "warning"
         }
       ],
       "rules": [
@@ -55,7 +72,8 @@
           "severity": "error",
           "allowedLiterals": [
             { "value": 0, "contexts": [".padding", ".safeAreaPadding", ".frame", ".offset", ".cornerRadius", ".contentMargins", ".safeAreaInset", "spacing", "CGFloat"] },
-            { "value": 1, "contexts": ["geometry-sentinel", "separator"] }
+            { "value": 1, "contexts": ["geometry-sentinel", "separator", "scaleEffect"] },
+            { "value": 0.96, "contexts": ["NomaScale", "CGFloat"] }
           ]
         },
         { "id": "ios-swiftui.no-direct-color", "severity": "warning" },
