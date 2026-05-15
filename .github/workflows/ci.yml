@@ -53,23 +53,14 @@ jobs:
             fi
           fi
 
-          base_commit="$(git merge-base "$base_ref" HEAD)"
-          mapfile -t changed_paths < <(git diff --name-only --diff-filter=ACMRT "$base_commit...HEAD")
+          mapfile -t changed_paths < <(git diff --name-only --diff-filter=ACMRT "$base_ref...HEAD")
           if [[ "${#changed_paths[@]}" -eq 0 ]]; then
             echo "No changed paths to check."
             exit 0
           fi
 
-          original_head="$(git rev-parse HEAD)"
-          restore_head() {
-            git reset --mixed "$original_head" >/dev/null
-          }
-          trap restore_head EXIT
-          git reset --soft "$base_commit"
           node .naome/bin/naome.js quality check --changed
           node .naome/bin/naome.js semantic check --changed
-          trap - EXIT
-          restore_head
 
       - name: Check architecture fitness
         run: node .naome/bin/naome.js arch validate
