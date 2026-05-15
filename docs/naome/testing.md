@@ -105,3 +105,40 @@ phase is failing or missing.
 
 - Define targeted test plans when OpenAI API, subscription, payment, premium
   entitlement, or API usage features are introduced.
+
+## Rules
+
+- Mirror durable entries in `.naome/verification.json`.
+- Use only commands proven by repository files, CI, or user confirmation.
+- Report exact commands and results. Do not claim proof that did not run.
+
+## UI Contract
+
+`.naome/ui-contract.json` defines platform profiles, token ids, component ids,
+and rule ids for UI style checks. The built-in `ios-swiftui` profile is passive
+until Swift files are selected or changed. Findings from `ui-style-check` use
+stable `ruleId`, `suggestedTokenIds`, `suggestedComponentIds`, and `reasonCode`
+fields so agents can repair only the affected paths.
+
+### First-Run iOS/SwiftUI Bootstrap
+
+1. Open `.naome/ui-contract.json` and replace template token/component names
+   with the repository's real SwiftUI design-system names. This project-owned
+   contract file is editable when the active task scope includes it.
+2. Confirm the app exposes matching Swift symbols for the listed typography,
+   spacing, radius, color, and component ids before feature UI work starts.
+3. Before creating or editing a SwiftUI file, run
+   `node .naome/bin/naome.js task preflight --path <SwiftUI path> --json` and
+   follow the returned UI scope hints and `ui-style-check` command.
+4. After a targeted edit, use
+   `node .naome/bin/naome.js ui check --path <SwiftUI path> --json` for
+   diagnosis before recording task proof.
+5. For active task proof, run
+   `node .naome/bin/naome.js task run-check --check ui-style-check --record-proof --json`.
+   This records the check receipt that `agent-snapshot` and `commit-preflight`
+   require.
+6. Refresh `node .naome/bin/naome.js task agent-snapshot --json` to confirm the
+   recorded proof and next action, then finish with
+   `node .naome/bin/naome.js task commit-preflight --json`.
+7. If no SwiftUI paths are selected or changed, the UI contract remains
+   informational and must not block non-iOS work.

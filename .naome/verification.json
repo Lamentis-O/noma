@@ -264,7 +264,8 @@
         "xcode-build-ios-simulator",
         "repository-quality-check",
         "architecture-fitness-check",
-        "diff-check"
+        "diff-check",
+        "repository-semantic-check"
       ],
       "recommendedChecks": [],
       "humanReview": true
