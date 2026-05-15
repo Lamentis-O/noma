@@ -35,6 +35,23 @@
         }
       }
     },
+    "create.project.close.accessibility-label" : {
+      "comment" : "Accessibility label for closing the project picker sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt schließen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close project"
+          }
+        }
+      }
+    },
     "create.send.accessibility-label" : {
       "comment" : "Accessibility label for the create view send button.",
       "localizations" : {
@@ -48,6 +65,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Send"
+          }
+        }
+      }
+    },
+    "create.tray.accessibility-label" : {
+      "comment" : "Accessibility label for opening the project picker sheet from the create view composer.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt öffnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open project"
+          }
+        }
+      }
+    },
+    "Project" : {
+      "comment" : "Navigation title for the project picker sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Project"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Project"
           }
         }
       }
