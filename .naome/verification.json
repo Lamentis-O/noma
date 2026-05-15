@@ -200,7 +200,8 @@
       "paths": [
         "Noma/**/*.swift",
         "Noma/Assets.xcassets/**",
-        "Noma/AppIcon.icon/**"
+        "Noma/AppIcon.icon/**",
+        "Noma/**/*.entitlements"
       ],
       "requiredChecks": [
         "repository-quality-check",

@@ -36,7 +36,9 @@ struct CreateView: View {
             isKeyboardPresented = false
         }
         .task {
-            try? await Task.sleep(nanoseconds: initialFocusDelay)
+            guard await Self.shouldApplyInitialFocus({
+                try await Task.sleep(nanoseconds: initialFocusDelay)
+            }) else { return }
             isInputFocused = true
         }
         .sheet(isPresented: $isProjectSheetPresented) {

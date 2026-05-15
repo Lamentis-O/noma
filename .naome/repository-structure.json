@@ -75,7 +75,20 @@
     ".gitignore",
     ".naomeignore"
   ],
-  "directoryRoleRules": [],
+  "directoryRoleRules": [
+    {
+      "id": "ios-app-root-resources",
+      "paths": [
+        "Noma/**"
+      ],
+      "allowedRoles": [
+        "source",
+        "config",
+        "unknown"
+      ],
+      "maxRoles": 3
+    }
+  ],
   "layerRules": [],
   "ignoredPaths": [
     ".git/**",

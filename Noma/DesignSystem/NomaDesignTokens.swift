@@ -5,7 +5,7 @@ enum NomaMetric {
 }
 
 enum NomaSpacing {
-    static let xsm: NomaMetric.Value = 4
+    static let xs: NomaMetric.Value = 4
     static let sm: NomaMetric.Value = 8
     static let md: NomaMetric.Value = 12
     static let lg: NomaMetric.Value = 16

@@ -1,7 +1,23 @@
 import SwiftUI
 
+struct CreateProjectEmptyState {
+    let systemImage: String
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey
+    let cta: HintCTA?
+
+    static let placeholder = CreateProjectEmptyState(
+        systemImage: "tray.full",
+        title: "create.project.empty.title",
+        subtitle: "create.project.empty.subtitle",
+        cta: nil
+    )
+}
+
 struct CreateSheet: View {
     @Environment(\.dismiss) private var dismiss
+
+    private let emptyState = CreateProjectEmptyState.placeholder
 
     var body: some View {
         NavigationStack {
@@ -9,10 +25,10 @@ struct CreateSheet: View {
                 Spacer(minLength: 0)
 
                 HintView(
-                    systemImage: "tray.full",
-                    title: "create.project.empty.title",
-                    subtitle: "create.project.empty.subtitle",
-                    cta: HintCTA(title: "create.project.empty.add-button", action: {})
+                    systemImage: emptyState.systemImage,
+                    title: emptyState.title,
+                    subtitle: emptyState.subtitle,
+                    cta: emptyState.cta
                 )
 
                 Spacer(minLength: 0)
