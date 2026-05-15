@@ -6,12 +6,12 @@ Status: Initialized
 
 | Change type | Required proof | Command | Notes |
 |---|---|---|---|
-| Swift app source | Xcode simulator build plus NAOME changed-file gates | `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data build` | PR build gate; default simulator is latest available iPhone 17 Pro. |
+| Swift app source | Xcode simulator build plus NAOME changed-file gates | `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /private/tmp/noma-derived-data build` | PR build gate; default simulator is latest available iPhone 17 Pro. |
 | Xcode project/assets | Xcode project listing, Xcode simulator build, NAOME gates | See Known Checks | Project listing and build are verified. |
-| npm/package tooling | npm install plus NAOME gates | `npm install` | Verified during NAOME package installation. |
+| npm/package tooling | clean npm install plus NAOME gates | `npm ci` | Verified from the committed lockfile. |
 | GitHub Actions CI | Ubuntu NAOME checks plus macOS iOS build and test jobs | `.github/workflows/ci.yml` | PR CI runs on GitHub-hosted `ubuntu-latest` and `macos-26` runners. |
 | NAOME harness/docs | Harness health plus NAOME gates | `node .naome/bin/check-harness-health.js` | Verified on 2026-05-15. |
-| XCTest/UI test edits | iPhone 17 Pro simulator test run plus NAOME gates | `xcodebuild test -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data` | Test command is the intended path for future test edits; build gate is the current PR minimum. |
+| XCTest/UI test edits | iPhone 17 Pro simulator test run plus NAOME gates | `xcodebuild test -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /private/tmp/noma-derived-data` | Test command is the intended path for future test edits; build gate is the current PR minimum. |
 | AI, API usage, subscriptions, payments, and premium entitlements | Build plus targeted unit/integration tests and human review | To be defined with each feature | These areas are high risk and require strict verification before merge. |
 
 ## Early Feedback
@@ -26,10 +26,10 @@ and stale-policy issues before the task grows. It does not replace the final
 
 | Check id | Command | Cwd | Cost | Last verified |
 |---|---|---|---|---|
-| npm-install | `npm install` | `.` | fast | 2026-05-15 |
+| npm-install | `npm ci` | `.` | fast | 2026-05-15 |
 | xcode-list | `xcodebuild -list -project Noma.xcodeproj` | `.` | fast | 2026-05-15 |
-| xcode-build-ios-simulator | `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data build` | `.` | medium | 2026-05-15 |
-| xcode-test-iphone-17-pro | `xcodebuild test -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data` | `.` | medium | 2026-05-15 |
+| xcode-build-ios-simulator | `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /private/tmp/noma-derived-data build` | `.` | medium | 2026-05-15 |
+| xcode-test-iphone-17-pro | `xcodebuild test -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /private/tmp/noma-derived-data` | `.` | medium | 2026-05-15 |
 | diff-check | `git diff --check` | `.` | fast | null |
 | naome-harness-health | `node .naome/bin/check-harness-health.js` | `.` | fast | 2026-05-15 |
 | naome-task-state | `node .naome/bin/check-task-state.js` | `.` | fast | null |
@@ -44,7 +44,7 @@ Pull requests and pushes to `main` run `.github/workflows/ci.yml`.
 
 - `NAOME checks` installs npm dependencies from the public npm registry on
   `ubuntu-latest`, syncs the local NAOME harness, validates harness health,
-  runs path-based quality and semantic checks for the committed diff, runs
+  runs changed-file quality and semantic checks for the committed diff, runs
   architecture fitness, and checks diff whitespace.
 - `iOS build and tests` runs on `macos-26`, lists the Xcode project, and runs
   `xcodebuild test` against the `iPhone 17 Pro` simulator. The test command
@@ -64,7 +64,7 @@ phase is failing or missing.
 
 | Change type | Paths | Required checks |
 |---|---|---|
-| iOS app source | `Noma/**/*.swift`, `Noma/Assets.xcassets/**` | `xcode-build-ios-simulator`, `repository-quality-check`, `repository-semantic-check`, `ui-style-check`, `architecture-fitness-check`, `diff-check` |
+| iOS app source | `Noma/**/*.swift`, `Noma/Assets.xcassets/**`, `Noma/AppIcon.icon/**` | `xcode-build-ios-simulator`, `repository-quality-check`, `repository-semantic-check`, `ui-style-check`, `architecture-fitness-check`, `diff-check` |
 | iOS tests | `NomaTests/**/*.swift`, `NomaUITests/**/*.swift` | `xcode-build-ios-simulator`, `xcode-test-iphone-17-pro`, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check` |
 | Xcode project | `Noma.xcodeproj/**` | `xcode-list`, `xcode-build-ios-simulator`, `repository-quality-check`, `architecture-fitness-check`, `diff-check` |
 | npm tooling | `package.json`, `package-lock.json`, `.gitignore` | `npm-install`, `repository-quality-check`, `repository-semantic-check`, `diff-check` |
@@ -93,14 +93,14 @@ phase is failing or missing.
 - `package.json`
 - `package-lock.json`
 - `.github/workflows/ci.yml`
-- Command: `npm install`
+- Command: `npm ci`
 - Command: `xcodebuild -list -project Noma.xcodeproj`
-- Command: `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data build`
+- Command: `xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /private/tmp/noma-derived-data build`
 - User confirmation on 2026-05-15: PR build must pass; default simulator is the
   latest available `iPhone 17 Pro`.
 - XcodeBuildMCP simulator listing on 2026-05-15: `iPhone 17 Pro` available;
-  current selected iOS 26.2 simulator id is
-  `E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA`.
+  verification commands use the portable simulator name rather than a local
+  simulator id.
 
 ## Open Questions
 

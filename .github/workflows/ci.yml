@@ -39,7 +39,7 @@ jobs:
       - name: Check harness health
         run: node .naome/bin/check-harness-health.js
 
-      - name: Check changed paths
+      - name: Check changed-file gates
         shell: bash
         run: |
           set -euo pipefail
@@ -53,26 +53,23 @@ jobs:
             fi
           fi
 
-          mapfile -t changed_paths < <(git diff --name-only --diff-filter=ACMRT "$base_ref...HEAD")
+          base_commit="$(git merge-base "$base_ref" HEAD)"
+          mapfile -t changed_paths < <(git diff --name-only --diff-filter=ACMRT "$base_commit...HEAD")
           if [[ "${#changed_paths[@]}" -eq 0 ]]; then
             echo "No changed paths to check."
             exit 0
           fi
 
-          for path in "${changed_paths[@]}"; do
-            if [[ ! -f "$path" ]]; then
-              continue
-            fi
-
-            case "$path" in
-              .naome/archive/*|.naome/cache/*|.naome/tasks/*|node_modules/*)
-                continue
-                ;;
-            esac
-
-            node .naome/bin/naome.js quality check --path "$path"
-            node .naome/bin/naome.js semantic check --path "$path"
-          done
+          original_head="$(git rev-parse HEAD)"
+          restore_head() {
+            git reset --mixed "$original_head" >/dev/null
+          }
+          trap restore_head EXIT
+          git reset --soft "$base_commit"
+          node .naome/bin/naome.js quality check --changed
+          node .naome/bin/naome.js semantic check --changed
+          trap - EXIT
+          restore_head
 
       - name: Check architecture fitness
         run: node .naome/bin/naome.js arch validate
