@@ -42,9 +42,10 @@ and stale-policy issues before the task grows. It does not replace the final
 
 Pull requests and pushes to `main` run `.github/workflows/ci.yml`.
 
-- `NAOME checks` installs npm dependencies on `ubuntu-latest`, validates harness
-  health, runs path-based quality and semantic checks for the committed diff,
-  runs architecture fitness, and checks diff whitespace.
+- `NAOME checks` installs npm dependencies on `ubuntu-latest`, syncs the local
+  NAOME harness, validates harness health, runs path-based quality and semantic
+  checks for the committed diff, runs architecture fitness, and checks diff
+  whitespace.
 - `iOS build and tests` runs on `macos-26`, lists the Xcode project, selects the
   latest available `iPhone 17 Pro` simulator with an iPhone fallback, builds the
   app, and runs XCTest/UI tests.
