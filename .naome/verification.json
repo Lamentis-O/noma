@@ -31,7 +31,7 @@
     },
     {
       "id": "xcode-build-ios-simulator",
-      "command": "xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'generic/platform=iOS Simulator' -derivedDataPath /private/tmp/noma-derived-data build",
+      "command": "xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data build",
       "cwd": ".",
       "purpose": "Compile the Noma iOS app for the iOS Simulator.",
       "cost": "medium",
@@ -42,6 +42,20 @@
         "Noma/ContentView.swift"
       ],
       "lastVerified": "2026-05-15"
+    },
+    {
+      "id": "xcode-test-iphone-17-pro",
+      "command": "xcodebuild test -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data",
+      "cwd": ".",
+      "purpose": "Run unit and UI tests on the latest available iPhone 17 Pro simulator.",
+      "cost": "medium",
+      "source": "User-confirmed default simulator",
+      "evidence": [
+        "Noma.xcodeproj/project.pbxproj",
+        "NomaTests/NomaTests.swift",
+        "NomaUITests/NomaUITests.swift"
+      ],
+      "lastVerified": null
     },
     {
       "id": "diff-check",
@@ -155,7 +169,8 @@
       "checkIds": [
         "npm-install",
         "xcode-list",
-        "xcode-build-ios-simulator"
+        "xcode-build-ios-simulator",
+        "xcode-test-iphone-17-pro"
       ]
     },
     {
@@ -176,6 +191,7 @@
       ],
       "requiredChecks": [
         "xcode-build-ios-simulator",
+        "xcode-test-iphone-17-pro",
         "repository-quality-check",
         "repository-semantic-check",
         "ui-style-check",
@@ -194,6 +210,29 @@
       ],
       "requiredChecks": [
         "xcode-build-ios-simulator",
+        "repository-quality-check",
+        "repository-semantic-check",
+        "architecture-fitness-check",
+        "diff-check"
+      ],
+      "recommendedChecks": [],
+      "humanReview": true
+    },
+    {
+      "id": "ai-subscription-payments",
+      "description": "OpenAI API integration, API usage tracking, subscription/payment flows, or premium entitlement logic.",
+      "paths": [
+        "**/*OpenAI*",
+        "**/*AI*",
+        "**/*Subscription*",
+        "**/*Payment*",
+        "**/*Entitlement*",
+        "**/*Premium*",
+        "**/*Usage*"
+      ],
+      "requiredChecks": [
+        "xcode-build-ios-simulator",
+        "xcode-test-iphone-17-pro",
         "repository-quality-check",
         "repository-semantic-check",
         "architecture-fitness-check",
@@ -259,6 +298,10 @@
     {
       "checkId": "xcode-build-ios-simulator",
       "requiredWhen": "Before release or merge of app source, asset, test, or Xcode project changes."
+    },
+    {
+      "checkId": "xcode-test-iphone-17-pro",
+      "requiredWhen": "Before release or merge of OpenAI API, API usage, subscription, payment, premium entitlement, or test changes."
     },
     {
       "checkId": "naome-harness-health",
