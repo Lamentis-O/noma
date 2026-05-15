@@ -1,8 +1,8 @@
 {
   "status": "complete",
-  "fromVersion": null,
-  "toVersion": "1.4.9",
+  "fromVersion": "1.4.9",
+  "toVersion": "1.4.10",
   "pending": [],
   "completed": [],
-  "updatedAt": "2026-05-15T11:28:31.017Z"
+  "updatedAt": "2026-05-15T18:04:18.467Z"
 }

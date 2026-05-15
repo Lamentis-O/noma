@@ -1,5 +1,66 @@
 {
   "schema": "naome.ui-contract.v1",
   "version": 1,
-  "platformProfiles": []
+  "optOut": {
+    "platformProfiles": []
+  },
+  "platformProfiles": [
+    {
+      "id": "ios-swiftui",
+      "fileGlobs": ["Noma/**/*.swift"],
+      "tokens": {
+        "textStyles": [
+          { "id": "typography.headline", "swiftui": ".headline" },
+          { "id": "typography.body", "swiftui": ".body" }
+        ],
+        "spacing": [
+          { "id": "spacing.xs", "value": 4, "swiftui": "NomaSpacing.xs" },
+          { "id": "spacing.sm", "value": 8, "swiftui": "NomaSpacing.sm" },
+          { "id": "spacing.md", "value": 12, "swiftui": "NomaSpacing.md" },
+          { "id": "spacing.lg", "value": 16, "swiftui": "NomaSpacing.lg" },
+          { "id": "spacing.xl", "value": 32, "swiftui": "NomaSpacing.xl" },
+          { "id": "spacing.keyboardAccessoryOverlap", "value": -20, "swiftui": "NomaSpacing.keyboardAccessoryOverlap" },
+          { "id": "size.scrollDismissSentinel", "value": 1, "swiftui": "NomaSize.scrollDismissSentinel" },
+          { "id": "size.sendButton", "value": 34, "swiftui": "NomaSize.sendButton" }
+        ],
+        "radius": [
+          { "id": "radius.composer", "value": 25, "swiftui": "NomaRadius.composer" }
+        ],
+        "colors": [
+          { "id": "color.text.primary", "swiftui": "Color.primary" },
+          { "id": "color.background.primary", "swiftui": "Color(.systemBackground)" },
+          { "id": "color.control.active", "swiftui": "Color(.label)" }
+        ]
+      },
+      "components": [
+        {
+          "id": "component.primary-glass-button",
+          "name": "PrimaryGlassButton",
+          "swiftuiType": "PrimaryGlassButton",
+          "adHocPatterns": [".buttonStyle(.glassProminent)"],
+          "severity": "warning"
+        },
+        {
+          "id": "component.reminder-input-bar",
+          "name": "ReminderInputBar",
+          "swiftuiType": "ReminderInputBar",
+          "adHocPatterns": ["TextField("],
+          "severity": "warning"
+        }
+      ],
+      "rules": [
+        { "id": "ios-swiftui.no-hardcoded-system-font", "severity": "error" },
+        {
+          "id": "ios-swiftui.no-magic-spacing",
+          "severity": "error",
+          "allowedLiterals": [
+            { "value": 0, "contexts": [".padding", ".safeAreaPadding", ".frame", ".offset", ".cornerRadius", ".contentMargins", ".safeAreaInset", "spacing", "CGFloat"] },
+            { "value": 1, "contexts": ["geometry-sentinel", "separator"] }
+          ]
+        },
+        { "id": "ios-swiftui.no-direct-color", "severity": "warning" },
+        { "id": "ios-swiftui.prefer-registered-component", "severity": "warning" }
+      ]
+    }
+  ]
 }

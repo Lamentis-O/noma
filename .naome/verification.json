@@ -62,7 +62,7 @@
       "command": "GitHub Actions workflow: .github/workflows/ci.yml",
       "cwd": ".",
       "purpose": "Run pull-request CI with Ubuntu NAOME checks and macOS iOS build/test checks.",
-      "cost": "remote",
+      "cost": "ci-only",
       "source": "CI workflow",
       "evidence": [
         ".github/workflows/ci.yml"
@@ -203,15 +203,16 @@
         "Noma/AppIcon.icon/**"
       ],
       "requiredChecks": [
-        "xcode-build-ios-simulator",
-        "xcode-test-iphone-17-pro",
         "repository-quality-check",
         "repository-semantic-check",
         "ui-style-check",
         "architecture-fitness-check",
         "diff-check"
       ],
-      "recommendedChecks": [],
+      "recommendedChecks": [
+        "xcode-build-ios-simulator",
+        "xcode-test-iphone-17-pro"
+      ],
       "humanReview": false
     },
     {
@@ -222,14 +223,15 @@
         "NomaUITests/**/*.swift"
       ],
       "requiredChecks": [
-        "xcode-build-ios-simulator",
-        "xcode-test-iphone-17-pro",
         "repository-quality-check",
         "repository-semantic-check",
         "architecture-fitness-check",
         "diff-check"
       ],
-      "recommendedChecks": [],
+      "recommendedChecks": [
+        "xcode-build-ios-simulator",
+        "xcode-test-iphone-17-pro"
+      ],
       "humanReview": true
     },
     {
@@ -245,14 +247,15 @@
         "**/*Usage*"
       ],
       "requiredChecks": [
-        "xcode-build-ios-simulator",
-        "xcode-test-iphone-17-pro",
         "repository-quality-check",
         "repository-semantic-check",
         "architecture-fitness-check",
         "diff-check"
       ],
-      "recommendedChecks": [],
+      "recommendedChecks": [
+        "xcode-build-ios-simulator",
+        "xcode-test-iphone-17-pro"
+      ],
       "humanReview": true
     },
     {
@@ -262,14 +265,15 @@
         "Noma.xcodeproj/**"
       ],
       "requiredChecks": [
-        "xcode-list",
-        "xcode-build-ios-simulator",
         "repository-quality-check",
         "architecture-fitness-check",
         "diff-check",
         "repository-semantic-check"
       ],
-      "recommendedChecks": [],
+      "recommendedChecks": [
+        "xcode-list",
+        "xcode-build-ios-simulator"
+      ],
       "humanReview": true
     },
     {
@@ -281,12 +285,13 @@
         ".gitignore"
       ],
       "requiredChecks": [
-        "npm-install",
         "repository-quality-check",
         "repository-semantic-check",
         "diff-check"
       ],
-      "recommendedChecks": [],
+      "recommendedChecks": [
+        "npm-install"
+      ],
       "humanReview": false
     },
     {
