@@ -1,0 +1,159 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "create.button.title" : {
+      "comment" : "Primary button title for opening the create flow from the Home screen.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgabe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task"
+          }
+        }
+      }
+    },
+    "create.input.placeholder" : {
+      "comment" : "Placeholder text for the create view reminder composer input.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erinnerung hinzufügen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add reminder"
+          }
+        }
+      }
+    },
+    "create.project.close.accessibility-label" : {
+      "comment" : "Accessibility label for closing the project picker sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt schließen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close project"
+          }
+        }
+      }
+    },
+    "create.project.empty.add-button" : {
+      "comment" : "Primary call-to-action title in the empty project sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt hinzufügen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Project"
+          }
+        }
+      }
+    },
+    "create.project.empty.subtitle" : {
+      "comment" : "Subtitle in the empty project sheet explaining what projects are.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekte sind eigene Bereiche, um Arbeit, persönliche Ziele oder alles andere zu planen, das du getrennt halten möchtest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projects are dedicated spaces for planning work, personal goals, or anything you want to keep separate."
+          }
+        }
+      }
+    },
+    "create.project.empty.title" : {
+      "comment" : "Title in the empty project sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgaben mit Projekten organisieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organize tasks with projects"
+          }
+        }
+      }
+    },
+    "create.send.accessibility-label" : {
+      "comment" : "Accessibility label for the create view send button.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        }
+      }
+    },
+    "create.tray.accessibility-label" : {
+      "comment" : "Accessibility label for opening the project picker sheet from the create view composer.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt öffnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open project"
+          }
+        }
+      }
+    },
+    "Project" : {
+      "comment" : "Navigation title for the project picker sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Project"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

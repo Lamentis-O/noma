@@ -64,7 +64,7 @@ phase is failing or missing.
 
 | Change type | Paths | Required checks |
 |---|---|---|
-| iOS app source | `Noma/**/*.swift`, `Noma/Assets.xcassets/**`, `Noma/AppIcon.icon/**` | `xcode-build-ios-simulator`, `repository-quality-check`, `repository-semantic-check`, `ui-style-check`, `architecture-fitness-check`, `diff-check` |
+| iOS app source | `Noma/**/*.swift`, `Noma/Assets.xcassets/**`, `Noma/AppIcon.icon/**`, `Noma/**/*.entitlements` | `xcode-build-ios-simulator`, `repository-quality-check`, `repository-semantic-check`, `ui-style-check`, `architecture-fitness-check`, `diff-check` |
 | iOS tests | `NomaTests/**/*.swift`, `NomaUITests/**/*.swift` | `xcode-build-ios-simulator`, `xcode-test-iphone-17-pro`, `repository-quality-check`, `repository-semantic-check`, `architecture-fitness-check`, `diff-check` |
 | Xcode project | `Noma.xcodeproj/**` | `xcode-list`, `xcode-build-ios-simulator`, `repository-quality-check`, `architecture-fitness-check`, `diff-check` |
 | npm tooling | `package.json`, `package-lock.json`, `.gitignore` | `npm-install`, `repository-quality-check`, `repository-semantic-check`, `diff-check` |
