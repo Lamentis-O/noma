@@ -14,7 +14,8 @@ struct PrimaryGlassButton: View {
             }
             .font(.headline)
             .foregroundStyle(Color(.systemBackground))
-            .padding(NomaSpacing.md)
+            .padding(.vertical, NomaSpacing.sm)
+            .padding(.horizontal, NomaSpacing.buttonHorizontal)
         }
         .tint(.primary)
         .buttonStyle(.glassProminent)
