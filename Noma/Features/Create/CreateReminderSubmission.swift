@@ -22,10 +22,20 @@ struct CreateReminderSubmissionResult: Equatable {
 }
 
 enum CreateReminderSubmission {
+    static let characterLimit = 1000
+
+    static func normalizedText(from text: String) -> String {
+        text
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
+    }
+
     static func reminder(from text: String, id: UUID = UUID()) -> CreateReminder? {
-        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedText.isEmpty else { return nil }
-        return CreateReminder(id: id, text: trimmedText)
+        let normalizedText = normalizedText(from: text)
+        guard !normalizedText.isEmpty, normalizedText.count <= characterLimit else { return nil }
+        return CreateReminder(id: id, text: normalizedText)
     }
 
     static func submit(text: String, id: UUID = UUID()) -> CreateReminderSubmissionResult? {

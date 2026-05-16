@@ -37,6 +37,26 @@ final class NomaTests: XCTestCase {
         XCTAssertEqual(reminder?.text, "Call Mika")
     }
 
+    func testCreateReminderSubmissionRemovesWhitespaceOnlyLines() {
+        let reminder = CreateReminderSubmission.reminder(from: "  Call Mika  \n   \n\n  Bring notes  \n  ")
+
+        XCTAssertEqual(reminder?.text, "Call Mika\nBring notes")
+    }
+
+    func testCreateReminderSubmissionRejectsTextOverCharacterLimit() {
+        let overLimitText = String(repeating: "a", count: CreateReminderSubmission.characterLimit + 1)
+
+        XCTAssertNil(CreateReminderSubmission.reminder(from: overLimitText))
+    }
+
+    func testReminderInputStateDisablesAndMarksOverLimitText() {
+        let state = ReminderInputState(text: String(repeating: "a", count: CreateReminderSubmission.characterLimit + 1))
+
+        XCTAssertFalse(state.canSubmit)
+        XCTAssertTrue(state.isOverLimit)
+        XCTAssertEqual(state.sendButtonTone, .error)
+    }
+
     func testCreateReminderSubmissionRejectsEmptyText() {
         XCTAssertNil(CreateReminderSubmission.reminder(from: "   \n  "))
     }

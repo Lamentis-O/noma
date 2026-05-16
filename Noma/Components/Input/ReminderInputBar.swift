@@ -4,6 +4,36 @@ enum ReminderInputBarLayout {
     static let minimumHeight = NomaSize.sendButton + NomaSpacing.sm + NomaSpacing.sm
 }
 
+enum ReminderSendButtonTone: Equatable {
+    case active
+    case disabled
+    case error
+}
+
+struct ReminderInputState: Equatable {
+    let text: String
+
+    var isOverLimit: Bool {
+        text.count > CreateReminderSubmission.characterLimit
+    }
+
+    var hasSubmitText: Bool {
+        !CreateReminderSubmission.normalizedText(from: text).isEmpty
+    }
+
+    var canSubmit: Bool {
+        hasSubmitText && !isOverLimit
+    }
+
+    var sendButtonTone: ReminderSendButtonTone {
+        if isOverLimit {
+            return .error
+        }
+
+        return canSubmit ? .active : .disabled
+    }
+}
+
 struct ReminderInputBar: View {
     private let cornerRadius = NomaRadius.composer
     private let sendButtonSize = NomaSize.sendButton
@@ -47,7 +77,7 @@ struct ReminderInputBar: View {
                         .accessibilityLabel(Text(placeholder))
                         .accessibilityIdentifier("create-reminder-input")
 
-                    ReminderSendButton(isActive: hasText, action: onSubmit)
+                    ReminderSendButton(state: inputState, action: onSubmit)
                         .padding(.trailing, NomaSpacing.sm)
                         .padding(.bottom, NomaSpacing.sm)
                 }
@@ -67,11 +97,11 @@ struct ReminderInputBar: View {
 
     private var minimumInputHeight: CGFloat { ReminderInputBarLayout.minimumHeight }
     private var trayButtonHeight: CGFloat { minimumInputHeight }
-    private var hasText: Bool { !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    private var inputState: ReminderInputState { ReminderInputState(text: text) }
 }
 
 private struct ReminderSendButton: View {
-    let isActive: Bool
+    let state: ReminderInputState
     let action: () -> Void
 
     var body: some View {
@@ -83,11 +113,19 @@ private struct ReminderSendButton: View {
                 .background { Circle().fill(background) }
         }
         .buttonStyle(.plain)
+        .disabled(!state.canSubmit)
         .accessibilityLabel(Text("create.send.accessibility-label"))
-        .animation(.smooth(duration: NomaTiming.controlFeedback), value: isActive)
+        .animation(.smooth(duration: NomaTiming.controlFeedback), value: state)
     }
 
     private var background: Color {
-        isActive ? Color(.label) : .secondary.opacity(NomaOpacity.disabledControlBackground)
+        switch state.sendButtonTone {
+        case .active:
+            Color(.label)
+        case .disabled:
+            .secondary.opacity(NomaOpacity.disabledControlBackground)
+        case .error:
+            Color(.systemRed)
+        }
     }
 }
