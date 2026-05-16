@@ -31,6 +31,96 @@ final class NomaTests: XCTestCase {
         XCTAssertNil(CreateProjectEmptyState.placeholder.cta)
     }
 
+    func testCreateReminderSubmissionTrimsSubmittedText() {
+        let reminder = CreateReminderSubmission.reminder(from: "  Call Mika  ")
+
+        XCTAssertEqual(reminder?.text, "Call Mika")
+    }
+
+    func testCreateReminderSubmissionRejectsEmptyText() {
+        XCTAssertNil(CreateReminderSubmission.reminder(from: "   \n  "))
+    }
+
+    func testCreateReminderSubmissionClearsInputAfterSuccessfulSubmit() {
+        let result = CreateReminderSubmission.submit(
+            text: "  Call Mika  ",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+        )
+
+        XCTAssertEqual(result?.reminder.text, "Call Mika")
+        XCTAssertEqual(result?.remainingText, "")
+    }
+
+    func testCreateReminderListLayoutLeavesScrollRoomAboveComposer() {
+        XCTAssertEqual(
+            CreateReminderListLayout.bottomScrollPadding,
+            ReminderInputBarLayout.minimumHeight + NomaSpacing.xl
+        )
+    }
+
+    func testSectionHeaderLayoutUsesTwentyFourPointBottomPadding() {
+        XCTAssertEqual(SectionHeaderLayout.bottomPadding, 24)
+    }
+
+    func testSectionHeaderTextFormattingUsesTitleCase() {
+        XCTAssertEqual(
+            SectionHeaderTextFormatting.titleCased("tasks in this group"),
+            "Tasks In This Group"
+        )
+    }
+
+    func testCreateReminderStartsIncompleteAndCanToggleCompletion() {
+        let reminder = CreateReminder(id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!, text: "Call Mika")
+
+        XCTAssertFalse(reminder.isCompleted)
+        XCTAssertTrue(reminder.togglingCompletion().isCompleted)
+        XCTAssertFalse(reminder.togglingCompletion().togglingCompletion().isCompleted)
+    }
+
+    func testRadioCheckboxStateOnlyShowsInnerCircleWhenOn() {
+        XCTAssertFalse(RadioCheckboxState(isOn: false).showsInnerCircle)
+        XCTAssertTrue(RadioCheckboxState(isOn: true).showsInnerCircle)
+    }
+
+    @MainActor
+    func testSectionHeaderConfigurationUsesHeadlinePrimaryAndLeadingDefaults() {
+        let configuration = SectionHeaderConfiguration(text: "Today")
+
+        XCTAssertEqual(configuration.text, "Today")
+        XCTAssertEqual(configuration.textStyle, .headline)
+        XCTAssertEqual(configuration.colorSource, .primary)
+        XCTAssertEqual(configuration.alignment, .leading)
+    }
+
+    @MainActor
+    func testSectionHeaderConfigurationMarksCustomColorOverrides() {
+        let configuration = SectionHeaderConfiguration(text: "Today", colorSource: .custom)
+
+        XCTAssertEqual(configuration.colorSource, .custom)
+    }
+
+    func testCreateReminderListSectionUsesLocalizedTaskHeaderForEnteredTasks() {
+        XCTAssertEqual(CreateReminderListSection.headerTitleKey, "create.tasks.section-header")
+        XCTAssertFalse(CreateReminderListSection.showsHeader(reminderCount: 0))
+        XCTAssertTrue(CreateReminderListSection.showsHeader(reminderCount: 1))
+    }
+
+    func testReminderCompletionHapticOnlyPlaysWhenToggledOn() {
+        XCTAssertEqual(CreateReminderCompletionFeedback.feedback(isCompleted: true), .createTaskSubmit)
+        XCTAssertNil(CreateReminderCompletionFeedback.feedback(isCompleted: false))
+    }
+
+    func testHapticFeedbackServiceRoutesSubmitFeedback() {
+        var playedFeedback: [HapticFeedbackClass] = []
+        let haptics = HapticFeedbackService { feedback in
+            playedFeedback.append(feedback)
+        }
+
+        haptics.play(.createTaskSubmit)
+
+        XCTAssertEqual(playedFeedback, [.createTaskSubmit])
+    }
+
     func testSupabaseConfigurationTargetsNomaProject() {
         XCTAssertEqual(
             SupabaseClientProvider.projectURL.absoluteString,
@@ -55,13 +145,52 @@ final class NomaTests: XCTestCase {
         )
     }
 
-    func testAuthSessionSnapshotMapsToRootPhases() {
-        XCTAssertEqual(AuthSessionSnapshot(isSignedIn: false).rootPhase, .signedOut)
-        XCTAssertEqual(AuthSessionSnapshot(isSignedIn: true).rootPhase, .signedIn)
+    func testSupabaseClientOptionsOptIntoLocalInitialSessionEmission() {
+        XCTAssertTrue(SupabaseClientProvider.emitsLocalSessionAsInitialSession)
     }
 
     @MainActor
-    func testSubscriptionTierManagerStartsInFreeTier() {
+    func testAuthSessionSnapshotMapsToRootPhases() {
+        XCTAssertEqual(AuthSessionSnapshot(isSignedIn: false).rootPhase, .signedOut)
+        XCTAssertEqual(AuthSessionSnapshot(isSignedIn: true).rootPhase, .signedIn)
+        XCTAssertEqual(AuthSessionSnapshot(state: .refreshingExpiredLocalSession).rootPhase, .loading)
+    }
+
+    @MainActor
+    func testAuthStateManagerKeepsExpiredStoredSessionLoadingAtStartup() async {
+        let authState = AuthStateManager(
+            authClient: StartupAuthClient(
+                initialSnapshot: AuthSessionSnapshot(state: .refreshingExpiredLocalSession),
+                streamSnapshots: []
+            ),
+            appleSignInProvider: StubAppleSignInProvider()
+        )
+        authState.phase = .signedOut
+
+        authState.start()
+        await allowAuthObserverToRun()
+
+        XCTAssertEqual(authState.phase, .loading)
+    }
+
+    @MainActor
+    func testAuthStateManagerAppliesRefreshAfterExpiredStoredSession() async {
+        let authState = AuthStateManager(
+            authClient: StartupAuthClient(
+                initialSnapshot: AuthSessionSnapshot(state: .refreshingExpiredLocalSession),
+                streamSnapshots: [AuthSessionSnapshot(state: .authenticated)]
+            ),
+            appleSignInProvider: StubAppleSignInProvider()
+        )
+
+        authState.start()
+        await allowAuthObserverToRun()
+
+        XCTAssertEqual(authState.phase, .signedIn)
+    }
+
+    @MainActor
+    func testSubscriptionTierManagerStartsInFreeTier() async {
         let subscriptionTier = SubscriptionTierManager()
 
         XCTAssertEqual(subscriptionTier.tier, .free)
@@ -69,7 +198,7 @@ final class NomaTests: XCTestCase {
     }
 
     @MainActor
-    func testSubscriptionTierManagerCanSwitchBetweenFreeAndPro() {
+    func testSubscriptionTierManagerCanSwitchBetweenFreeAndPro() async {
         let subscriptionTier = SubscriptionTierManager()
 
         subscriptionTier.updateTier(.pro)
@@ -148,6 +277,11 @@ final class NomaTests: XCTestCase {
     }
 }
 
+private func allowAuthObserverToRun() async {
+    await Task.yield()
+    try? await Task.sleep(nanoseconds: 1_000_000)
+}
+
 private struct StubAppleSignInProvider: AppleSignInProviding {
     func requestCredential() async throws -> AppleSignInCredential {
         AppleSignInCredential(
@@ -156,6 +290,30 @@ private struct StubAppleSignInProvider: AppleSignInProviding {
             fullName: nil
         )
     }
+}
+
+private struct StartupAuthClient: AuthClient {
+    let initialSnapshot: AuthSessionSnapshot
+    let streamSnapshots: [AuthSessionSnapshot]
+
+    func currentSessionSnapshot() async -> AuthSessionSnapshot {
+        initialSnapshot
+    }
+
+    func authStateSnapshots() -> AsyncStream<AuthSessionSnapshot> {
+        AsyncStream { continuation in
+            for snapshot in streamSnapshots {
+                continuation.yield(snapshot)
+            }
+            continuation.finish()
+        }
+    }
+
+    func signInWithApple(idToken: String, nonce: String) async throws -> AuthSessionSnapshot {
+        AuthSessionSnapshot(state: .authenticated)
+    }
+
+    func signOut() async throws {}
 }
 
 private struct SignInSucceedsAuthClient: AuthClient {

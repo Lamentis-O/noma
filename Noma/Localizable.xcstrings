@@ -155,6 +155,24 @@
         }
       }
     },
+    "create.tasks.section-header" : {
+      "comment" : "Section header shown above reminders entered in the create task view.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgaben in dieser Gruppe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks in this group"
+          }
+        }
+      }
+    },
     "create.tray.accessibility-label" : {
       "comment" : "Accessibility label for opening the project picker sheet from the create view composer.",
       "localizations" : {

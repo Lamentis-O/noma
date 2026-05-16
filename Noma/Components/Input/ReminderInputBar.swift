@@ -1,5 +1,9 @@
 import SwiftUI
 
+enum ReminderInputBarLayout {
+    static let minimumHeight = NomaSize.sendButton + NomaSpacing.sm + NomaSpacing.sm
+}
+
 struct ReminderInputBar: View {
     private let cornerRadius = NomaRadius.composer
     private let sendButtonSize = NomaSize.sendButton
@@ -61,8 +65,8 @@ struct ReminderInputBar: View {
         .frame(maxWidth: .infinity)
     }
 
-    private var minimumInputHeight: CGFloat { sendButtonSize + NomaSpacing.sm + NomaSpacing.sm }
-    private var trayButtonHeight: CGFloat {minimumInputHeight}
+    private var minimumInputHeight: CGFloat { ReminderInputBarLayout.minimumHeight }
+    private var trayButtonHeight: CGFloat { minimumInputHeight }
     private var hasText: Bool { !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 }
 

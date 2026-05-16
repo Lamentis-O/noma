@@ -18,6 +18,10 @@ enum NomaSpacing {
 enum NomaSize {
     static let scrollDismissSentinel: NomaMetric.Value = 1
     static let sendButton: NomaMetric.Value = 34
+    static let radioCheckboxOuter: NomaMetric.Value = 16
+    static let radioCheckboxInner: NomaMetric.Value = 12
+    static let radioCheckboxBorder: NomaMetric.Value = 1.5
+    static let radioCheckboxFirstLineOffset: NomaMetric.Value = 1
 }
 
 enum NomaRadius {

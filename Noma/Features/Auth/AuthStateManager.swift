@@ -3,9 +3,35 @@ import Observation
 
 enum AuthRootPhase: Equatable { case loading, signedOut, signedIn }
 
+enum AuthSessionState: Equatable {
+    case missing
+    case authenticated
+    case refreshingExpiredLocalSession
+}
+
 struct AuthSessionSnapshot: Equatable {
-    let isSignedIn: Bool
-    var rootPhase: AuthRootPhase { isSignedIn ? .signedIn : .signedOut }
+    let state: AuthSessionState
+
+    init(state: AuthSessionState) {
+        self.state = state
+    }
+
+    init(isSignedIn: Bool) {
+        self.state = isSignedIn ? .authenticated : .missing
+    }
+
+    var isSignedIn: Bool { state == .authenticated }
+
+    var rootPhase: AuthRootPhase {
+        switch state {
+        case .missing:
+            .signedOut
+        case .authenticated:
+            .signedIn
+        case .refreshingExpiredLocalSession:
+            .loading
+        }
+    }
 }
 
 struct AppleSignInCredential: Equatable {
