@@ -1,8 +1,8 @@
 import SwiftUI
 
 enum SignupViewLayout {
-    static let edgePadding: NomaMetric.Value = NomaSpacing.xl
-    static let bottomPadding: NomaMetric.Value = NomaSpacing.xl
+    static let edgePadding: NomaMetric.Value = NomaSpacing.xxl
+    static let bottomPadding: NomaMetric.Value = NomaSpacing.xxl
 }
 
 struct SignupView: View {
@@ -22,12 +22,13 @@ struct SignupView: View {
 
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Rectangle()
+                .fill(.primaryBackground)
                 .ignoresSafeArea()
 
             Text("signup.title")
                 .font(.title.weight(.black))
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(.textPrimary)
                 .multilineTextAlignment(.center)
 
             VStack {
@@ -36,7 +37,7 @@ struct SignupView: View {
                 if let errorMessage {
                     Text(errorMessage)
                         .font(.footnote)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(.textSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, SignupViewLayout.edgePadding)
                         .transition(.blurReplace)

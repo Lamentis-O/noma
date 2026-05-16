@@ -3,9 +3,38 @@ import Observation
 
 enum AuthRootPhase: Equatable { case loading, signedOut, signedIn }
 
+enum AuthSessionState: Equatable {
+    case missing
+    case authenticated
+    case refreshingExpiredLocalSession
+}
+
 struct AuthSessionSnapshot: Equatable {
-    let isSignedIn: Bool
-    var rootPhase: AuthRootPhase { isSignedIn ? .signedIn : .signedOut }
+    let state: AuthSessionState
+    let userID: String?
+
+    init(state: AuthSessionState, userID: String? = nil) {
+        self.state = state
+        self.userID = userID
+    }
+
+    init(isSignedIn: Bool, userID: String? = nil) {
+        self.init(state: isSignedIn ? .authenticated : .missing, userID: userID)
+    }
+
+    var isSignedIn: Bool { state == .authenticated }
+    var storageUserID: String? { isSignedIn ? userID : nil }
+
+    var rootPhase: AuthRootPhase {
+        switch state {
+        case .missing:
+            .signedOut
+        case .authenticated:
+            .signedIn
+        case .refreshingExpiredLocalSession:
+            .loading
+        }
+    }
 }
 
 struct AppleSignInCredential: Equatable {
@@ -26,6 +55,7 @@ final class AuthStateManager {
     private var hasStarted = false
 
     var phase: AuthRootPhase = .loading
+    var storageUserID: String?
     var errorMessage: String?
     var isSigningIn = false
 
@@ -104,5 +134,6 @@ final class AuthStateManager {
 
     private func apply(_ snapshot: AuthSessionSnapshot) {
         phase = snapshot.rootPhase
+        storageUserID = snapshot.storageUserID
     }
 }

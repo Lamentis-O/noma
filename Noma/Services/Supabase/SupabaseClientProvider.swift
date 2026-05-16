@@ -45,6 +45,18 @@ enum SupabaseClientProvider {
         return trimmedInfoValue.isEmpty ? bundledPublishableKey : trimmedInfoValue
     }
 
+    static var clientOptions: SupabaseClientOptions {
+        SupabaseClientOptions(
+            auth: SupabaseClientOptions.AuthOptions(
+                emitLocalSessionAsInitialSession: true
+            )
+        )
+    }
+
+    static var emitsLocalSessionAsInitialSession: Bool {
+        clientOptions.auth.emitLocalSessionAsInitialSession
+    }
+
     static func makeClient(configuration: SupabaseConfiguration = currentConfiguration) throws -> SupabaseClient {
         guard configuration.isConfigured else {
             throw SupabaseConfigurationError.missingPublishableKey
@@ -52,7 +64,8 @@ enum SupabaseClientProvider {
 
         return SupabaseClient(
             supabaseURL: configuration.projectURL,
-            supabaseKey: configuration.publishableKey
+            supabaseKey: configuration.publishableKey,
+            options: clientOptions
         )
     }
 

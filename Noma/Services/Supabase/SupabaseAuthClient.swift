@@ -13,14 +13,14 @@ struct SupabaseAuthClient: AuthClient {
     let client: SupabaseClient
 
     func currentSessionSnapshot() async -> AuthSessionSnapshot {
-        AuthSessionSnapshot(isSignedIn: client.auth.currentSession != nil)
+        AuthSessionSnapshot(session: client.auth.currentSession)
     }
 
     func authStateSnapshots() -> AsyncStream<AuthSessionSnapshot> {
         AsyncStream { continuation in
             Task {
-                for await (_, session) in await client.auth.authStateChanges {
-                    continuation.yield(AuthSessionSnapshot(isSignedIn: session != nil))
+                for await (event, session) in client.auth.authStateChanges {
+                    continuation.yield(AuthSessionSnapshot(event: event, session: session))
                 }
                 continuation.finish()
             }
@@ -28,14 +28,14 @@ struct SupabaseAuthClient: AuthClient {
     }
 
     func signInWithApple(idToken: String, nonce: String) async throws -> AuthSessionSnapshot {
-        _ = try await client.auth.signInWithIdToken(
+        let session = try await client.auth.signInWithIdToken(
             credentials: OpenIDConnectCredentials(
                 provider: .apple,
                 idToken: idToken,
                 nonce: nonce
             )
         )
-        return AuthSessionSnapshot(isSignedIn: true)
+        return AuthSessionSnapshot(session: session)
     }
 
     func signOut() async throws {
@@ -61,4 +61,29 @@ struct UnconfiguredAuthClient: AuthClient {
     }
 
     func signOut() async throws {}
+}
+
+private extension AuthSessionSnapshot {
+    init(session: Session?) {
+        guard let session else {
+            self.init(state: .missing)
+            return
+        }
+
+        self.init(
+            state: session.isExpired ? .refreshingExpiredLocalSession : .authenticated,
+            userID: session.user.id.uuidString
+        )
+    }
+
+    init(event: AuthChangeEvent, session: Session?) {
+        switch event {
+        case .initialSession:
+            self.init(session: session)
+        case .signedIn, .tokenRefreshed, .userUpdated, .mfaChallengeVerified, .passwordRecovery:
+            self.init(session: session)
+        case .signedOut, .userDeleted:
+            self.init(state: .missing)
+        }
+    }
 }

@@ -7,7 +7,7 @@ struct HomeTopBar: View {
     var body: some View {
         HStack(spacing: NomaSpacing.sm) {
             Text("Noma")
-                .font(Font.title2)
+                .font(Font.title)
                 .fontWeight(.medium)
 
             subscriptionTierText
@@ -23,7 +23,7 @@ struct HomeTopBar: View {
     @ViewBuilder
     private var subscriptionTierText: some View {
         let text = Text(LocalizedStringKey(subscriptionTier.tier.titleKey))
-            .font(Font.title2)
+            .font(Font.title)
             .fontWeight(.medium)
 
         if subscriptionTier.tier.usesProminentTextGradient {

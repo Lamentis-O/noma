@@ -51,10 +51,18 @@ extension AppleSignInAuthenticator: ASAuthorizationControllerDelegate {
 extension AppleSignInAuthenticator: ASAuthorizationControllerPresentationContextProviding {
     nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         MainActor.assumeIsolated {
-            UIApplication.shared.connectedScenes
+            let windowScenes = UIApplication.shared.connectedScenes
                 .compactMap { $0 as? UIWindowScene }
-                .flatMap(\.windows)
-                .first { $0.isKeyWindow } ?? ASPresentationAnchor()
+
+            if let keyWindow = windowScenes.flatMap(\.windows).first(where: { $0.isKeyWindow }) {
+                return keyWindow
+            }
+
+            if let windowScene = windowScenes.first(where: { $0.activationState == .foregroundActive }) ?? windowScenes.first {
+                return ASPresentationAnchor(windowScene: windowScene)
+            }
+
+            preconditionFailure("Apple sign-in requires an active window scene.")
         }
     }
 }

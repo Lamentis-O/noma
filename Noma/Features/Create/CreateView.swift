@@ -1,79 +1,64 @@
 import SwiftUI
 
-struct CreateView: View {
-    private let collapsedEdgePadding = NomaSpacing.xl
-    private let focusedEdgePadding = NomaSpacing.md
-    private let focusedKeyboardSpacing = NomaSpacing.keyboardAccessoryOverlap
-    private let initialFocusDelay = NomaTiming.initialFocusDelay
+enum CreateViewContentMode {
+    static func usesScrollView(reminderCount: Int) -> Bool {
+        !CreateReminderListSection.showsEmptyState(reminderCount: reminderCount)
+    }
+}
 
-    @State private var message = ""
-    @State private var isKeyboardPresented = false
-    @State private var isProjectSheetPresented = false
-    @FocusState private var isInputFocused: Bool
+struct CreateView: View {
+    let dayID: String
+    let collapsedEdgePadding = NomaSpacing.xxl
+    let focusedEdgePadding = NomaSpacing.md
+    let focusedKeyboardSpacing = NomaOffset.keyboardAccessoryOverlap
+    let initialFocusDelay = NomaTiming.initialFocusDelay
+
+    @Environment(\.hapticFeedback) var hapticFeedback
+    @Environment(SubscriptionTierManager.self) var subscriptionTier
+    @Environment(DailyTaskGroupStore.self) var dailyTaskGroups
+    @State var message = ""
+    @State var reminders: [CreateReminder] = []
+    @State var isKeyboardPresented = false
+    @State var isProjectSheetPresented = false
+    @State var isUnlockMoreSheetPresented = false
+    @State var pendingScrollTargetID: String?
+    @FocusState var isInputFocused: Bool
+
+    init(dayID: String = DailyTaskGroupStore.todayID()) {
+        self.dayID = dayID
+    }
 
     var body: some View {
         GeometryReader { proxy in
-            ScrollView {
-                Color.clear
-                    .frame(minHeight: proxy.size.height + NomaSize.scrollDismissSentinel)
+            ZStack {
+                Rectangle()
+                    .fill(.primaryBackground)
+                    .ignoresSafeArea(.container)
+
+                content(in: proxy)
             }
-            .scrollIndicators(.hidden)
-            .scrollDismissesKeyboard(.interactively)
-            .background { Color(.systemBackground).ignoresSafeArea(.container) }
             .safeAreaBar(edge: .bottom, spacing: barSpacing) {
                 composerBar
                     .frame(width: barWidth(in: proxy))
                     .padding(.bottom, barBottomPadding(in: proxy))
             }
         }
-        .background {
-            NavigationKeyboardDismissObserver(isInputFocused: $isInputFocused)
-        }
+        .background { NavigationKeyboardDismissObserver(isInputFocused: $isInputFocused) }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
             isKeyboardPresented = true
+            scrollToReminderListBottomAfterKeyboardFocus()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             isKeyboardPresented = false
         }
         .task {
+            reminders = dailyTaskGroups.reminders(forDayID: dayID)
             guard await Self.shouldApplyInitialFocus({
                 try await Task.sleep(nanoseconds: initialFocusDelay)
             }) else { return }
             isInputFocused = true
         }
-        .sheet(isPresented: $isProjectSheetPresented) {
-            CreateSheet()
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-        }
+        .sheet(isPresented: $isProjectSheetPresented) { projectSheet }
+        .sheet(isPresented: $isUnlockMoreSheetPresented) { unlockMoreSheet }
     }
-
-    private var composerBar: some View {
-        ReminderInputBar(
-            text: $message,
-            focus: $isInputFocused,
-            placeholder: "create.input.placeholder",
-            onTrayButtonTap: { isProjectSheetPresented = true },
-            onSubmit: {}
-        )
-    }
-
-    private var barSpacing: CGFloat { max(0, isKeyboardPresented ? focusedKeyboardSpacing : 0) }
-
-    private func barWidth(in proxy: GeometryProxy) -> CGFloat {
-        // Ensure we never return a negative or non-finite width
-        let raw = proxy.size.width - (barEdgePadding * 2)
-        let clamped = max(0, raw)
-        if clamped.isFinite { return clamped }
-        return 0
-    }
-
-    private func barBottomPadding(in proxy: GeometryProxy) -> CGFloat {
-        let value = isKeyboardPresented ? focusedEdgePadding : max(0, collapsedEdgePadding - proxy.safeAreaInsets.bottom)
-        let clamped = max(0, value)
-        if clamped.isFinite { return clamped }
-        return 0
-    }
-
-    private var barEdgePadding: CGFloat { isKeyboardPresented ? focusedEdgePadding : collapsedEdgePadding }
 }
