@@ -1,0 +1,7 @@
+project_id = "ejulpxdohfnojevqntks"
+
+[functions.sync-apple-transaction]
+verify_jwt = true
+
+[functions.apple-subscription-webhook]
+verify_jwt = false

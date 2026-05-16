@@ -122,8 +122,8 @@ final class NomaTests: XCTestCase {
     @MainActor
     func testSubscriptionPurchaseRefreshesEntitlementToPro() async {
         let subscriptionState = SubscriptionStateManager(
-            entitlementClient: StubEntitlementClient(entitlements: [.free, .activePro]),
-            storeKitClient: StubStoreKitClient(products: [.monthlyPro])
+            entitlementClient: StubEntitlementClient(entitlements: [.free], syncedEntitlement: .activePro),
+            storeKitClient: StubStoreKitClient(products: [.monthlyPro], purchaseOutcome: .purchased(.monthlyPro))
         )
 
         await subscriptionState.refreshEntitlement()
@@ -131,6 +131,44 @@ final class NomaTests: XCTestCase {
 
         XCTAssertEqual(subscriptionState.phase, .pro(.activePro))
         XCTAssertFalse(subscriptionState.isPurchasing)
+    }
+
+    @MainActor
+    func testSubscriptionPurchaseSyncsStoreKitTransactionBeforeRefreshingEntitlement() async {
+        let entitlementClient = StubEntitlementClient(
+            entitlements: [.free],
+            syncedEntitlement: .activePro
+        )
+        let subscriptionState = SubscriptionStateManager(
+            entitlementClient: entitlementClient,
+            storeKitClient: StubStoreKitClient(products: [.monthlyPro], purchaseOutcome: .purchased(.monthlyPro))
+        )
+
+        await subscriptionState.refreshEntitlement()
+        await subscriptionState.purchase(.monthlyPro)
+
+        XCTAssertEqual(entitlementClient.syncedTransactions, [.monthlyPro])
+        XCTAssertEqual(subscriptionState.phase, .pro(.activePro))
+    }
+
+    @MainActor
+    func testRestoreSyncsCurrentStoreKitEntitlements() async {
+        let entitlementClient = StubEntitlementClient(
+            entitlements: [.free],
+            syncedEntitlement: .activePro
+        )
+        let subscriptionState = SubscriptionStateManager(
+            entitlementClient: entitlementClient,
+            storeKitClient: StubStoreKitClient(
+                products: [.monthlyPro],
+                currentEntitlements: [.monthlyPro]
+            )
+        )
+
+        await subscriptionState.restorePurchases()
+
+        XCTAssertEqual(entitlementClient.syncedTransactions, [.monthlyPro])
+        XCTAssertEqual(subscriptionState.phase, .pro(.activePro))
     }
 
     @MainActor
@@ -241,8 +279,19 @@ private struct SignOutSucceedsAuthClient: AuthClient {
     func signOut() async throws {}
 }
 
-private struct StubEntitlementClient: EntitlementClient {
+@MainActor
+private final class StubEntitlementClient: EntitlementClient {
     var entitlements: [UserEntitlement]
+    var syncedEntitlement: UserEntitlement
+    var syncedTransactions: [StoreKitTransactionSnapshot] = []
+
+    init(
+        entitlements: [UserEntitlement],
+        syncedEntitlement: UserEntitlement = .free
+    ) {
+        self.entitlements = entitlements
+        self.syncedEntitlement = syncedEntitlement
+    }
 
     func currentEntitlement() async throws -> UserEntitlement {
         entitlements.first ?? .free
@@ -254,6 +303,11 @@ private struct StubEntitlementClient: EntitlementClient {
 
     func appAccountToken() async throws -> UUID {
         UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    }
+
+    func syncStoreKitTransaction(_ transaction: StoreKitTransactionSnapshot) async throws -> UserEntitlement {
+        syncedTransactions.append(transaction)
+        return syncedEntitlement
     }
 }
 
@@ -269,20 +323,41 @@ private struct FailingEntitlementClient: EntitlementClient {
     func appAccountToken() async throws -> UUID {
         throw TestAuthError.entitlementMissing
     }
+
+    func syncStoreKitTransaction(_ transaction: StoreKitTransactionSnapshot) async throws -> UserEntitlement {
+        throw TestAuthError.entitlementMissing
+    }
 }
 
 private struct StubStoreKitClient: StoreKitClient {
     var products: [SubscriptionProduct] = []
+    var purchaseOutcome: PurchaseOutcome = .purchased(.monthlyPro)
+    var currentEntitlements: [StoreKitTransactionSnapshot] = []
 
     func availableProducts() async throws -> [SubscriptionProduct] {
         products
     }
 
     func purchase(_ product: SubscriptionProduct) async throws -> PurchaseOutcome {
-        .purchased(transactionID: "test-transaction")
+        purchaseOutcome
     }
 
     func restorePurchases() async throws {}
+
+    func currentEntitlementTransactions() async throws -> [StoreKitTransactionSnapshot] {
+        currentEntitlements
+    }
+}
+
+private extension StoreKitTransactionSnapshot {
+    static let monthlyPro = StoreKitTransactionSnapshot(
+        transactionID: "test-transaction",
+        originalTransactionID: "test-original-transaction",
+        productID: SubscriptionProducts.monthlyProID,
+        transactionJSONRepresentation: "{}",
+        appAccountToken: UUID(uuidString: "00000000-0000-0000-0000-000000000001"),
+        expiresAt: nil
+    )
 }
 
 private enum TestAuthError: LocalizedError {

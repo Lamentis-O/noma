@@ -6,6 +6,7 @@ protocol EntitlementClient {
     func currentEntitlement() async throws -> UserEntitlement
     func refreshEntitlement() async throws -> UserEntitlement
     func appAccountToken() async throws -> UUID
+    func syncStoreKitTransaction(_ transaction: StoreKitTransactionSnapshot) async throws -> UserEntitlement
 }
 
 struct SupabaseEntitlementClient: EntitlementClient {
@@ -25,6 +26,15 @@ struct SupabaseEntitlementClient: EntitlementClient {
 
     func appAccountToken() async throws -> UUID {
         try await loadRow().appAccountToken
+    }
+
+    func syncStoreKitTransaction(_ transaction: StoreKitTransactionSnapshot) async throws -> UserEntitlement {
+        let row: EntitlementRow = try await client.functions.invoke(
+            "sync-apple-transaction",
+            options: .init(method: .post, body: SyncStoreKitTransactionRequest(transaction: transaction))
+        )
+
+        return row.entitlement
     }
 
     private func loadEntitlement() async throws -> UserEntitlement {
@@ -52,6 +62,34 @@ struct StaticFreeEntitlementClient: EntitlementClient {
 
     func appAccountToken() async throws -> UUID {
         UUID()
+    }
+
+    func syncStoreKitTransaction(_ transaction: StoreKitTransactionSnapshot) async throws -> UserEntitlement {
+        .free
+    }
+}
+
+private struct SyncStoreKitTransactionRequest: Encodable {
+    let transactionID: String
+    let originalTransactionID: String
+    let productID: String
+    let transactionJSONRepresentation: String
+    let appAccountToken: UUID?
+
+    init(transaction: StoreKitTransactionSnapshot) {
+        transactionID = transaction.transactionID
+        originalTransactionID = transaction.originalTransactionID
+        productID = transaction.productID
+        transactionJSONRepresentation = transaction.transactionJSONRepresentation
+        appAccountToken = transaction.appAccountToken
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case transactionID = "transaction_id"
+        case originalTransactionID = "original_transaction_id"
+        case productID = "product_id"
+        case transactionJSONRepresentation = "transaction_json_representation"
+        case appAccountToken = "app_account_token"
     }
 }
 

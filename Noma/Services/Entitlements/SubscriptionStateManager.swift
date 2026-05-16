@@ -70,8 +70,9 @@ final class SubscriptionStateManager {
         do {
             let outcome = try await storeKitClient.purchase(product)
             switch outcome {
-            case .purchased:
-                await refreshEntitlement()
+            case .purchased(let transaction):
+                let entitlement = try await entitlementClient.syncStoreKitTransaction(transaction)
+                phase = SubscriptionPhase.resolved(from: entitlement)
             case .pending:
                 phase = .unavailable("Purchase is pending.")
             case .cancelled:
@@ -85,7 +86,14 @@ final class SubscriptionStateManager {
     func restorePurchases() async {
         do {
             try await storeKitClient.restorePurchases()
-            await refreshEntitlement()
+            let transactions = try await storeKitClient.currentEntitlementTransactions()
+            for transaction in transactions {
+                let entitlement = try await entitlementClient.syncStoreKitTransaction(transaction)
+                phase = SubscriptionPhase.resolved(from: entitlement)
+            }
+            if transactions.isEmpty {
+                await refreshEntitlement()
+            }
         } catch {
             errorMessage = error.localizedDescription
         }

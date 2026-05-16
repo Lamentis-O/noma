@@ -21,8 +21,17 @@ enum SubscriptionProducts {
     static let configuredIDs = [monthlyProID, yearlyProID]
 }
 
+struct StoreKitTransactionSnapshot: Codable, Equatable {
+    let transactionID: String
+    let originalTransactionID: String
+    let productID: String
+    let transactionJSONRepresentation: String
+    let appAccountToken: UUID?
+    let expiresAt: Date?
+}
+
 enum PurchaseOutcome: Equatable {
-    case purchased(transactionID: String)
+    case purchased(StoreKitTransactionSnapshot)
     case pending
     case cancelled
 }
@@ -32,6 +41,7 @@ protocol StoreKitClient {
     func availableProducts() async throws -> [SubscriptionProduct]
     func purchase(_ product: SubscriptionProduct) async throws -> PurchaseOutcome
     func restorePurchases() async throws
+    func currentEntitlementTransactions() async throws -> [StoreKitTransactionSnapshot]
 }
 
 struct StoreKit2Client: StoreKitClient {
@@ -74,8 +84,9 @@ struct StoreKit2Client: StoreKitClient {
         switch result {
         case .success(let verification):
             let transaction = try checkVerified(verification)
+            let snapshot = StoreKitTransactionSnapshot(transaction: transaction)
             await transaction.finish()
-            return .purchased(transactionID: String(transaction.id))
+            return .purchased(snapshot)
         case .pending:
             return .pending
         case .userCancelled:
@@ -89,6 +100,18 @@ struct StoreKit2Client: StoreKitClient {
         try await AppStore.sync()
     }
 
+    func currentEntitlementTransactions() async throws -> [StoreKitTransactionSnapshot] {
+        var snapshots: [StoreKitTransactionSnapshot] = []
+
+        for await result in Transaction.currentEntitlements {
+            let transaction = try checkVerified(result)
+            guard productIDs.contains(transaction.productID) else { continue }
+            snapshots.append(StoreKitTransactionSnapshot(transaction: transaction))
+        }
+
+        return snapshots
+    }
+
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .verified(let signedType):
@@ -96,6 +119,19 @@ struct StoreKit2Client: StoreKitClient {
         case .unverified:
             throw StoreKitClientError.failedVerification
         }
+    }
+}
+
+private extension StoreKitTransactionSnapshot {
+    init(transaction: Transaction) {
+        self.init(
+            transactionID: String(transaction.id),
+            originalTransactionID: String(transaction.originalID),
+            productID: transaction.productID,
+            transactionJSONRepresentation: String(data: transaction.jsonRepresentation, encoding: .utf8) ?? "{}",
+            appAccountToken: transaction.appAccountToken,
+            expiresAt: transaction.expirationDate
+        )
     }
 }
 
