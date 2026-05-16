@@ -28,14 +28,14 @@ struct SupabaseAuthClient: AuthClient {
     }
 
     func signInWithApple(idToken: String, nonce: String) async throws -> AuthSessionSnapshot {
-        _ = try await client.auth.signInWithIdToken(
+        let session = try await client.auth.signInWithIdToken(
             credentials: OpenIDConnectCredentials(
                 provider: .apple,
                 idToken: idToken,
                 nonce: nonce
             )
         )
-        return AuthSessionSnapshot(isSignedIn: true)
+        return AuthSessionSnapshot(session: session)
     }
 
     func signOut() async throws {
@@ -70,7 +70,10 @@ private extension AuthSessionSnapshot {
             return
         }
 
-        self.init(state: session.isExpired ? .refreshingExpiredLocalSession : .authenticated)
+        self.init(
+            state: session.isExpired ? .refreshingExpiredLocalSession : .authenticated,
+            userID: session.user.id.uuidString
+        )
     }
 
     init(event: AuthChangeEvent, session: Session?) {

@@ -1,57 +1,35 @@
 import Foundation
 import Observation
 
-struct DailyTaskGroup: Codable, Equatable, Identifiable {
-    let id: String
-    let date: Date
-    var reminders: [CreateReminder]
-
-    var taskCount: Int { reminders.count }
-}
-
-struct DailyTaskGroupSummary: Equatable, Identifiable {
-    let group: DailyTaskGroup
-
-    var id: String { group.id }
-    var taskCount: Int { group.taskCount }
-    var completedTaskCount: Int { group.reminders.filter(\.isCompleted).count }
-    var isCompleted: Bool { taskCount > 0 && completedTaskCount == taskCount }
-    var taskCountUnitKey: String {
-        taskCount == 1 ? "home.daily-groups.task-count.singular" : "home.daily-groups.task-count.plural"
-    }
-
-    var title: String {
-        group.date.formatted(date: .abbreviated, time: .omitted)
-    }
-}
-
-enum DailyTaskGroupsSection {
-    static let headerTitleKey = "home.daily-groups.section-header"
-}
-
-enum DailyTaskGroupsProgressCopy {
-    static let ofKey = "home.daily-groups.progress.of"
-    static let doneKey = "home.daily-groups.progress.done"
-}
-
 @MainActor
 @Observable
 final class DailyTaskGroupStore {
     @ObservationIgnored
-    private let storage: DailyTaskGroupStorage
+    private let userDefaults: UserDefaults
+
+    @ObservationIgnored
+    private var storage: DailyTaskGroupStorage
 
     @ObservationIgnored
     private let calendar: Calendar
 
+    @ObservationIgnored
+    private var userID: String?
     private(set) var groups: [DailyTaskGroup]
 
     init(
         userDefaults: UserDefaults = .standard,
         calendar: Calendar = .current,
-        storageKey: String = DailyTaskGroupStorage.defaultStorageKey
+        userID: String? = nil,
+        storageKey: String? = nil
     ) {
-        self.storage = DailyTaskGroupStorage(userDefaults: userDefaults, storageKey: storageKey)
+        self.userDefaults = userDefaults
         self.calendar = calendar
+        self.userID = userID
+        self.storage = DailyTaskGroupStorage(
+            userDefaults: userDefaults,
+            storageKey: storageKey ?? DailyTaskGroupStorage.storageKey(forUserID: userID)
+        )
         self.groups = storage.loadGroups()
     }
 
@@ -83,6 +61,17 @@ final class DailyTaskGroupStore {
 
     func reminders(forDayID dayID: String) -> [CreateReminder] {
         groups.first { $0.id == dayID }?.reminders ?? []
+    }
+
+    func switchUserID(_ userID: String?) {
+        guard self.userID != userID else { return }
+
+        self.userID = userID
+        storage = DailyTaskGroupStorage(
+            userDefaults: userDefaults,
+            storageKey: DailyTaskGroupStorage.storageKey(forUserID: userID)
+        )
+        groups = storage.loadGroups()
     }
 
     func save(reminders: [CreateReminder], for date: Date) {

@@ -11,16 +11,19 @@ enum AuthSessionState: Equatable {
 
 struct AuthSessionSnapshot: Equatable {
     let state: AuthSessionState
+    let userID: String?
 
-    init(state: AuthSessionState) {
+    init(state: AuthSessionState, userID: String? = nil) {
         self.state = state
+        self.userID = userID
     }
 
-    init(isSignedIn: Bool) {
-        self.state = isSignedIn ? .authenticated : .missing
+    init(isSignedIn: Bool, userID: String? = nil) {
+        self.init(state: isSignedIn ? .authenticated : .missing, userID: userID)
     }
 
     var isSignedIn: Bool { state == .authenticated }
+    var storageUserID: String? { isSignedIn ? userID : nil }
 
     var rootPhase: AuthRootPhase {
         switch state {
@@ -52,6 +55,7 @@ final class AuthStateManager {
     private var hasStarted = false
 
     var phase: AuthRootPhase = .loading
+    var storageUserID: String?
     var errorMessage: String?
     var isSigningIn = false
 
@@ -130,5 +134,6 @@ final class AuthStateManager {
 
     private func apply(_ snapshot: AuthSessionSnapshot) {
         phase = snapshot.rootPhase
+        storageUserID = snapshot.storageUserID
     }
 }

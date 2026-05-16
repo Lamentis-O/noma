@@ -19,6 +19,9 @@ struct NomaApp: App {
                 .environment(authState)
                 .environment(subscriptionTier)
                 .environment(dailyTaskGroups)
+                .onChange(of: authState.storageUserID, initial: true) { _, userID in
+                    dailyTaskGroups.switchUserID(userID)
+                }
         }
     }
 }

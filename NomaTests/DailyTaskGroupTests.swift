@@ -27,6 +27,37 @@ final class DailyTaskGroupTests: XCTestCase {
         XCTAssertEqual(storage.loadGroups().first?.reminders, [reminder])
     }
 
+    func testDailyTaskGroupStorageScopesSavedGroupsByUserID() throws {
+        let defaults = UserDefaults.standard
+        let firstUserID = UUID().uuidString
+        let secondUserID = UUID().uuidString
+        let firstStorageKey = DailyTaskGroupStorage.storageKey(forUserID: firstUserID)
+        let secondStorageKey = DailyTaskGroupStorage.storageKey(forUserID: secondUserID)
+        defaults.removeObject(forKey: firstStorageKey)
+        defaults.removeObject(forKey: secondStorageKey)
+        defer {
+            defaults.removeObject(forKey: firstStorageKey)
+            defaults.removeObject(forKey: secondStorageKey)
+        }
+        let calendar = Calendar(identifier: .gregorian)
+        let date = try XCTUnwrap(DateComponents(calendar: calendar, year: 2026, month: 5, day: 16).date)
+        let firstStorage = DailyTaskGroupStorage(userDefaults: defaults, storageKey: firstStorageKey)
+        let secondStorage = DailyTaskGroupStorage(userDefaults: defaults, storageKey: secondStorageKey)
+
+        firstStorage.save(groups: [
+            DailyTaskGroup(id: "2026-05-16", date: date, reminders: [CreateReminder(text: "Private task")])
+        ])
+
+        XCTAssertTrue(secondStorage.loadGroups().isEmpty)
+
+        secondStorage.save(groups: [
+            DailyTaskGroup(id: "2026-05-16", date: date, reminders: [CreateReminder(text: "Other account task")])
+        ])
+
+        XCTAssertEqual(firstStorage.loadGroups().first?.reminders.map(\.text), ["Private task"])
+        XCTAssertEqual(secondStorage.loadGroups().first?.reminders.map(\.text), ["Other account task"])
+    }
+
     @MainActor
     func testDailyTaskGroupSummaryUsesDailyGroupsProgressCopyAndCompletionState() throws {
         let calendar = Calendar(identifier: .gregorian)

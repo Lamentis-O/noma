@@ -7,6 +7,8 @@ final class AuthStateManagerTests: XCTestCase {
         XCTAssertEqual(AuthSessionSnapshot(isSignedIn: false).rootPhase, .signedOut)
         XCTAssertEqual(AuthSessionSnapshot(isSignedIn: true).rootPhase, .signedIn)
         XCTAssertEqual(AuthSessionSnapshot(state: .refreshingExpiredLocalSession).rootPhase, .loading)
+        XCTAssertEqual(AuthSessionSnapshot(isSignedIn: true, userID: "user-1").storageUserID, "user-1")
+        XCTAssertNil(AuthSessionSnapshot(isSignedIn: false, userID: "user-1").storageUserID)
     }
 
     @MainActor
@@ -53,6 +55,7 @@ final class AuthStateManagerTests: XCTestCase {
         await authState.signInWithAppleFlow()
 
         XCTAssertEqual(authState.phase, .signedIn)
+        XCTAssertEqual(authState.storageUserID, "signed-in-user")
         XCTAssertFalse(authState.isSigningIn)
     }
 
@@ -82,6 +85,7 @@ final class AuthStateManagerTests: XCTestCase {
         await authState.signOutFlow()
 
         XCTAssertEqual(authState.phase, .signedOut)
+        XCTAssertNil(authState.storageUserID)
         XCTAssertNil(authState.errorMessage)
     }
 }
@@ -137,7 +141,7 @@ private struct SignInSucceedsAuthClient: AuthClient {
     }
 
     func signInWithApple(idToken: String, nonce: String) async throws -> AuthSessionSnapshot {
-        AuthSessionSnapshot(isSignedIn: true)
+        AuthSessionSnapshot(isSignedIn: true, userID: "signed-in-user")
     }
 
     func signOut() async throws {}
