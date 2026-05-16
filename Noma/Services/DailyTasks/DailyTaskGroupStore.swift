@@ -81,6 +81,10 @@ final class DailyTaskGroupStore {
         groups.map(DailyTaskGroupSummary.init(group:))
     }
 
+    func metrics() -> DailyTaskMetrics {
+        DailyTaskMetrics.make(groups: groups, calendar: calendar)
+    }
+
     func reminders(forDayID dayID: String) -> [CreateReminder] {
         groups.first { $0.id == dayID }?.reminders ?? []
     }

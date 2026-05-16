@@ -92,4 +92,53 @@ final class DailyTaskGroupTests: XCTestCase {
             DailyTaskGroupRowStatus.completedSystemImage
         )
     }
+
+    func testDailyTaskMetricsCountsTodayProgressAndStreak() throws {
+        let calendar = Calendar(identifier: .gregorian)
+        let today = try XCTUnwrap(DateComponents(calendar: calendar, year: 2026, month: 5, day: 16).date)
+        let yesterday = try XCTUnwrap(DateComponents(calendar: calendar, year: 2026, month: 5, day: 15).date)
+        let twoDaysAgo = try XCTUnwrap(DateComponents(calendar: calendar, year: 2026, month: 5, day: 14).date)
+
+        let metrics = DailyTaskMetrics.make(
+            groups: [
+                DailyTaskGroup(
+                    id: "2026-05-16",
+                    date: today,
+                    reminders: [
+                        CreateReminder(text: "One", isCompleted: true),
+                        CreateReminder(text: "Two")
+                    ]
+                ),
+                DailyTaskGroup(
+                    id: "2026-05-15",
+                    date: yesterday,
+                    reminders: [
+                        CreateReminder(text: "Three")
+                    ]
+                ),
+                DailyTaskGroup(
+                    id: "2026-05-14",
+                    date: twoDaysAgo,
+                    reminders: [
+                        CreateReminder(text: "Four", isCompleted: true)
+                    ]
+                )
+            ],
+            today: today,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(metrics.todayCompletedCount, 1)
+        XCTAssertEqual(metrics.todayTargetCount, 2)
+        XCTAssertEqual(metrics.streakCount, 3)
+    }
+
+    func testDailyTaskMetricsSectionIsOnlyVisibleForProAndUsesSharedLayoutTokens() {
+        XCTAssertFalse(DailyTaskMetricsSectionVisibility.isVisible(for: .free))
+        XCTAssertTrue(DailyTaskMetricsSectionVisibility.isVisible(for: .pro))
+        XCTAssertEqual(DailyTaskMetricsSectionLayout.cardSpacing, NomaSpacing.md)
+        XCTAssertEqual(DailyMetricCardLayout.cornerRadius, NomaRadius.xl)
+        XCTAssertEqual(DailyMetricCardLayout.contentPadding, NomaSpacing.lg)
+        XCTAssertEqual(HomeViewLayout.contentTopPadding, NomaSpacing.xl)
+    }
 }

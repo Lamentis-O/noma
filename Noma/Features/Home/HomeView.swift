@@ -4,8 +4,13 @@ private enum HomeRoute: Hashable {
     case create(dayID: String)
 }
 
+enum HomeViewLayout {
+    static let contentTopPadding = NomaSpacing.xl
+}
+
 struct HomeView: View {
     @Environment(DailyTaskGroupStore.self) private var dailyTaskGroups
+    @Environment(SubscriptionTierManager.self) private var subscriptionTier
     @State private var path: [HomeRoute] = []
 
     var body: some View {
@@ -50,18 +55,24 @@ struct HomeView: View {
     }
 
     private var dailyGroupsList: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if !dailyTaskGroups.groups.isEmpty {
-                SectionHeader(DailyTaskGroupsSection.headerTitleKey)
+        VStack(alignment: .leading, spacing: NomaSpacing.xl) {
+            if DailyTaskMetricsSectionVisibility.isVisible(for: subscriptionTier.tier) {
+                DailyTaskMetricsSection(metrics: dailyTaskGroups.metrics())
+            }
 
-                VStack(alignment: .leading, spacing: NomaSpacing.xl) {
-                    ForEach(dailyTaskGroups.summaries()) { summary in
-                        Button {
-                            path.append(.create(dayID: summary.id))
-                        } label: {
-                            DailyTaskGroupRow(summary: summary)
+            if !dailyTaskGroups.groups.isEmpty {
+                VStack(alignment: .leading, spacing: 0) {
+                    SectionHeader(DailyTaskGroupsSection.headerTitleKey)
+
+                    VStack(alignment: .leading, spacing: NomaSpacing.xl) {
+                        ForEach(dailyTaskGroups.summaries()) { summary in
+                            Button {
+                                path.append(.create(dayID: summary.id))
+                            } label: {
+                                DailyTaskGroupRow(summary: summary)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -69,7 +80,7 @@ struct HomeView: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, NomaSpacing.xl)
-        .padding(.top, NomaSpacing.xxl)
+        .padding(.top, HomeViewLayout.contentTopPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }

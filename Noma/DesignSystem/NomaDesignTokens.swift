@@ -28,6 +28,7 @@ enum NomaSize {
 }
 
 enum NomaRadius {
+    static let xl: NomaMetric.Value = 24
     static let composer: NomaMetric.Value = 25
 }
 
@@ -59,6 +60,7 @@ extension ShapeStyle where Self == Color {
     static var textPrimary: Color { Color.primary }
     static var textSecondary: Color { Color.secondary }
     static var primaryBackground: Color { Color(.systemBackground) }
+    static var secondaryBackground: Color { Color(.secondarySystemBackground) }
     static var controlActive: Color { Color(.label) }
     static var controlError: Color { Color(.systemRed) }
     static var controlSuccess: Color { Color(.systemGreen) }

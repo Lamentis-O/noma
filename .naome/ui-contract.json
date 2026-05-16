@@ -31,6 +31,7 @@
           { "id": "offset.keyboardAccessoryOverlap", "value": -20, "swiftui": "NomaOffset.keyboardAccessoryOverlap" }
         ],
         "radius": [
+          { "id": "radius.xl", "value": 24, "swiftui": "NomaRadius.xl" },
           { "id": "radius.composer", "value": 25, "swiftui": "NomaRadius.composer" }
         ],
         "colors": [
@@ -38,6 +39,7 @@
           { "id": "color.text.secondary", "swiftui": ".textSecondary" },
           { "id": "color.text.primaryBackground", "swiftui": ".primaryBackground" },
           { "id": "color.background.primary", "swiftui": ".primaryBackground" },
+          { "id": "color.background.secondary", "swiftui": ".secondaryBackground" },
           { "id": "color.control.active", "swiftui": ".controlActive" },
           { "id": "color.control.error", "swiftui": ".controlError" },
           { "id": "color.control.success", "swiftui": ".controlSuccess" }
@@ -77,6 +79,13 @@
           "name": "HintView",
           "swiftuiType": "HintView",
           "adHocPatterns": [".font(.title.weight(.bold))"],
+          "severity": "warning"
+        },
+        {
+          "id": "component.daily-metric-card",
+          "name": "DailyMetricCard",
+          "swiftuiType": "DailyMetricCard",
+          "adHocPatterns": ["RoundedRectangle("],
           "severity": "warning"
         }
       ],
