@@ -33,7 +33,7 @@ struct CreateSheet: View {
 
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, NomaSpacing.xl)
+            .padding(.horizontal, NomaSpacing.xxl)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle("Project")
             .toolbarTitleDisplayMode(.inline)

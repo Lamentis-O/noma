@@ -21,22 +21,25 @@
           { "id": "spacing.sm", "value": 8, "swiftui": "NomaSpacing.sm" },
           { "id": "spacing.md", "value": 12, "swiftui": "NomaSpacing.md" },
           { "id": "spacing.lg", "value": 16, "swiftui": "NomaSpacing.lg" },
-          { "id": "spacing.authButtonVertical", "value": 12, "swiftui": "NomaSpacing.authButtonVertical" },
-          { "id": "spacing.buttonHorizontal", "value": 24, "swiftui": "NomaSpacing.buttonHorizontal" },
-          { "id": "spacing.xl", "value": 32, "swiftui": "NomaSpacing.xl" },
-          { "id": "spacing.keyboardAccessoryOverlap", "value": -20, "swiftui": "NomaSpacing.keyboardAccessoryOverlap" },
+          { "id": "spacing.xl", "value": 24, "swiftui": "NomaSpacing.xl" },
+          { "id": "spacing.xxl", "value": 32, "swiftui": "NomaSpacing.xxl" },
           { "id": "size.scrollDismissSentinel", "value": 1, "swiftui": "NomaSize.scrollDismissSentinel" },
-          { "id": "size.sendButton", "value": 34, "swiftui": "NomaSize.sendButton" }
+          { "id": "size.sendButton", "value": 34, "swiftui": "NomaSize.sendButton" },
+          { "id": "size.taskDeleteSwipeThreshold", "value": 72, "swiftui": "NomaSize.taskDeleteSwipeThreshold" }
+        ],
+        "offsets": [
+          { "id": "offset.keyboardAccessoryOverlap", "value": -20, "swiftui": "NomaOffset.keyboardAccessoryOverlap" }
         ],
         "radius": [
           { "id": "radius.composer", "value": 25, "swiftui": "NomaRadius.composer" }
         ],
         "colors": [
-          { "id": "color.text.primary", "swiftui": "Color.primary" },
-          { "id": "color.text.secondary", "swiftui": "Color.secondary" },
+          { "id": "color.text.primary", "swiftui": ".textPrimary" },
+          { "id": "color.text.secondary", "swiftui": ".textSecondary" },
           { "id": "color.text.primaryBackground", "swiftui": ".primaryBackground" },
-          { "id": "color.background.primary", "swiftui": "Color(.systemBackground)" },
-          { "id": "color.control.active", "swiftui": "Color(.label)" }
+          { "id": "color.background.primary", "swiftui": ".primaryBackground" },
+          { "id": "color.control.active", "swiftui": ".controlActive" },
+          { "id": "color.control.error", "swiftui": ".controlError" }
         ]
       },
       "components": [

@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum SignInWithAppleGlassButtonLayout {
-    static let verticalPadding: NomaMetric.Value = NomaSpacing.authButtonVertical
+    static let verticalPadding: NomaMetric.Value = NomaSpacing.md
 }
 
 struct SignInWithAppleGlassButtonState: Equatable {
@@ -33,13 +33,13 @@ struct SignInWithAppleGlassButton: View {
         Button(action: action) {
             content
             .font(.title3)
-            .foregroundStyle(Color(.systemBackground))
+            .foregroundStyle(.primaryBackground)
             .frame(maxWidth: .infinity)
             .padding(.vertical, SignInWithAppleGlassButtonLayout.verticalPadding)
             .animation(.smooth, value: isLoading)
         }
         .disabled(!state.allowsInteraction)
-        .tint(.primary)
+        .tint(.controlActive)
         .buttonStyle(.glassProminent)
         .buttonBorderShape(.capsule)
     }
@@ -54,7 +54,7 @@ struct SignInWithAppleGlassButton: View {
             if state.showsProgressSpinner {
                 ProgressView()
                     .progressViewStyle(.circular)
-                    .tint(Color(.systemBackground))
+                    .tint(.primaryBackground)
                     .transition(.blurReplace)
             } else {
                 buttonLabel

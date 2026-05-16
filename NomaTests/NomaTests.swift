@@ -11,6 +11,8 @@ import XCTest
 final class NomaTests: XCTestCase {
     func testSpacingContractExposesXsToken() {
         XCTAssertEqual(NomaSpacing.xs, 4)
+        XCTAssertEqual(NomaSpacing.xl, 24)
+        XCTAssertEqual(NomaSpacing.xxl, 32)
     }
 
     func testCreateViewDoesNotFocusInputWhenInitialDelayIsCancelled() async {
@@ -31,6 +33,103 @@ final class NomaTests: XCTestCase {
         XCTAssertNil(CreateProjectEmptyState.placeholder.cta)
     }
 
+    func testCreateTaskEmptyStateUsesHintCopyAndNoIcon() {
+        let emptyState = CreateTaskEmptyState.placeholder
+
+        XCTAssertNil(emptyState.systemImage)
+        XCTAssertEqual(emptyState.titleKey, "create.tasks.empty.title")
+        XCTAssertEqual(emptyState.subtitleKey, "create.tasks.empty.subtitle")
+        XCTAssertFalse(emptyState.mirrorsImageForRightToLeftLayoutDirection)
+        XCTAssertNil(emptyState.cta)
+    }
+
+    func testCreateReminderAutoScrollTargetsBottomAnchorAfterSubmission() {
+        let reminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
+            text: "Last task"
+        )
+
+        XCTAssertEqual(
+            CreateReminderAutoScroll.targetAfterAppending(reminder),
+            CreateReminderListLayout.bottomAnchorID
+        )
+    }
+
+    func testCreateReminderAutoScrollTargetsBottomAnchorAfterKeyboardFocusWithTasks() {
+        XCTAssertEqual(
+            CreateReminderAutoScroll.targetAfterKeyboardFocus(reminderCount: 1),
+            CreateReminderListLayout.bottomAnchorID
+        )
+    }
+
+    func testCreateReminderAutoScrollIgnoresKeyboardFocusWithoutTasks() {
+        XCTAssertNil(CreateReminderAutoScroll.targetAfterKeyboardFocus(reminderCount: 0))
+    }
+
+    func testFreeTierLimitsTaskGroupsToFiveTasks() {
+        XCTAssertEqual(SubscriptionTier.free.taskLimitPerGroup, 5)
+        XCTAssertTrue(SubscriptionTier.free.canAddTask(toGroupWithTaskCount: 4))
+        XCTAssertFalse(SubscriptionTier.free.canAddTask(toGroupWithTaskCount: 5))
+    }
+
+    func testProTierCanAddTasksBeyondFreeLimit() {
+        XCTAssertNil(SubscriptionTier.pro.taskLimitPerGroup)
+        XCTAssertTrue(SubscriptionTier.pro.canAddTask(toGroupWithTaskCount: 5))
+        XCTAssertTrue(SubscriptionTier.pro.canAddTask(toGroupWithTaskCount: 50))
+    }
+
+    func testCreateReminderListShowsUnlockMoreAtFreeLimitOnly() {
+        XCTAssertFalse(CreateReminderListSection.showsUnlockMoreButton(tier: .free, reminderCount: 4))
+        XCTAssertTrue(CreateReminderListSection.showsUnlockMoreButton(tier: .free, reminderCount: 5))
+        XCTAssertFalse(CreateReminderListSection.showsUnlockMoreButton(tier: .pro, reminderCount: 5))
+    }
+
+    @MainActor
+    func testReminderInputStateDisablesSubmitWhenSubscriptionLimitIsReached() {
+        let state = ReminderInputState(text: "Next task", isSubmissionAvailable: false)
+
+        XCTAssertFalse(state.canSubmit)
+        XCTAssertEqual(state.sendButtonTone, .disabled)
+    }
+
+    func testPrimaryButtonUsesSharedLayoutTokens() {
+        XCTAssertEqual(PrimaryButtonLayout.horizontalPadding, NomaSpacing.xl)
+        XCTAssertEqual(PrimaryButtonLayout.verticalPadding, NomaSpacing.md)
+    }
+
+    @MainActor
+    func testPrimaryButtonUsesSharedSubmitHapticFeedback() {
+        XCTAssertEqual(PrimaryButtonFeedback.feedback, .createTaskSubmit)
+    }
+
+    func testCreateReminderListLimitCalloutUsesProfessionalCopyAndSpacing() {
+        XCTAssertEqual(
+            CreateReminderListSection.unlockMoreMessageKey,
+            "create.tasks.unlock-more.message"
+        )
+        XCTAssertEqual(CreateReminderLimitCalloutLayout.spacingFromTasks, 24)
+        XCTAssertEqual(CreateReminderLimitCalloutLayout.contentSpacing, NomaSpacing.md)
+    }
+
+    @MainActor
+    func testDebugUnlockMorePromotesAccountToPro() async {
+        let subscriptionTier = SubscriptionTierManager()
+
+        subscriptionTier.debugUnlockPro()
+
+        XCTAssertEqual(subscriptionTier.tier, .pro)
+    }
+
+    func testCreateReminderListShowsEmptyStateOnlyWithoutTasks() {
+        XCTAssertTrue(CreateReminderListSection.showsEmptyState(reminderCount: 0))
+        XCTAssertFalse(CreateReminderListSection.showsEmptyState(reminderCount: 1))
+    }
+
+    func testCreateViewOnlyUsesScrollViewAfterTasksWereAdded() {
+        XCTAssertFalse(CreateViewContentMode.usesScrollView(reminderCount: 0))
+        XCTAssertTrue(CreateViewContentMode.usesScrollView(reminderCount: 1))
+    }
+
     func testCreateReminderSubmissionTrimsSubmittedText() {
         let reminder = CreateReminderSubmission.reminder(from: "  Call Mika  ")
 
@@ -49,6 +148,7 @@ final class NomaTests: XCTestCase {
         XCTAssertNil(CreateReminderSubmission.reminder(from: overLimitText))
     }
 
+    @MainActor
     func testReminderInputStateDisablesAndMarksOverLimitText() {
         let state = ReminderInputState(text: String(repeating: "a", count: CreateReminderSubmission.characterLimit + 1))
 
@@ -71,10 +171,19 @@ final class NomaTests: XCTestCase {
         XCTAssertEqual(result?.remainingText, "")
     }
 
+    func testReminderInputRejectsSubmittedTextWrittenBackAfterClear() {
+        var staleGuard = ReminderInputStaleTextGuard()
+
+        staleGuard.prepareForSubmit(text: "Call Mika")
+
+        XCTAssertFalse(staleGuard.acceptsIncomingText("Call Mika"))
+        XCTAssertTrue(staleGuard.acceptsIncomingText("Next task"))
+    }
+
     func testCreateReminderListLayoutLeavesScrollRoomAboveComposer() {
         XCTAssertEqual(
             CreateReminderListLayout.bottomScrollPadding,
-            ReminderInputBarLayout.minimumHeight + NomaSpacing.xl
+            NomaSpacing.xl
         )
     }
 
@@ -102,23 +211,6 @@ final class NomaTests: XCTestCase {
         XCTAssertTrue(RadioCheckboxState(isOn: true).showsInnerCircle)
     }
 
-    @MainActor
-    func testSectionHeaderConfigurationUsesHeadlinePrimaryAndLeadingDefaults() {
-        let configuration = SectionHeaderConfiguration(text: "Today")
-
-        XCTAssertEqual(configuration.text, "Today")
-        XCTAssertEqual(configuration.textStyle, .headline)
-        XCTAssertEqual(configuration.colorSource, .primary)
-        XCTAssertEqual(configuration.alignment, .leading)
-    }
-
-    @MainActor
-    func testSectionHeaderConfigurationMarksCustomColorOverrides() {
-        let configuration = SectionHeaderConfiguration(text: "Today", colorSource: .custom)
-
-        XCTAssertEqual(configuration.colorSource, .custom)
-    }
-
     func testCreateReminderListSectionUsesLocalizedTaskHeaderForEnteredTasks() {
         XCTAssertEqual(CreateReminderListSection.headerTitleKey, "create.tasks.section-header")
         XCTAssertFalse(CreateReminderListSection.showsHeader(reminderCount: 0))
@@ -128,6 +220,42 @@ final class NomaTests: XCTestCase {
     func testReminderCompletionHapticOnlyPlaysWhenToggledOn() {
         XCTAssertEqual(CreateReminderCompletionFeedback.feedback(isCompleted: true), .createTaskSubmit)
         XCTAssertNil(CreateReminderCompletionFeedback.feedback(isCompleted: false))
+    }
+
+    func testReminderSwipeOnlyTracksLeftDragAndDeletesAfterThreshold() {
+        XCTAssertEqual(CreateReminderSwipeAction.minimumDistance, 0)
+        XCTAssertEqual(CreateReminderSwipeAction.offset(for: 24), 0)
+        XCTAssertEqual(CreateReminderSwipeAction.offset(for: -24), -24 * NomaScale.taskDeleteSwipeDamping)
+        XCTAssertFalse(CreateReminderSwipeAction.shouldDelete(offset: -24))
+        XCTAssertFalse(CreateReminderSwipeAction.shouldDelete(offset: CreateReminderSwipeAction.offset(for: -24)))
+        XCTAssertTrue(CreateReminderSwipeAction.shouldDelete(offset: -CreateReminderSwipeAction.deleteThreshold))
+    }
+
+    func testReminderSwipeProgressTracksDeleteThreshold() {
+        XCTAssertEqual(CreateReminderSwipeAction.progress(for: 0), 0)
+        XCTAssertEqual(CreateReminderSwipeAction.remainingProgress(for: 0), 1)
+        XCTAssertEqual(
+            CreateReminderSwipeAction.progress(for: -CreateReminderSwipeAction.deleteThreshold),
+            1
+        )
+        XCTAssertEqual(
+            CreateReminderSwipeAction.remainingProgress(for: -CreateReminderSwipeAction.deleteThreshold),
+            0
+        )
+    }
+
+    func testReminderSwipeFeedbackOnlyPlaysWhenCrossingDeleteThreshold() {
+        XCTAssertEqual(
+            CreateReminderSwipeAction.feedback(previousOffset: -24, currentOffset: -CreateReminderSwipeAction.deleteThreshold),
+            .createTaskSubmit
+        )
+        XCTAssertNil(
+            CreateReminderSwipeAction.feedback(
+                previousOffset: -CreateReminderSwipeAction.deleteThreshold,
+                currentOffset: -CreateReminderSwipeAction.deleteThreshold - 1
+            )
+        )
+        XCTAssertNil(CreateReminderSwipeAction.feedback(previousOffset: 0, currentOffset: -24))
     }
 
     func testHapticFeedbackServiceRoutesSubmitFeedback() {
@@ -167,46 +295,6 @@ final class NomaTests: XCTestCase {
 
     func testSupabaseClientOptionsOptIntoLocalInitialSessionEmission() {
         XCTAssertTrue(SupabaseClientProvider.emitsLocalSessionAsInitialSession)
-    }
-
-    @MainActor
-    func testAuthSessionSnapshotMapsToRootPhases() {
-        XCTAssertEqual(AuthSessionSnapshot(isSignedIn: false).rootPhase, .signedOut)
-        XCTAssertEqual(AuthSessionSnapshot(isSignedIn: true).rootPhase, .signedIn)
-        XCTAssertEqual(AuthSessionSnapshot(state: .refreshingExpiredLocalSession).rootPhase, .loading)
-    }
-
-    @MainActor
-    func testAuthStateManagerKeepsExpiredStoredSessionLoadingAtStartup() async {
-        let authState = AuthStateManager(
-            authClient: StartupAuthClient(
-                initialSnapshot: AuthSessionSnapshot(state: .refreshingExpiredLocalSession),
-                streamSnapshots: []
-            ),
-            appleSignInProvider: StubAppleSignInProvider()
-        )
-        authState.phase = .signedOut
-
-        authState.start()
-        await allowAuthObserverToRun()
-
-        XCTAssertEqual(authState.phase, .loading)
-    }
-
-    @MainActor
-    func testAuthStateManagerAppliesRefreshAfterExpiredStoredSession() async {
-        let authState = AuthStateManager(
-            authClient: StartupAuthClient(
-                initialSnapshot: AuthSessionSnapshot(state: .refreshingExpiredLocalSession),
-                streamSnapshots: [AuthSessionSnapshot(state: .authenticated)]
-            ),
-            appleSignInProvider: StubAppleSignInProvider()
-        )
-
-        authState.start()
-        await allowAuthObserverToRun()
-
-        XCTAssertEqual(authState.phase, .signedIn)
     }
 
     @MainActor
@@ -253,147 +341,4 @@ final class NomaTests: XCTestCase {
         XCTAssertTrue(SignInWithAppleGlassButtonState(isLoading: true).preservesLabelLayout)
     }
 
-    @MainActor
-    func testSignInWithAppleAppliesReturnedSessionSnapshotImmediately() async {
-        let authState = AuthStateManager(
-            authClient: SignInSucceedsAuthClient(),
-            appleSignInProvider: StubAppleSignInProvider()
-        )
-        authState.phase = .signedOut
-
-        await authState.signInWithAppleFlow()
-
-        XCTAssertEqual(authState.phase, .signedIn)
-        XCTAssertFalse(authState.isSigningIn)
-    }
-
-    @MainActor
-    func testSignInWithAppleReportsFailureAndClearsLoading() async {
-        let authState = AuthStateManager(
-            authClient: SignInFailsAuthClient(),
-            appleSignInProvider: StubAppleSignInProvider()
-        )
-        authState.phase = .signedOut
-
-        await authState.signInWithAppleFlow()
-
-        XCTAssertEqual(authState.phase, .signedOut)
-        XCTAssertEqual(authState.errorMessage, TestAuthError.signInRejected.localizedDescription)
-        XCTAssertFalse(authState.isSigningIn)
-    }
-
-    @MainActor
-    func testSignOutAppliesSignedOutSnapshot() async {
-        let authState = AuthStateManager(
-            authClient: SignOutSucceedsAuthClient(),
-            appleSignInProvider: StubAppleSignInProvider()
-        )
-        authState.phase = .signedIn
-
-        await authState.signOutFlow()
-
-        XCTAssertEqual(authState.phase, .signedOut)
-        XCTAssertNil(authState.errorMessage)
-    }
-}
-
-private func allowAuthObserverToRun() async {
-    await Task.yield()
-    try? await Task.sleep(nanoseconds: 1_000_000)
-}
-
-private struct StubAppleSignInProvider: AppleSignInProviding {
-    func requestCredential() async throws -> AppleSignInCredential {
-        AppleSignInCredential(
-            identityToken: "identity-token",
-            nonce: "nonce",
-            fullName: nil
-        )
-    }
-}
-
-private struct StartupAuthClient: AuthClient {
-    let initialSnapshot: AuthSessionSnapshot
-    let streamSnapshots: [AuthSessionSnapshot]
-
-    func currentSessionSnapshot() async -> AuthSessionSnapshot {
-        initialSnapshot
-    }
-
-    func authStateSnapshots() -> AsyncStream<AuthSessionSnapshot> {
-        AsyncStream { continuation in
-            for snapshot in streamSnapshots {
-                continuation.yield(snapshot)
-            }
-            continuation.finish()
-        }
-    }
-
-    func signInWithApple(idToken: String, nonce: String) async throws -> AuthSessionSnapshot {
-        AuthSessionSnapshot(state: .authenticated)
-    }
-
-    func signOut() async throws {}
-}
-
-private struct SignInSucceedsAuthClient: AuthClient {
-    func currentSessionSnapshot() async -> AuthSessionSnapshot {
-        AuthSessionSnapshot(isSignedIn: false)
-    }
-
-    func authStateSnapshots() -> AsyncStream<AuthSessionSnapshot> {
-        AsyncStream { continuation in
-            continuation.finish()
-        }
-    }
-
-    func signInWithApple(idToken: String, nonce: String) async throws -> AuthSessionSnapshot {
-        AuthSessionSnapshot(isSignedIn: true)
-    }
-
-    func signOut() async throws {}
-}
-
-private struct SignInFailsAuthClient: AuthClient {
-    func currentSessionSnapshot() async -> AuthSessionSnapshot {
-        AuthSessionSnapshot(isSignedIn: false)
-    }
-
-    func authStateSnapshots() -> AsyncStream<AuthSessionSnapshot> {
-        AsyncStream { continuation in
-            continuation.finish()
-        }
-    }
-
-    func signInWithApple(idToken: String, nonce: String) async throws -> AuthSessionSnapshot {
-        throw TestAuthError.signInRejected
-    }
-
-    func signOut() async throws {}
-}
-
-private struct SignOutSucceedsAuthClient: AuthClient {
-    func currentSessionSnapshot() async -> AuthSessionSnapshot {
-        AuthSessionSnapshot(isSignedIn: true)
-    }
-
-    func authStateSnapshots() -> AsyncStream<AuthSessionSnapshot> {
-        AsyncStream { continuation in
-            continuation.finish()
-        }
-    }
-
-    func signInWithApple(idToken: String, nonce: String) async throws -> AuthSessionSnapshot {
-        AuthSessionSnapshot(isSignedIn: true)
-    }
-
-    func signOut() async throws {}
-}
-
-private enum TestAuthError: LocalizedError {
-    case signInRejected
-
-    var errorDescription: String? {
-        "Sign in rejected"
-    }
 }

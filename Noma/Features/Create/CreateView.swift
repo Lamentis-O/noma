@@ -1,30 +1,36 @@
 import SwiftUI
 
+enum CreateViewContentMode {
+    static func usesScrollView(reminderCount: Int) -> Bool {
+        !CreateReminderListSection.showsEmptyState(reminderCount: reminderCount)
+    }
+}
+
 struct CreateView: View {
-    let collapsedEdgePadding = NomaSpacing.xl
+    let collapsedEdgePadding = NomaSpacing.xxl
     let focusedEdgePadding = NomaSpacing.md
-    let focusedKeyboardSpacing = NomaSpacing.keyboardAccessoryOverlap
+    let focusedKeyboardSpacing = NomaOffset.keyboardAccessoryOverlap
     let initialFocusDelay = NomaTiming.initialFocusDelay
 
     @Environment(\.hapticFeedback) var hapticFeedback
+    @Environment(SubscriptionTierManager.self) var subscriptionTier
     @State var message = ""
     @State var reminders: [CreateReminder] = []
     @State var isKeyboardPresented = false
     @State var isProjectSheetPresented = false
+    @State var isUnlockMoreSheetPresented = false
+    @State var pendingScrollTargetID: String?
     @FocusState var isInputFocused: Bool
 
     var body: some View {
         GeometryReader { proxy in
-            ScrollView {
-                CreateReminderList(
-                    reminders: reminders,
-                    minimumHeight: CreateReminderListLayout.minimumHeight(for: proxy.size.height),
-                    onToggleReminder: toggleReminder
-                )
+            ZStack {
+                Rectangle()
+                    .fill(.primaryBackground)
+                    .ignoresSafeArea(.container)
+
+                content(in: proxy)
             }
-            .scrollIndicators(.hidden)
-            .scrollDismissesKeyboard(.interactively)
-            .background { Color.primaryBackground.ignoresSafeArea(.container) }
             .safeAreaBar(edge: .bottom, spacing: barSpacing) {
                 composerBar
                     .frame(width: barWidth(in: proxy))
@@ -34,6 +40,7 @@ struct CreateView: View {
         .background { NavigationKeyboardDismissObserver(isInputFocused: $isInputFocused) }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
             isKeyboardPresented = true
+            scrollToReminderListBottomAfterKeyboardFocus()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             isKeyboardPresented = false
@@ -45,5 +52,6 @@ struct CreateView: View {
             isInputFocused = true
         }
         .sheet(isPresented: $isProjectSheetPresented) { projectSheet }
+        .sheet(isPresented: $isUnlockMoreSheetPresented) { unlockMoreSheet }
     }
 }

@@ -14,6 +14,20 @@ enum SubscriptionTier: Equatable {
     }
 
     var usesProminentTextGradient: Bool { self == .pro }
+
+    var taskLimitPerGroup: Int? {
+        switch self {
+        case .free:
+            5
+        case .pro:
+            nil
+        }
+    }
+
+    func canAddTask(toGroupWithTaskCount taskCount: Int) -> Bool {
+        guard let taskLimitPerGroup else { return true }
+        return taskCount < taskLimitPerGroup
+    }
 }
 
 @MainActor
@@ -25,5 +39,9 @@ final class SubscriptionTierManager {
 
     func updateTier(_ tier: SubscriptionTier) {
         self.tier = tier
+    }
+
+    func debugUnlockPro() {
+        updateTier(.pro)
     }
 }

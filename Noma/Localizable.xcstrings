@@ -155,6 +155,42 @@
         }
       }
     },
+    "create.tasks.empty.subtitle" : {
+      "comment" : "Subtitle for the empty task list hint in the create task view.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppiere eine oder mehrere Aufgaben. Füge sie optional einem Projekt hinzu, um sie besser zu organisieren."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group one or more tasks together. Optionally add them to a project for better organization."
+          }
+        }
+      }
+    },
+    "create.tasks.empty.title" : {
+      "comment" : "Title for the empty task list hint in the create task view.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgaben zu dieser Gruppe hinzufügen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add tasks to this group"
+          }
+        }
+      }
+    },
     "create.tasks.section-header" : {
       "comment" : "Section header shown above reminders entered in the create task view.",
       "extractionState" : "stale",
@@ -169,6 +205,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tasks in this group"
+          }
+        }
+      }
+    },
+    "create.tasks.unlock-more" : {
+      "comment" : "Button title shown when the free task limit for a group is reached.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehr freischalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock more"
+          }
+        }
+      }
+    },
+    "create.tasks.unlock-more.message" : {
+      "comment" : "Informational text shown above the unlock button when the free task limit for a group is reached.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Free-Tier kannst du bis zu 5 Aufgaben pro Gruppe erstellen. Mit Pro kannst du unbegrenzt viele Aufgaben hinzufügen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Free tier lets you create up to 5 tasks per group. With Pro, you can add unlimited tasks."
           }
         }
       }
