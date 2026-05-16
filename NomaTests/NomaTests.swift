@@ -33,12 +33,16 @@ final class NomaTests: XCTestCase {
         XCTAssertNil(CreateProjectEmptyState.placeholder.cta)
     }
 
+    func testHintViewAddsDefaultHorizontalPadding() {
+        XCTAssertEqual(HintViewLayout.horizontalPadding, NomaSpacing.xl)
+    }
+
     func testCreateTaskEmptyStateUsesHintCopyAndNoIcon() {
         let emptyState = CreateTaskEmptyState.placeholder
 
         XCTAssertNil(emptyState.systemImage)
-        XCTAssertEqual(emptyState.titleKey, "create.tasks.empty.title")
-        XCTAssertEqual(emptyState.subtitleKey, "create.tasks.empty.subtitle")
+        XCTAssertEqual(emptyState.titleKey, "create.tasks.empty.today.title")
+        XCTAssertEqual(emptyState.subtitleKey, "create.tasks.empty.today.subtitle")
         XCTAssertFalse(emptyState.mirrorsImageForRightToLeftLayoutDirection)
         XCTAssertNil(emptyState.cta)
     }
@@ -105,7 +109,7 @@ final class NomaTests: XCTestCase {
     func testCreateReminderListLimitCalloutUsesProfessionalCopyAndSpacing() {
         XCTAssertEqual(
             CreateReminderListSection.unlockMoreMessageKey,
-            "create.tasks.unlock-more.message"
+            "create.tasks.unlock-more.today.message"
         )
         XCTAssertEqual(CreateReminderLimitCalloutLayout.spacingFromTasks, 24)
         XCTAssertEqual(CreateReminderLimitCalloutLayout.contentSpacing, NomaSpacing.md)
@@ -204,8 +208,8 @@ final class NomaTests: XCTestCase {
 
     func testSectionHeaderTextFormattingUsesTitleCase() {
         XCTAssertEqual(
-            SectionHeaderTextFormatting.titleCased("tasks in this group"),
-            "Tasks In This Group"
+            SectionHeaderTextFormatting.titleCased("tasks for today"),
+            "Tasks For Today"
         )
     }
 
@@ -223,7 +227,7 @@ final class NomaTests: XCTestCase {
     }
 
     func testCreateReminderListSectionUsesLocalizedTaskHeaderForEnteredTasks() {
-        XCTAssertEqual(CreateReminderListSection.headerTitleKey, "create.tasks.section-header")
+        XCTAssertEqual(CreateReminderListSection.headerTitleKey, "create.tasks.today.section-header")
         XCTAssertFalse(CreateReminderListSection.showsHeader(reminderCount: 0))
         XCTAssertTrue(CreateReminderListSection.showsHeader(reminderCount: 1))
     }

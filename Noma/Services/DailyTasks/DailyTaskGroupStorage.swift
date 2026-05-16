@@ -1,0 +1,29 @@
+import Foundation
+
+struct DailyTaskGroupStorage {
+    nonisolated static let defaultStorageKey = "noma.daily-task-groups"
+
+    private let userDefaults: UserDefaults
+    private let storageKey: String
+
+    init(userDefaults: UserDefaults = .standard, storageKey: String = DailyTaskGroupStorage.defaultStorageKey) {
+        self.userDefaults = userDefaults
+        self.storageKey = storageKey
+    }
+
+    func loadGroups() -> [DailyTaskGroup] {
+        guard let data = userDefaults.data(forKey: storageKey),
+              let groups = try? JSONDecoder().decode([DailyTaskGroup].self, from: data) else {
+            return []
+        }
+
+        return groups
+            .filter { !$0.reminders.isEmpty }
+            .sorted { $0.date > $1.date }
+    }
+
+    func save(groups: [DailyTaskGroup]) {
+        guard let data = try? JSONEncoder().encode(groups) else { return }
+        userDefaults.set(data, forKey: storageKey)
+    }
+}

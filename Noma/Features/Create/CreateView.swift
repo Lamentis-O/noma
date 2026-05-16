@@ -7,6 +7,7 @@ enum CreateViewContentMode {
 }
 
 struct CreateView: View {
+    let dayID: String
     let collapsedEdgePadding = NomaSpacing.xxl
     let focusedEdgePadding = NomaSpacing.md
     let focusedKeyboardSpacing = NomaOffset.keyboardAccessoryOverlap
@@ -14,6 +15,7 @@ struct CreateView: View {
 
     @Environment(\.hapticFeedback) var hapticFeedback
     @Environment(SubscriptionTierManager.self) var subscriptionTier
+    @Environment(DailyTaskGroupStore.self) var dailyTaskGroups
     @State var message = ""
     @State var reminders: [CreateReminder] = []
     @State var isKeyboardPresented = false
@@ -21,6 +23,10 @@ struct CreateView: View {
     @State var isUnlockMoreSheetPresented = false
     @State var pendingScrollTargetID: String?
     @FocusState var isInputFocused: Bool
+
+    init(dayID: String = DailyTaskGroupStore.todayID()) {
+        self.dayID = dayID
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -46,6 +52,7 @@ struct CreateView: View {
             isKeyboardPresented = false
         }
         .task {
+            reminders = dailyTaskGroups.reminders(forDayID: dayID)
             guard await Self.shouldApplyInitialFocus({
                 try await Task.sleep(nanoseconds: initialFocusDelay)
             }) else { return }

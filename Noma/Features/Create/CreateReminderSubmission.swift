@@ -1,6 +1,6 @@
 import Foundation
 
-struct CreateReminder: Equatable, Identifiable {
+struct CreateReminder: Codable, Equatable, Identifiable {
     let id: UUID
     let text: String
     let isCompleted: Bool

@@ -1,6 +1,15 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    " " : {
+
+    },
+    " %lld " : {
+
+    },
+    "%lld" : {
+
+    },
     "auth.apple.button.title" : {
       "comment" : "Primary Apple SSO authentication button title.",
       "localizations" : {
@@ -155,56 +164,56 @@
         }
       }
     },
-    "create.tasks.empty.subtitle" : {
+    "create.tasks.empty.today.subtitle" : {
       "comment" : "Subtitle for the empty task list hint in the create task view.",
       "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gruppiere eine oder mehrere Aufgaben. Füge sie optional einem Projekt hinzu, um sie besser zu organisieren."
+            "value" : "Plane eine oder mehrere Aufgaben für heute. Füge sie optional einem Projekt hinzu, um sie besser zu organisieren."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Group one or more tasks together. Optionally add them to a project for better organization."
+            "value" : "Plan one or more tasks for today. Optionally add them to a project for better organization."
           }
         }
       }
     },
-    "create.tasks.empty.title" : {
+    "create.tasks.empty.today.title" : {
       "comment" : "Title for the empty task list hint in the create task view.",
       "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aufgaben zu dieser Gruppe hinzufügen"
+            "value" : "Aufgaben für heute hinzufügen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add tasks to this group"
+            "value" : "Add tasks for today"
           }
         }
       }
     },
-    "create.tasks.section-header" : {
+    "create.tasks.today.section-header" : {
       "comment" : "Section header shown above reminders entered in the create task view.",
       "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aufgaben in dieser Gruppe"
+            "value" : "Aufgaben für heute"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tasks in this group"
+            "value" : "Tasks for today"
           }
         }
       }
@@ -227,56 +236,20 @@
         }
       }
     },
-    "create.tasks.unlock-more.message" : {
+    "create.tasks.unlock-more.today.message" : {
       "comment" : "Informational text shown above the unlock button when the free task limit for a group is reached.",
       "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Im Free-Tier kannst du bis zu 5 Aufgaben pro Gruppe erstellen. Mit Pro kannst du unbegrenzt viele Aufgaben hinzufügen."
+            "value" : "Im Free-Tier kannst du bis zu 5 Aufgaben für heute erstellen. Mit Pro kannst du unbegrenzt viele Aufgaben hinzufügen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Free tier lets you create up to 5 tasks per group. With Pro, you can add unlimited tasks."
-          }
-        }
-      }
-    },
-    "create.unlock-more.close.accessibility-label" : {
-      "comment" : "Accessibility label for closing the unlock more sheet.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noma Pro schließen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close Noma Pro"
-          }
-        }
-      }
-    },
-    "create.unlock-more.sheet.title" : {
-      "comment" : "Title shown in the unlock more information sheet.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noma Pro"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noma Pro"
+            "value" : "The Free tier lets you create up to 5 tasks for today. With Pro, you can add unlimited tasks."
           }
         }
       }
@@ -298,6 +271,62 @@
         }
       }
     },
+    "create.unlock-more.close.accessibility-label" : {
+      "comment" : "Accessibility label for closing the unlock more sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noma Pro schließen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Noma Pro"
+          }
+        }
+      }
+    },
+    "create.unlock-more.sheet.title" : {
+      "comment" : "Title shown in the unlock more information sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noma Pro"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noma Pro"
+          }
+        }
+      }
+    },
+    "home.daily-groups.progress.done" : {"comment":"Completion status suffix shown below a daily group on the Home screen.","extractionState":"stale","localizations":{"de":{"stringUnit":{"state":"translated","value":"erledigt"}},"en":{"stringUnit":{"state":"translated","value":"done"}}}},
+    "home.daily-groups.progress.of" : {"comment":"Completion status connector shown below a daily group on the Home screen.","extractionState":"stale","localizations":{"de":{"stringUnit":{"state":"translated","value":"von"}},"en":{"stringUnit":{"state":"translated","value":"of"}}}},
+    "home.daily-groups.section-header" : {
+      "comment" : "Section header above locally saved daily task groups on the Home screen.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tagesgruppen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily Groups"
+          }
+        }
+      }
+    },
+    "home.daily-groups.task-count.plural" : {"comment":"Plural task count unit shown below a daily group on the Home screen.","extractionState":"stale","localizations":{"de":{"stringUnit":{"state":"translated","value":"Aufgaben"}},"en":{"stringUnit":{"state":"translated","value":"tasks"}}}},
+    "home.daily-groups.task-count.singular" : {"comment":"Singular task count unit shown below a daily group on the Home screen.","extractionState":"stale","localizations":{"de":{"stringUnit":{"state":"translated","value":"Aufgabe"}},"en":{"stringUnit":{"state":"translated","value":"task"}}}},
     "Noma" : {
 
     },

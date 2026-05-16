@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum CreateReminderListSection {
-    static let headerTitleKey = "create.tasks.section-header", unlockMoreTitleKey = "create.tasks.unlock-more", unlockMoreMessageKey = "create.tasks.unlock-more.message"
+    static let headerTitleKey = "create.tasks.today.section-header", unlockMoreTitleKey = "create.tasks.unlock-more", unlockMoreMessageKey = "create.tasks.unlock-more.today.message"
 
     static func showsHeader(reminderCount: Int) -> Bool { reminderCount > 0 }
     static func showsEmptyState(reminderCount: Int) -> Bool { reminderCount == 0 }
@@ -64,7 +64,7 @@ struct CreateTaskEmptyState {
     let cta: HintCTA?
     let mirrorsImageForRightToLeftLayoutDirection: Bool
 
-    static let placeholder = CreateTaskEmptyState(systemImage: nil, titleKey: "create.tasks.empty.title", subtitleKey: "create.tasks.empty.subtitle", cta: nil, mirrorsImageForRightToLeftLayoutDirection: false)
+    static let placeholder = CreateTaskEmptyState(systemImage: nil, titleKey: "create.tasks.empty.today.title", subtitleKey: "create.tasks.empty.today.subtitle", cta: nil, mirrorsImageForRightToLeftLayoutDirection: false)
 }
 
 struct CreateTaskEmptyHint: View {
@@ -222,7 +222,7 @@ struct CreateReminderList: View {
                     .accessibilityHidden(true)
             }
         }
-        .padding(.horizontal, NomaSpacing.xxl)
+        .padding(.horizontal, NomaSpacing.xl)
         .padding(.top, NomaSpacing.xxl)
         .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .topLeading)
     }

@@ -39,7 +39,8 @@
           { "id": "color.text.primaryBackground", "swiftui": ".primaryBackground" },
           { "id": "color.background.primary", "swiftui": ".primaryBackground" },
           { "id": "color.control.active", "swiftui": ".controlActive" },
-          { "id": "color.control.error", "swiftui": ".controlError" }
+          { "id": "color.control.error", "swiftui": ".controlError" },
+          { "id": "color.control.success", "swiftui": ".controlSuccess" }
         ]
       },
       "components": [

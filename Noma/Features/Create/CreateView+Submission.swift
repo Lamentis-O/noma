@@ -21,6 +21,7 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             reminders.append(submission.reminder)
         }
+        saveCurrentReminders()
         pendingScrollTargetID = CreateReminderAutoScroll.targetAfterAppending(submission.reminder)
     }
 
@@ -55,6 +56,7 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             reminders[index] = updatedReminder
         }
+        saveCurrentReminders()
     }
 
     func deleteReminder(_ reminder: CreateReminder) {
@@ -63,6 +65,11 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             _ = reminders.remove(at: index)
         }
+        saveCurrentReminders()
+    }
+
+    func saveCurrentReminders() {
+        dailyTaskGroups.save(reminders: reminders, forDayID: dayID)
     }
 
     func playSwipeDeleteThresholdFeedback() {
@@ -134,7 +141,7 @@ extension CreateView {
             }
         } else {
             CreateTaskEmptyHint()
-                .padding(.horizontal, NomaSpacing.xxl)
+                .padding(.horizontal, NomaSpacing.xl)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
     }

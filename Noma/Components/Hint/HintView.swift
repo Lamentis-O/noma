@@ -6,6 +6,10 @@ struct HintCTA {
     let action: () -> Void
 }
 
+enum HintViewLayout {
+    static let horizontalPadding = NomaSpacing.xl
+}
+
 struct HintView: View {
     let systemImage: String?
     let title: LocalizedStringKey?
@@ -59,6 +63,7 @@ struct HintView: View {
                     .padding(.top, hasContentBeforeCTA ? NomaSpacing.xxl : 0)
             }
         }
+        .padding(.horizontal, HintViewLayout.horizontalPadding)
         .frame(maxWidth: .infinity)
     }
 

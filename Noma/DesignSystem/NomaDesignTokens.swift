@@ -61,4 +61,5 @@ extension ShapeStyle where Self == Color {
     static var primaryBackground: Color { Color(.systemBackground) }
     static var controlActive: Color { Color(.label) }
     static var controlError: Color { Color(.systemRed) }
+    static var controlSuccess: Color { Color(.systemGreen) }
 }

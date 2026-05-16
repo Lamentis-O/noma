@@ -11,12 +11,14 @@ import SwiftUI
 struct NomaApp: App {
     @State private var authState = AuthStateManager()
     @State private var subscriptionTier = SubscriptionTierManager()
+    @State private var dailyTaskGroups = DailyTaskGroupStore()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(authState)
                 .environment(subscriptionTier)
+                .environment(dailyTaskGroups)
         }
     }
 }
