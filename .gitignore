@@ -1,1 +1,30 @@
+# Dependencies
 node_modules/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Xcode / Swift local state
+DerivedData/
+.build/
+.swiftpm/
+xcuserdata/
+*.xcuserstate
+*.xcresult
+*.moved-aside
+
+# App build artifacts
+*.dSYM
+*.dSYM.zip
+*.ipa
+
+# Supabase local CLI state
+.supabase/
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+supabase/.env.*
+!supabase/.env.example
