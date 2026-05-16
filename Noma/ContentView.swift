@@ -17,7 +17,12 @@ struct ContentView: View {
     @Previewable @State var authState = AuthStateManager(
         authClient: UnconfiguredAuthClient(error: SupabaseConfigurationError.missingPublishableKey)
     )
+    @Previewable @State var subscriptionState = SubscriptionStateManager(
+        entitlementClient: StaticFreeEntitlementClient(),
+        storeKitClient: StoreKit2Client(productIDs: [])
+    )
 
     ContentView()
         .environment(authState)
+        .environment(subscriptionState)
 }

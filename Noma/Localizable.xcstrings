@@ -172,6 +172,74 @@
         }
       }
     },
+    "subscription.paywall.restore" : {
+      "comment" : "Button title for restoring App Store purchases.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Käufe wiederherstellen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore Purchases"
+          }
+        }
+      }
+    },
+    "subscription.paywall.subtitle" : {
+      "comment" : "Subtitle for the Pro subscription paywall.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte Noma Pro frei, sobald dein Abo bereit ist."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock Noma Pro once your subscription is ready."
+          }
+        }
+      }
+    },
+    "subscription.paywall.title" : {
+      "comment" : "Title for the Pro subscription paywall.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noma Pro"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noma Pro"
+          }
+        }
+      }
+    },
+    "subscription.paywall.unavailable" : {
+      "comment" : "Fallback text shown when no subscription product can be loaded.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abo momentan nicht verfügbar."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subscription currently unavailable."
+          }
+        }
+      }
+    },
     "Noma" : {
 
     },

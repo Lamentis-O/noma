@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AuthStateManager.self) private var authState
+    @Environment(SubscriptionStateManager.self) private var subscriptionState
 
     var body: some View {
         Group {
@@ -16,22 +17,23 @@ struct RootView: View {
                     authState.signInWithApple()
                 }
             case .signedIn:
-                HomeView()
+                SubscriptionGateView()
             }
         }
         .task {
             authState.start()
         }
+        .onChange(of: authState.phase) { _, phase in
+            guard phase != .signedIn else { return }
+            subscriptionState.reset()
+        }
     }
 
     private var loadingView: some View {
-        ZStack {
-            Color(.systemBackground)
-                .ignoresSafeArea()
-
-            ProgressView()
-                .tint(.primary)
-        }
+        ProgressView()
+            .tint(.primary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(.primaryBackground)
     }
 }
 
@@ -39,7 +41,12 @@ struct RootView: View {
     @Previewable @State var authState = AuthStateManager(
         authClient: UnconfiguredAuthClient(error: SupabaseConfigurationError.missingPublishableKey)
     )
+    @Previewable @State var subscriptionState = SubscriptionStateManager(
+        entitlementClient: StaticFreeEntitlementClient(),
+        storeKitClient: StoreKit2Client(productIDs: [])
+    )
 
     RootView()
         .environment(authState)
+        .environment(subscriptionState)
 }

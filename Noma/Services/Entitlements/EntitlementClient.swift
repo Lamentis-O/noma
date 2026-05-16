@@ -1,0 +1,118 @@
+import Foundation
+import Supabase
+
+@MainActor
+protocol EntitlementClient {
+    func currentEntitlement() async throws -> UserEntitlement
+    func refreshEntitlement() async throws -> UserEntitlement
+    func appAccountToken() async throws -> UUID
+}
+
+struct SupabaseEntitlementClient: EntitlementClient {
+    private let client: SupabaseClient
+
+    init(client: SupabaseClient) {
+        self.client = client
+    }
+
+    func currentEntitlement() async throws -> UserEntitlement {
+        try await loadEntitlement()
+    }
+
+    func refreshEntitlement() async throws -> UserEntitlement {
+        try await loadEntitlement()
+    }
+
+    func appAccountToken() async throws -> UUID {
+        try await loadRow().appAccountToken
+    }
+
+    private func loadEntitlement() async throws -> UserEntitlement {
+        try await loadRow().entitlement
+    }
+
+    private func loadRow() async throws -> EntitlementRow {
+        try await client
+            .from("user_entitlements")
+            .select()
+            .single()
+            .execute()
+            .value
+    }
+}
+
+struct StaticFreeEntitlementClient: EntitlementClient {
+    func currentEntitlement() async throws -> UserEntitlement {
+        .free
+    }
+
+    func refreshEntitlement() async throws -> UserEntitlement {
+        .free
+    }
+
+    func appAccountToken() async throws -> UUID {
+        UUID()
+    }
+}
+
+enum EntitlementClientProvider {
+    @MainActor
+    static func makeClient() -> any EntitlementClient {
+        do {
+            return SupabaseEntitlementClient(client: try SupabaseClientProvider.makeClient())
+        } catch {
+            return StaticFreeEntitlementClient()
+        }
+    }
+}
+
+private struct EntitlementRow: Decodable {
+    let tier: SubscriptionTier
+    let status: DatabaseEntitlementStatus
+    let productID: String?
+    let originalTransactionID: String?
+    let expiresAt: Date?
+    let appAccountToken: UUID
+
+    var entitlement: UserEntitlement {
+        UserEntitlement(
+            tier: tier,
+            status: status.appStatus,
+            productID: productID,
+            originalTransactionID: originalTransactionID,
+            expiresAt: expiresAt
+        )
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case tier
+        case status
+        case productID = "product_id"
+        case originalTransactionID = "original_transaction_id"
+        case expiresAt = "expires_at"
+        case appAccountToken = "app_account_token"
+    }
+}
+
+private enum DatabaseEntitlementStatus: String, Decodable {
+    case active
+    case gracePeriod = "grace_period"
+    case billingRetry = "billing_retry"
+    case expired
+    case revoked
+
+    var appStatus: EntitlementStatus {
+        switch self {
+        case .active:
+            .active
+        case .gracePeriod:
+            .gracePeriod
+        case .billingRetry:
+            .billingRetry
+        case .expired:
+            .expired
+        case .revoked:
+            .revoked
+        }
+    }
+}

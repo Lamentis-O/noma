@@ -73,6 +73,38 @@ final class NomaTests: XCTestCase {
         XCTAssertTrue(SignInWithAppleGlassButtonState(isLoading: true).preservesLabelLayout)
     }
 
+    func testFeatureAccessSeparatesFreeAndProEntitlements() {
+        XCTAssertTrue(FeatureAccessPolicy.canUse(.createTask, entitlement: .free))
+        XCTAssertFalse(FeatureAccessPolicy.canUse(.unlimitedTasks, entitlement: .free))
+        XCTAssertTrue(FeatureAccessPolicy.canUse(.unlimitedTasks, entitlement: .activePro))
+    }
+
+    @MainActor
+    func testSubscriptionStateLoadsFreeEntitlementFromBackend() async {
+        let subscriptionState = SubscriptionStateManager(
+            entitlementClient: StubEntitlementClient(entitlements: [.free]),
+            storeKitClient: StubStoreKitClient()
+        )
+
+        await subscriptionState.refreshEntitlement()
+
+        XCTAssertEqual(subscriptionState.phase, .free(.free))
+    }
+
+    @MainActor
+    func testSubscriptionPurchaseRefreshesEntitlementToPro() async {
+        let subscriptionState = SubscriptionStateManager(
+            entitlementClient: StubEntitlementClient(entitlements: [.free, .activePro]),
+            storeKitClient: StubStoreKitClient(products: [.monthlyPro])
+        )
+
+        await subscriptionState.refreshEntitlement()
+        await subscriptionState.purchase(.monthlyPro)
+
+        XCTAssertEqual(subscriptionState.phase, .pro(.activePro))
+        XCTAssertFalse(subscriptionState.isPurchasing)
+    }
+
     @MainActor
     func testSignInWithAppleAppliesReturnedSessionSnapshotImmediately() async {
         let authState = AuthStateManager(
@@ -179,6 +211,36 @@ private struct SignOutSucceedsAuthClient: AuthClient {
     }
 
     func signOut() async throws {}
+}
+
+private struct StubEntitlementClient: EntitlementClient {
+    var entitlements: [UserEntitlement]
+
+    func currentEntitlement() async throws -> UserEntitlement {
+        entitlements.first ?? .free
+    }
+
+    func refreshEntitlement() async throws -> UserEntitlement {
+        entitlements.dropFirst().first ?? entitlements.first ?? .free
+    }
+
+    func appAccountToken() async throws -> UUID {
+        UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    }
+}
+
+private struct StubStoreKitClient: StoreKitClient {
+    var products: [SubscriptionProduct] = []
+
+    func availableProducts() async throws -> [SubscriptionProduct] {
+        products
+    }
+
+    func purchase(_ product: SubscriptionProduct) async throws -> PurchaseOutcome {
+        .purchased(transactionID: "test-transaction")
+    }
+
+    func restorePurchases() async throws {}
 }
 
 private enum TestAuthError: LocalizedError {

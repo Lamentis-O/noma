@@ -10,11 +10,13 @@ import SwiftUI
 @main
 struct NomaApp: App {
     @State private var authState = AuthStateManager()
+    @State private var subscriptionState = SubscriptionStateManager()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(authState)
+                .environment(subscriptionState)
         }
     }
 }
