@@ -69,6 +69,15 @@ enum SubscriptionPhase: Equatable {
     case expired(UserEntitlement)
     case unavailable(String?)
 
+    var showsProEntryPoint: Bool {
+        switch self {
+        case .loading, .pro:
+            false
+        case .free, .expired, .unavailable:
+            true
+        }
+    }
+
     static func resolved(from entitlement: UserEntitlement) -> SubscriptionPhase {
         guard entitlement.tier == .pro else { return .free(entitlement) }
         return entitlement.unlocksPro ? .pro(entitlement) : .expired(entitlement)

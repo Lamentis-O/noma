@@ -79,6 +79,22 @@ final class NomaTests: XCTestCase {
         XCTAssertTrue(FeatureAccessPolicy.canUse(.unlimitedTasks, entitlement: .activePro))
     }
 
+    func testSubscriptionPhaseShowsProEntryPointOnlyForNonProUsers() {
+        let expiredPro = UserEntitlement(
+            tier: .pro,
+            status: .expired,
+            productID: SubscriptionProducts.monthlyProID,
+            originalTransactionID: "expired-original-transaction",
+            expiresAt: nil
+        )
+
+        XCTAssertFalse(SubscriptionPhase.loading.showsProEntryPoint)
+        XCTAssertTrue(SubscriptionPhase.free(.free).showsProEntryPoint)
+        XCTAssertFalse(SubscriptionPhase.pro(.activePro).showsProEntryPoint)
+        XCTAssertTrue(SubscriptionPhase.expired(expiredPro).showsProEntryPoint)
+        XCTAssertTrue(SubscriptionPhase.unavailable(nil).showsProEntryPoint)
+    }
+
     @MainActor
     func testSubscriptionStateLoadsFreeEntitlementFromBackend() async {
         let subscriptionState = SubscriptionStateManager(

@@ -6,7 +6,9 @@ private enum HomeRoute: Hashable {
 
 struct HomeView: View {
     @Environment(AuthStateManager.self) private var authState
+    @Environment(SubscriptionStateManager.self) private var subscriptionState
     @State private var path: [HomeRoute] = []
+    @State private var isShowingProSheet = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -27,8 +29,21 @@ struct HomeView: View {
                     }
                     .navigationTitle("Noma")
                     .toolbarTitleDisplayMode(.inlineLarge)
+                    .sheet(isPresented: $isShowingProSheet) {
+                        PaywallView()
+                            .presentationDetents([.large])
+                    }
                     .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
+                        ToolbarItemGroup(placement: .topBarTrailing) {
+                            if subscriptionState.phase.showsProEntryPoint {
+                                Button {
+                                    isShowingProSheet = true
+                                } label: {
+                                    Image(systemName: "crown")
+                                }
+                                .accessibilityLabel(Text("subscription.pro.toolbar.accessibility-label"))
+                            }
+
                             Menu {
                                 Button(role: .destructive) {
                                     authState.signOut()

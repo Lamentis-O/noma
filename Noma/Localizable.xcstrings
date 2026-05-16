@@ -240,6 +240,23 @@
         }
       }
     },
+    "subscription.pro.toolbar.accessibility-label" : {
+      "comment" : "Accessibility label for the Home toolbar button that opens the Pro subscription screen.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noma Pro abonnieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subscribe to Noma Pro"
+          }
+        }
+      }
+    },
     "Noma" : {
 
     },
