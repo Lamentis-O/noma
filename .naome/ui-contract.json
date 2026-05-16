@@ -10,6 +10,7 @@
       "fileGlobs": ["Noma/**/*.swift"],
       "tokens": {
         "textStyles": [
+          { "id": "typography.title", "swiftui": ".title" },
           { "id": "typography.title3", "swiftui": ".title3" },
           { "id": "typography.headline", "swiftui": ".headline" },
           { "id": "typography.subheadline", "swiftui": ".subheadline" },
@@ -20,6 +21,7 @@
           { "id": "spacing.sm", "value": 8, "swiftui": "NomaSpacing.sm" },
           { "id": "spacing.md", "value": 12, "swiftui": "NomaSpacing.md" },
           { "id": "spacing.lg", "value": 16, "swiftui": "NomaSpacing.lg" },
+          { "id": "spacing.authButtonVertical", "value": 12, "swiftui": "NomaSpacing.authButtonVertical" },
           { "id": "spacing.buttonHorizontal", "value": 24, "swiftui": "NomaSpacing.buttonHorizontal" },
           { "id": "spacing.xl", "value": 32, "swiftui": "NomaSpacing.xl" },
           { "id": "spacing.keyboardAccessoryOverlap", "value": -20, "swiftui": "NomaSpacing.keyboardAccessoryOverlap" },
@@ -50,6 +52,13 @@
           "name": "PrimaryGlassButton",
           "swiftuiType": "PrimaryGlassButton",
           "adHocPatterns": [".buttonStyle(.glassProminent)"],
+          "severity": "warning"
+        },
+        {
+          "id": "component.sign-in-with-apple-glass-button",
+          "name": "SignInWithAppleGlassButton",
+          "swiftuiType": "SignInWithAppleGlassButton",
+          "adHocPatterns": ["Image(systemName: \"apple.logo\")"],
           "severity": "warning"
         },
         {

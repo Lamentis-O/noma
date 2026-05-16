@@ -13,6 +13,8 @@ Status: Partial
 ## Known Boundaries
 
 - Keep application source in `Noma/`.
+- Keep authentication shell UI and state in `Noma/Features/Auth/`.
+- Keep Apple/Supabase integration adapters in `Noma/Services/`.
 - Keep unit tests in `NomaTests/` and UI tests in `NomaUITests/`.
 - Keep Xcode project configuration in `Noma.xcodeproj/`.
 - Keep NAOME harness state in `.naome/` and NAOME docs in `docs/naome/`.
@@ -27,8 +29,21 @@ Status: Partial
 
 ## Dependency Rules
 
-- App source currently depends on SwiftUI only.
+- App source depends on SwiftUI and AuthenticationServices for native Apple SSO.
+- Supabase client access is centralized behind `SupabaseClientProvider`; iOS
+  code must use publishable client keys only and must not include service-role
+  or secret keys.
 - `@lamentis/naome` is repository tooling, not app runtime code.
+
+## Auth Shell
+
+- The app starts through `RootView`, which routes `loading`, `signedOut`, and
+  `signedIn` states.
+- `AuthStateManager` owns initial session loading, auth state observation, and
+  Apple sign-in actions.
+- The first subscription gate should sit after authentication and before
+  premium app content. No profile table, subscription schema, or entitlement
+  logic belongs to the initial auth shell.
 
 ## Generated Or External Code
 
@@ -42,6 +57,9 @@ Status: Partial
 
 - `Noma/NomaApp.swift`
 - `Noma/ContentView.swift`
+- `Noma/Features/Auth/AuthStateManager.swift`
+- `Noma/Features/Auth/RootView.swift`
+- `Noma/Services/Supabase/SupabaseClientProvider.swift`
 - `Noma/Assets.xcassets/Contents.json`
 - `NomaTests/NomaTests.swift`
 - `NomaUITests/NomaUITests.swift`

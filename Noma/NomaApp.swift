@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct NomaApp: App {
+    @State private var authState = AuthStateManager()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(authState)
         }
     }
 }
