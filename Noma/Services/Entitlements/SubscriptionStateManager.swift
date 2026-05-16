@@ -56,7 +56,7 @@ final class SubscriptionStateManager {
             let entitlement = try await entitlementClient.refreshEntitlement()
             phase = SubscriptionPhase.resolved(from: entitlement)
         } catch {
-            phase = .unavailable(error.localizedDescription)
+            phase = .free(.free)
             errorMessage = error.localizedDescription
         }
     }

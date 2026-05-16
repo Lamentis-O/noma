@@ -33,6 +33,7 @@ create table public.subscription_events (
 alter table public.user_entitlements enable row level security;
 alter table public.subscription_events enable row level security;
 
+revoke all on table public.user_entitlements from anon, authenticated;
 grant select on table public.user_entitlements to authenticated;
 revoke all on table public.subscription_events from anon, authenticated;
 
@@ -57,3 +58,29 @@ create trigger set_user_entitlements_updated_at
 before update on public.user_entitlements
 for each row
 execute function public.set_updated_at();
+
+create schema if not exists app_private;
+
+create function app_private.create_default_entitlement()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.user_entitlements (user_id)
+  values (new.id)
+  on conflict (user_id) do nothing;
+
+  return new;
+end;
+$$;
+
+create trigger create_user_entitlement
+after insert on auth.users
+for each row
+execute function app_private.create_default_entitlement();
+
+insert into public.user_entitlements (user_id)
+select id from auth.users
+on conflict (user_id) do nothing;

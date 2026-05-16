@@ -92,6 +92,18 @@ final class NomaTests: XCTestCase {
     }
 
     @MainActor
+    func testSubscriptionStateDefaultsToFreeWhenEntitlementIsMissing() async {
+        let subscriptionState = SubscriptionStateManager(
+            entitlementClient: FailingEntitlementClient(),
+            storeKitClient: StubStoreKitClient()
+        )
+
+        await subscriptionState.refreshEntitlement()
+
+        XCTAssertEqual(subscriptionState.phase, .free(.free))
+    }
+
+    @MainActor
     func testSubscriptionPurchaseRefreshesEntitlementToPro() async {
         let subscriptionState = SubscriptionStateManager(
             entitlementClient: StubEntitlementClient(entitlements: [.free, .activePro]),
@@ -229,6 +241,20 @@ private struct StubEntitlementClient: EntitlementClient {
     }
 }
 
+private struct FailingEntitlementClient: EntitlementClient {
+    func currentEntitlement() async throws -> UserEntitlement {
+        throw TestAuthError.entitlementMissing
+    }
+
+    func refreshEntitlement() async throws -> UserEntitlement {
+        throw TestAuthError.entitlementMissing
+    }
+
+    func appAccountToken() async throws -> UUID {
+        throw TestAuthError.entitlementMissing
+    }
+}
+
 private struct StubStoreKitClient: StoreKitClient {
     var products: [SubscriptionProduct] = []
 
@@ -244,9 +270,15 @@ private struct StubStoreKitClient: StoreKitClient {
 }
 
 private enum TestAuthError: LocalizedError {
+    case entitlementMissing
     case signInRejected
 
     var errorDescription: String? {
-        "Sign in rejected"
+        switch self {
+        case .entitlementMissing:
+            "Entitlement missing"
+        case .signInRejected:
+            "Sign in rejected"
+        }
     }
 }
