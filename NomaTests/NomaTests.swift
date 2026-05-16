@@ -157,6 +157,17 @@ final class NomaTests: XCTestCase {
         XCTAssertEqual(state.sendButtonTone, .error)
     }
 
+    @MainActor
+    func testReminderInputStateCountsNormalizedTextForLimit() {
+        let validTextWithExtraWhitespace = "\n  \(String(repeating: "a", count: CreateReminderSubmission.characterLimit))  \n"
+        let state = ReminderInputState(text: validTextWithExtraWhitespace)
+
+        XCTAssertEqual(state.normalizedText.count, CreateReminderSubmission.characterLimit)
+        XCTAssertTrue(state.canSubmit)
+        XCTAssertFalse(state.isOverLimit)
+        XCTAssertEqual(state.sendButtonTone, .active)
+    }
+
     func testCreateReminderSubmissionRejectsEmptyText() {
         XCTAssertNil(CreateReminderSubmission.reminder(from: "   \n  "))
     }
@@ -224,6 +235,9 @@ final class NomaTests: XCTestCase {
 
     func testReminderSwipeOnlyTracksLeftDragAndDeletesAfterThreshold() {
         XCTAssertEqual(CreateReminderSwipeAction.minimumDistance, 0)
+        XCTAssertTrue(CreateReminderSwipeAction.shouldTrackSwipe(translation: CGSize(width: -24, height: 4)))
+        XCTAssertFalse(CreateReminderSwipeAction.shouldTrackSwipe(translation: CGSize(width: -4, height: 24)))
+        XCTAssertFalse(CreateReminderSwipeAction.shouldTrackSwipe(translation: CGSize(width: 24, height: 4)))
         XCTAssertEqual(CreateReminderSwipeAction.offset(for: 24), 0)
         XCTAssertEqual(CreateReminderSwipeAction.offset(for: -24), -24 * NomaScale.taskDeleteSwipeDamping)
         XCTAssertFalse(CreateReminderSwipeAction.shouldDelete(offset: -24))

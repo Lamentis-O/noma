@@ -34,6 +34,10 @@ enum CreateReminderAutoScroll {
 enum CreateReminderSwipeAction {
     static let deleteThreshold = NomaSize.taskDeleteSwipeThreshold, minimumDistance: CGFloat = 0
 
+    static func shouldTrackSwipe(translation: CGSize) -> Bool {
+        translation.width < 0 && abs(translation.width) >= abs(translation.height)
+    }
+
     static func offset(for translation: CGFloat) -> CGFloat {
         max(-deleteThreshold, min(0, translation * NomaScale.taskDeleteSwipeDamping))
     }
@@ -98,6 +102,7 @@ struct CreateReminderRow: View {
     let onToggle: () -> Void, onDelete: () -> Void, onSwipeDeleteThreshold: () -> Void
 
     @State private var swipeOffset: CGFloat = 0
+    @State private var isSwipeActive = false
 
     var body: some View {
         HStack(alignment: .top, spacing: NomaSpacing.md) {
@@ -111,11 +116,16 @@ struct CreateReminderRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture(perform: onToggle)
-        .gesture(DragGesture(minimumDistance: CreateReminderSwipeAction.minimumDistance).onChanged(updateSwipeOffset).onEnded(finishSwipe))
+        .simultaneousGesture(swipeGesture)
     }
 
     private var swipeProgress: CGFloat { CreateReminderSwipeAction.progress(for: swipeOffset) }
     private var remainingSwipeProgress: CGFloat { CreateReminderSwipeAction.remainingProgress(for: swipeOffset) }
+    private var swipeGesture: some Gesture {
+        DragGesture(minimumDistance: CreateReminderSwipeAction.minimumDistance)
+            .onChanged(updateSwipeOffset)
+            .onEnded(finishSwipe)
+    }
 
     private var swipeActionControl: some View {
         ZStack {
@@ -149,6 +159,9 @@ struct CreateReminderRow: View {
     }
 
     private func updateSwipeOffset(with value: DragGesture.Value) {
+        guard isSwipeActive || CreateReminderSwipeAction.shouldTrackSwipe(translation: value.translation) else { return }
+        isSwipeActive = true
+
         let nextOffset = CreateReminderSwipeAction.offset(for: value.translation.width)
         if CreateReminderSwipeAction.feedback(previousOffset: swipeOffset, currentOffset: nextOffset) != nil {
             onSwipeDeleteThreshold()
@@ -157,6 +170,12 @@ struct CreateReminderRow: View {
     }
 
     private func finishSwipe(with _: DragGesture.Value) {
+        guard isSwipeActive else {
+            swipeOffset = 0
+            return
+        }
+
+        isSwipeActive = false
         guard CreateReminderSwipeAction.shouldDelete(offset: swipeOffset) else {
             withAnimation(.smooth(duration: NomaTiming.taskSwipeRelease)) { swipeOffset = 0 }
             return

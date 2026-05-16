@@ -245,6 +245,42 @@
         }
       }
     },
+    "create.unlock-more.close.accessibility-label" : {
+      "comment" : "Accessibility label for closing the unlock more sheet.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noma Pro schließen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Noma Pro"
+          }
+        }
+      }
+    },
+    "create.unlock-more.sheet.title" : {
+      "comment" : "Title shown in the unlock more information sheet.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noma Pro"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noma Pro"
+          }
+        }
+      }
+    },
     "create.tray.accessibility-label" : {
       "comment" : "Accessibility label for opening the project picker sheet from the create view composer.",
       "localizations" : {

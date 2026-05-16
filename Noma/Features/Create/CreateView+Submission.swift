@@ -90,10 +90,25 @@ extension CreateView {
     }
 
     var unlockMoreSheet: some View {
-        Rectangle()
-            .fill(.primaryBackground)
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
+        NavigationStack {
+            Rectangle()
+                .fill(.primaryBackground)
+                .ignoresSafeArea(.container)
+                .navigationTitle(LocalizedStringKey("create.unlock-more.sheet.title"))
+                .toolbarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            isUnlockMoreSheetPresented = false
+                        } label: {
+                            Image(systemName: "xmark")
+                        }
+                        .accessibilityLabel(Text("create.unlock-more.close.accessibility-label"))
+                    }
+                }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 
     @ViewBuilder

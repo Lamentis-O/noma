@@ -14,12 +14,16 @@ struct ReminderInputState: Equatable {
     let text: String
     var isSubmissionAvailable = true
 
+    var normalizedText: String {
+        CreateReminderSubmission.normalizedText(from: text)
+    }
+
     var isOverLimit: Bool {
-        text.count > CreateReminderSubmission.characterLimit
+        normalizedText.count > CreateReminderSubmission.characterLimit
     }
 
     var hasSubmitText: Bool {
-        !CreateReminderSubmission.normalizedText(from: text).isEmpty
+        !normalizedText.isEmpty
     }
 
     var canSubmit: Bool {
