@@ -9,10 +9,15 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        HomeView()
+        RootView()
     }
 }
 
 #Preview {
+    @Previewable @State var authState = AuthStateManager(
+        authClient: UnconfiguredAuthClient(error: SupabaseConfigurationError.missingPublishableKey)
+    )
+
     ContentView()
+        .environment(authState)
 }

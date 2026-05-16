@@ -24,6 +24,9 @@ struct HomeView: View {
                             CreateView()
                         }
                     }
+                    .safeAreaBar(edge: .top) {
+                        HomeTopBar()
+                    }
             }
         }
     }

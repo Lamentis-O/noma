@@ -1,6 +1,40 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "auth.apple.button.title" : {
+      "comment" : "Primary Apple SSO authentication button title.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Apple anmelden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with Apple"
+          }
+        }
+      }
+    },
+    "auth.logout.title" : {
+      "comment" : "Menu item title for signing out of the app.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abmelden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logout"
+          }
+        }
+      }
+    },
     "create.button.title" : {
       "comment" : "Primary button title for opening the create flow from the Home screen.",
       "localizations" : {
@@ -54,6 +88,7 @@
     },
     "create.project.empty.add-button" : {
       "comment" : "Primary call-to-action title in the empty project sheet.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -137,6 +172,9 @@
         }
       }
     },
+    "Noma" : {
+
+    },
     "Project" : {
       "comment" : "Navigation title for the project picker sheet.",
       "localizations" : {
@@ -150,6 +188,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Project"
+          }
+        }
+      }
+    },
+    "signup.title" : {
+      "comment" : "Centered headline on the authentication signup screen.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plane Aufgaben,\nerreiche Ziele!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan tasks,\nreach goals!"
+          }
+        }
+      }
+    },
+    "subscription.debug.pro.title" : {
+      "comment" : "Debug-only menu toggle title for switching the local subscription tier to Pro.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro"
+          }
+        }
+      }
+    },
+    "subscription.tier.free.title" : {
+      "comment" : "Short label shown in the home top bar when the user is on the free tier.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free"
+          }
+        }
+      }
+    },
+    "subscription.tier.pro.title" : {
+      "comment" : "Short label shown in the home top bar when the user is on the pro tier.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro"
           }
         }
       }
