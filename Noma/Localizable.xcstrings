@@ -208,6 +208,59 @@
           }
         }
       }
+    },
+    "subscription.debug.pro.title" : {
+      "comment" : "Debug-only menu toggle title for switching the local subscription tier to Pro.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro"
+          }
+        }
+      }
+    },
+    "subscription.tier.free.title" : {
+      "comment" : "Short label shown in the home top bar when the user is on the free tier.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free"
+          }
+        }
+      }
+    },
+    "subscription.tier.pro.title" : {
+      "comment" : "Short label shown in the home top bar when the user is on the pro tier.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

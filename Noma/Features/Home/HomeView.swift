@@ -5,7 +5,6 @@ private enum HomeRoute: Hashable {
 }
 
 struct HomeView: View {
-    @Environment(AuthStateManager.self) private var authState
     @State private var path: [HomeRoute] = []
 
     var body: some View {
@@ -25,23 +24,8 @@ struct HomeView: View {
                             CreateView()
                         }
                     }
-                    .navigationTitle("Noma")
-                    .toolbarTitleDisplayMode(.inlineLarge)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Menu {
-                                Button(role: .destructive) {
-                                    authState.signOut()
-                                } label: {
-                                    Label(
-                                        "auth.logout.title",
-                                        systemImage: "rectangle.portrait.and.arrow.right"
-                                    )
-                                }
-                            } label: {
-                                Image(systemName: "gearshape")
-                            }
-                        }
+                    .safeAreaBar(edge: .top) {
+                        HomeTopBar()
                     }
             }
         }

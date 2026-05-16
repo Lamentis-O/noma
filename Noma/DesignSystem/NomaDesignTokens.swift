@@ -38,6 +38,14 @@ enum NomaScale {
     static let hintIcon: CGFloat = 1.5
 }
 
+enum NomaGradient {
+    static let proTierText = LinearGradient(
+        colors: [Color.orange, Color.pink],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+}
+
 extension ShapeStyle where Self == Color {
     static var primaryBackground: Color { Color(.systemBackground) }
 }

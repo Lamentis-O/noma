@@ -60,6 +60,37 @@ final class NomaTests: XCTestCase {
         XCTAssertEqual(AuthSessionSnapshot(isSignedIn: true).rootPhase, .signedIn)
     }
 
+    @MainActor
+    func testSubscriptionTierManagerStartsInFreeTier() {
+        let subscriptionTier = SubscriptionTierManager()
+
+        XCTAssertEqual(subscriptionTier.tier, .free)
+        XCTAssertFalse(subscriptionTier.isPro)
+    }
+
+    @MainActor
+    func testSubscriptionTierManagerCanSwitchBetweenFreeAndPro() {
+        let subscriptionTier = SubscriptionTierManager()
+
+        subscriptionTier.updateTier(.pro)
+
+        XCTAssertEqual(subscriptionTier.tier, .pro)
+        XCTAssertTrue(subscriptionTier.isPro)
+
+        subscriptionTier.updateTier(.free)
+
+        XCTAssertEqual(subscriptionTier.tier, .free)
+        XCTAssertFalse(subscriptionTier.isPro)
+    }
+
+    func testSubscriptionTierDisplayConfigurationMatchesTier() {
+        XCTAssertEqual(SubscriptionTier.free.titleKey, "subscription.tier.free.title")
+        XCTAssertFalse(SubscriptionTier.free.usesProminentTextGradient)
+
+        XCTAssertEqual(SubscriptionTier.pro.titleKey, "subscription.tier.pro.title")
+        XCTAssertTrue(SubscriptionTier.pro.usesProminentTextGradient)
+    }
+
     func testSignupLayoutUsesRequestedSpacing() {
         XCTAssertEqual(SignInWithAppleGlassButtonLayout.verticalPadding, 12)
         XCTAssertEqual(SignupViewLayout.edgePadding, 32)
