@@ -68,6 +68,7 @@ struct CreateSheet: View {
     let onUnlockMore: () -> Void
     @State var projectEditorPresentation: CreateProjectEditorPresentation?
     @State var pendingDeleteProjectID: TaskProject.ID?
+    @State var isUnlockMoreSheetPresented = false
 
     var body: some View {
         NavigationStack {
@@ -93,6 +94,13 @@ struct CreateSheet: View {
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
             .presentationContentInteraction(.scrolls)
+        }
+        .sheet(isPresented: $isUnlockMoreSheetPresented) {
+            UnlockMoreSheet {
+                isUnlockMoreSheetPresented = false
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
         }
         .confirmationDialog(
             LocalizedStringKey(CreateProjectListSection.deleteProjectTitleKey),

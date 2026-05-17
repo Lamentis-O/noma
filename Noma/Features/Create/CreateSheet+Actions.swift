@@ -24,7 +24,7 @@ extension CreateSheet {
                 onSelectProject: selectProject,
                 onEditProject: editProject,
                 onDeleteProject: deleteProject,
-                onUnlockMore: onUnlockMore
+                onUnlockMore: unlockMoreProjects
             )
         }
     }
@@ -64,6 +64,14 @@ extension CreateSheet {
         projectEditorPresentation = .add
     }
 
+    func unlockMoreProjects() {
+        #if DEBUG
+        onUnlockMore()
+        #else
+        isUnlockMoreSheetPresented = true
+        #endif
+    }
+
     func saveProject(_ project: TaskProject) {
         if case .edit = projectEditorPresentation {
             onUpdateProject(project)
@@ -76,7 +84,7 @@ extension CreateSheet {
     var emptyState: CreateProjectEmptyState {
         CreateProjectEmptyState {
             guard tier.canAddProject(toProjectCount: projects.count) else {
-                onUnlockMore()
+                unlockMoreProjects()
                 return
             }
             openAddProjectSheet()

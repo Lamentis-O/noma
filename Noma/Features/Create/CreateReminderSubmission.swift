@@ -19,6 +19,21 @@ struct CreateReminder: Codable, Equatable, Identifiable {
         self.projectID = projectID
     }
 
+    enum CodingKeys: String, CodingKey {
+        case id
+        case text
+        case isCompleted
+        case projectID
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        text = try container.decode(String.self, forKey: .text)
+        isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
+        projectID = try container.decodeIfPresent(TaskProject.ID.self, forKey: .projectID)
+    }
+
     func togglingCompletion() -> CreateReminder {
         CreateReminder(id: id, text: text, isCompleted: !isCompleted, projectID: projectID)
     }

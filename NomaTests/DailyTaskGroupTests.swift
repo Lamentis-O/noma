@@ -9,6 +9,24 @@
 import XCTest
 
 final class DailyTaskGroupTests: XCTestCase {
+    func testCreateReminderDecodesLegacyPayloadWithoutProjectID() throws {
+        let legacyJSON = """
+        {
+          "id": "00000000-0000-0000-0000-000000000031",
+          "text": "Legacy reminder",
+          "isCompleted": false
+        }
+        """
+        let data = try XCTUnwrap(legacyJSON.data(using: .utf8))
+
+        let reminder = try JSONDecoder().decode(CreateReminder.self, from: data)
+
+        XCTAssertEqual(reminder.id, UUID(uuidString: "00000000-0000-0000-0000-000000000031"))
+        XCTAssertEqual(reminder.text, "Legacy reminder")
+        XCTAssertFalse(reminder.isCompleted)
+        XCTAssertNil(reminder.projectID)
+    }
+
     func testProjectsAreStoredGloballyAcrossDailyGroups() async throws {
         let fixture = DailyTaskGroupTestFixture()
         defer { fixture.cleanUp() }
