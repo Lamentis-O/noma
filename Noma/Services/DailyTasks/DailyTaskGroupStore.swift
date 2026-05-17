@@ -14,6 +14,9 @@ final class DailyTaskGroupStore {
     private let calendar: Calendar
 
     @ObservationIgnored
+    private let usesMockData: Bool
+
+    @ObservationIgnored
     private var userID: String?
     private(set) var groups: [DailyTaskGroup]
 
@@ -27,16 +30,18 @@ final class DailyTaskGroupStore {
         userDefaults: UserDefaults = .standard,
         calendar: Calendar = .current,
         userID: String? = nil,
-        storageKey: String? = nil
+        storageKey: String? = nil,
+        usesMockData: Bool = false
     ) {
         self.userDefaults = userDefaults
         self.calendar = calendar
+        self.usesMockData = usesMockData
         self.userID = userID
         self.storage = DailyTaskGroupStorage(
             userDefaults: userDefaults,
             storageKey: storageKey ?? DailyTaskGroupStorage.storageKey(forUserID: userID)
         )
-        let state = storage.loadState()
+        let state = storage.loadState(usesMockData: usesMockData, calendar: calendar)
         self.groups = state.groups
         self.storedProjects = state.projects
         self.storedSelectedProjectID = state.selectedProjectID
@@ -70,8 +75,37 @@ final class DailyTaskGroupStore {
             .map(DailyTaskGroupSummary.init(group:))
     }
 
+    func commonProjectSummaries(limit: Int = 3) -> [CommonProjectSummary] {
+        storedProjects
+            .map { project in
+                let reminders = groups.flatMap(\.reminders).filter { $0.projectID == project.id }
+                return CommonProjectSummary(
+                    project: project,
+                    taskCount: reminders.count,
+                    unsolvedTaskCount: reminders.filter { !$0.isCompleted }.count
+                )
+            }
+            .filter { $0.taskCount > 0 }
+            .sorted {
+                if $0.taskCount == $1.taskCount {
+                    return $0.project.title.localizedStandardCompare($1.project.title) == .orderedAscending
+                }
+                return $0.taskCount > $1.taskCount
+            }
+            .prefix(limit)
+            .map { $0 }
+    }
+
     func reminders(forDayID dayID: String) -> [CreateReminder] {
         groups.first { $0.id == dayID }?.reminders ?? []
+    }
+
+    func openRemindersFromPreviousDay(beforeDayID dayID: String) -> [CreateReminder] {
+        guard let date = Self.date(forDayID: dayID, calendar: calendar),
+              let previousDate = calendar.date(byAdding: .day, value: -1, to: date)
+        else { return [] }
+        let previousDayID = Self.dayID(for: previousDate, calendar: calendar)
+        return reminders(forDayID: previousDayID).filter { !$0.isCompleted }
     }
 
     func projects(forDayID _: String) -> [TaskProject] {
@@ -90,7 +124,7 @@ final class DailyTaskGroupStore {
             userDefaults: userDefaults,
             storageKey: DailyTaskGroupStorage.storageKey(forUserID: userID)
         )
-        let state = storage.loadState()
+        let state = storage.loadState(usesMockData: usesMockData, calendar: calendar)
         groups = state.groups
         storedProjects = state.projects
         storedSelectedProjectID = state.selectedProjectID

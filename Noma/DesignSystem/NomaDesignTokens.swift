@@ -40,7 +40,6 @@ enum NomaRadius {
 }
 
 enum NomaTiming {
-    static let initialFocusDelay: UInt64 = 20_000_000
     static let controlFeedback = 0.2
     static let taskSwipeRelease = 0.26
 }

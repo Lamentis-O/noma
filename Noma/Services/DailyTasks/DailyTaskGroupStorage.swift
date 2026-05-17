@@ -17,8 +17,11 @@ struct DailyTaskGroupStorage {
         self.storageKey = storageKey
     }
 
-    func loadState() -> DailyTaskGroupState {
+    func loadState(usesMockData: Bool = false, calendar: Calendar = .current) -> DailyTaskGroupState {
         guard let data = userDefaults.data(forKey: storageKey) else {
+            if usesMockData {
+                return DailyTaskGroupFixtures.state(calendar: calendar)
+            }
             return DailyTaskGroupState(groups: [], projects: [], selectedProjectID: nil)
         }
 

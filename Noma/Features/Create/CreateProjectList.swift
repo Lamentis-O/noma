@@ -89,6 +89,7 @@ struct CreateProjectSelectionRow<Icon: View>: View {
                 VStack(alignment: .leading, spacing: NomaSpacing.none) {
                     Text(title)
                         .font(.headline)
+                        .fontWeight(.medium)
                         .foregroundStyle(.textPrimary)
 
                     CreateProjectStatsText(summary: summary)
@@ -126,6 +127,7 @@ struct CreateProjectStatsText: View {
             Text(LocalizedStringKey(TaskProjectStatsCopy.unsolvedKey))
         }
         .font(.headline)
+        .fontWeight(.medium)
         .foregroundStyle(.textSecondary)
     }
 }

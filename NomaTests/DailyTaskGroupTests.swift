@@ -86,6 +86,87 @@ final class DailyTaskGroupTests: XCTestCase {
         }
     }
 
+    func testOpenRemindersFromPreviousDayReturnsOnlyUncompletedPreviousDayTasks() async throws {
+        let fixture = DailyTaskGroupTestFixture()
+        defer { fixture.cleanUp() }
+
+        await MainActor.run {
+            let store = fixture.makeStore()
+
+            store.save(
+                reminders: [
+                    CreateReminder(text: "Carry forward"),
+                    CreateReminder(text: "Already done", isCompleted: true)
+                ],
+                forDayID: "2026-05-16"
+            )
+            store.save(
+                reminders: [CreateReminder(text: "Current day")],
+                forDayID: "2026-05-17"
+            )
+
+            XCTAssertEqual(
+                store.openRemindersFromPreviousDay(beforeDayID: "2026-05-17").map(\.text),
+                ["Carry forward"]
+            )
+        }
+    }
+
+    func testCommonProjectSummariesReturnTopThreeProjectsByTaskCount() async throws {
+        let fixture = DailyTaskGroupTestFixture()
+        defer { fixture.cleanUp() }
+        let work = taskProject(id: "00000000-0000-0000-0000-000000000041", title: "Work")
+        let home = taskProject(id: "00000000-0000-0000-0000-000000000042", title: "Home")
+        let personal = taskProject(id: "00000000-0000-0000-0000-000000000043", title: "Personal")
+        let travel = taskProject(id: "00000000-0000-0000-0000-000000000044", title: "Travel")
+        let projects = [work, home, personal, travel]
+
+        await MainActor.run {
+            let store = fixture.makeStore()
+
+            store.save(
+                reminders: [
+                    CreateReminder(text: "Work 1", projectID: work.id),
+                    CreateReminder(text: "Work 2", isCompleted: true, projectID: work.id),
+                    CreateReminder(text: "Home 1", projectID: home.id)
+                ],
+                projects: projects,
+                selectedProjectID: nil,
+                forDayID: "2026-05-16"
+            )
+            store.save(
+                reminders: [
+                    CreateReminder(text: "Personal 1", projectID: personal.id),
+                    CreateReminder(text: "Personal 2", projectID: personal.id),
+                    CreateReminder(text: "Personal 3", isCompleted: true, projectID: personal.id),
+                    CreateReminder(text: "Travel 1", projectID: travel.id)
+                ],
+                projects: projects,
+                selectedProjectID: nil,
+                forDayID: "2026-05-17"
+            )
+
+            let summaries = store.commonProjectSummaries()
+
+            XCTAssertEqual(summaries.map(\.project.id), [personal.id, work.id, home.id])
+            XCTAssertEqual(summaries.map(\.taskCount), [3, 2, 1])
+            XCTAssertEqual(summaries.map(\.unsolvedTaskCount), [2, 1, 1])
+        }
+    }
+
+    func testMockFixtureProvidesPreviousOpenTasksAndCommonProjects() async throws {
+        let fixture = DailyTaskGroupTestFixture()
+        defer { fixture.cleanUp() }
+
+        await MainActor.run {
+            let store = fixture.makeStore(usesMockData: true)
+            let todayID = DailyTaskGroupStore.todayID(calendar: fixture.calendar)
+
+            XCTAssertFalse(store.openRemindersFromPreviousDay(beforeDayID: todayID).isEmpty)
+            XCTAssertFalse(store.commonProjectSummaries().isEmpty)
+        }
+    }
+
     func testDailyTaskGroupStoragePersistsGlobalProjectsAndTaskGroups() throws {
         let storageKey = "NomaTests-\(UUID().uuidString)"
         let defaults = UserDefaults.standard
@@ -271,8 +352,13 @@ private struct DailyTaskGroupTestFixture {
     let calendar = Calendar(identifier: .gregorian)
 
     @MainActor
-    func makeStore() -> DailyTaskGroupStore {
-        DailyTaskGroupStore(userDefaults: defaults, calendar: calendar, storageKey: storageKey)
+    func makeStore(usesMockData: Bool = false) -> DailyTaskGroupStore {
+        DailyTaskGroupStore(
+            userDefaults: defaults,
+            calendar: calendar,
+            storageKey: storageKey,
+            usesMockData: usesMockData
+        )
     }
 
     func cleanUp() {

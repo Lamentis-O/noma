@@ -8,6 +8,28 @@ enum DailyTaskGroupRowLayout {
     static let completedIconAdditionalTrailingPadding = NomaSpacing.xs
 }
 
+struct DailyGroupsSectionView: View {
+    let summaries: [DailyTaskGroupSummary]
+    let onSelectGroup: (DailyTaskGroupSummary) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SectionHeader(DailyTaskGroupsSection.headerTitleKey)
+
+            VStack(alignment: .leading, spacing: NomaSpacing.xl) {
+                ForEach(summaries) { summary in
+                    Button {
+                        onSelectGroup(summary)
+                    } label: {
+                        DailyTaskGroupRow(summary: summary)
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                }
+            }
+        }
+    }
+}
+
 struct DailyTaskGroupRow: View {
     let summary: DailyTaskGroupSummary
 

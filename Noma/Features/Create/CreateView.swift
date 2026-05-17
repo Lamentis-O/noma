@@ -11,7 +11,6 @@ struct CreateView: View {
     let collapsedEdgePadding = NomaSpacing.xxl
     let focusedEdgePadding = NomaSpacing.md
     let focusedKeyboardSpacing = NomaOffset.keyboardAccessoryOverlap
-    let initialFocusDelay = NomaTiming.initialFocusDelay
 
     @Environment(\.hapticFeedback) var hapticFeedback
     @Environment(SubscriptionTierManager.self) var subscriptionTier
@@ -41,8 +40,16 @@ struct CreateView: View {
                 content(in: proxy)
             }
             .safeAreaBar(edge: .bottom, spacing: barSpacing) {
-                composerBar
-                    .frame(width: barWidth(in: proxy))
+                VStack(alignment: .leading, spacing: NomaSpacing.xl) {
+                    if showsCarryForwardButton {
+                        carryForwardButton
+                            .padding(.leading, NomaSpacing.xl)
+                    }
+
+                    composerBar
+                        .frame(width: barWidth(in: proxy))
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.bottom, barBottomPadding(in: proxy))
             }
         }
@@ -62,10 +69,6 @@ struct CreateView: View {
         }
         .task {
             loadDailyGroup()
-            guard await Self.shouldApplyInitialFocus({
-                try await Task.sleep(nanoseconds: initialFocusDelay)
-            }) else { return }
-            isInputFocused = true
         }
         .navigationTitle(createNavigationTitle)
         .navigationSubtitle(createNavigationSubtitle)

@@ -16,20 +16,6 @@ final class NomaTests: XCTestCase {
         XCTAssertEqual(NomaSpacing.xxl, 32)
     }
 
-    func testCreateViewDoesNotFocusInputWhenInitialDelayIsCancelled() async {
-        let shouldFocus = await CreateView.shouldApplyInitialFocus {
-            throw CancellationError()
-        }
-
-        XCTAssertFalse(shouldFocus)
-    }
-
-    func testCreateViewFocusesInputAfterInitialDelayCompletes() async {
-        let shouldFocus = await CreateView.shouldApplyInitialFocus {}
-
-        XCTAssertTrue(shouldFocus)
-    }
-
     func testProjectEmptyStateEnablesAddProjectCTA() {
         let emptyState = CreateProjectEmptyState.placeholder
 

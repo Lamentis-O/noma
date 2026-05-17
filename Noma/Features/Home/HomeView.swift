@@ -59,20 +59,16 @@ struct HomeView: View {
     }
 
     private var dailyGroupsList: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if !dailyGroupSummaries.isEmpty {
-                SectionHeader(DailyTaskGroupsSection.headerTitleKey)
+        VStack(alignment: .leading, spacing: NomaSpacing.xxl) {
+            if !commonProjectSummaries.isEmpty {
+                CommonProjectsSectionView(summaries: commonProjectSummaries)
+            }
 
-                VStack(alignment: .leading, spacing: NomaSpacing.xl) {
-                    ForEach(dailyGroupSummaries) { summary in
-                        Button {
-                            path.append(.create(dayID: summary.id))
-                        } label: {
-                            DailyTaskGroupRow(summary: summary)
-                        }
-                        .buttonStyle(ScaleButtonStyle())
-                    }
-                }
+            if !dailyGroupSummaries.isEmpty {
+                DailyGroupsSectionView(
+                    summaries: dailyGroupSummaries,
+                    onSelectGroup: { path.append(.create(dayID: $0.id)) }
+                )
             }
 
             Spacer(minLength: 0)
@@ -83,4 +79,5 @@ struct HomeView: View {
     }
 
     private var dailyGroupSummaries: [DailyTaskGroupSummary] { dailyTaskGroups.summaries() }
+    private var commonProjectSummaries: [CommonProjectSummary] { dailyTaskGroups.commonProjectSummaries() }
 }

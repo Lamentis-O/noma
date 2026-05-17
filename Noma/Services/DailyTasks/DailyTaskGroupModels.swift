@@ -65,6 +65,21 @@ struct DailyTaskGroupSummary: Equatable, Identifiable {
     }
 }
 
+struct CommonProjectSummary: Equatable, Identifiable {
+    let project: TaskProject
+    let taskCount: Int
+    let unsolvedTaskCount: Int
+
+    var id: TaskProject.ID { project.id }
+    var taskUnitKey: String {
+        taskCount == 1 ? "create.projects.stats.task.singular" : "create.projects.stats.task.plural"
+    }
+}
+
+enum CommonProjectsSection {
+    static let headerTitleKey = "home.common-projects.section-header"
+}
+
 enum DailyTaskGroupsSection {
     static let headerTitleKey = "home.daily-groups.section-header"
 }
