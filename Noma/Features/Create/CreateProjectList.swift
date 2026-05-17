@@ -1,5 +1,13 @@
 import SwiftUI
 
+private enum CreateProjectListLayout {
+    static var cardPadding: NomaMetric.Value { NomaSpacing.xs }
+    static var cardHorizontalPadding: NomaMetric.Value { NomaSpacing.xl - cardPadding }
+    static var contentHorizontalPadding: NomaMetric.Value { NomaSpacing.xl }
+    static var cardRadius: NomaMetric.Value { NomaRadius.composer }
+    static var radioTrailingPadding: NomaMetric.Value { NomaSpacing.sm }
+}
+
 struct CreateProjectRow: View {
     let project: TaskProject
     let summary: TaskProjectSummary
@@ -88,11 +96,22 @@ struct CreateProjectSelectionRow<Icon: View>: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 RadioCheckbox(isOn: isSelected)
-                    .padding(.trailing, NomaSpacing.xs)
+                    .padding(.trailing, CreateProjectListLayout.radioTrailingPadding)
+            }
+            .padding(CreateProjectListLayout.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                RoundedRectangle(cornerRadius: CreateProjectListLayout.cardRadius, style: .continuous)
+                    .fill(.primaryBackground)
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(ScaleButtonStyle())
+        .contentShape(
+            .contextMenuPreview,
+            RoundedRectangle(cornerRadius: CreateProjectListLayout.cardRadius, style: .continuous)
+        )
+        .padding(.horizontal, CreateProjectListLayout.cardHorizontalPadding)
     }
 }
 
@@ -113,6 +132,7 @@ struct CreateProjectStatsText: View {
 
 struct CreateProjectList: View {
     let projects: [TaskProject]
+    let projectCount: Int
     let selectedProjectID: TaskProject.ID?
     let reminders: [CreateReminder]
     let tier: SubscriptionTier
@@ -131,6 +151,7 @@ struct CreateProjectList: View {
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, CreateProjectListLayout.contentHorizontalPadding)
 
                 CreateProjectClearSelectionRow(
                     summary: TaskProjectSummary.withoutProject(reminders: reminders),
@@ -151,13 +172,14 @@ struct CreateProjectList: View {
                     }
                 }
 
-                if CreateProjectListSection.showsUnlockMoreButton(tier: tier, projectCount: projects.count) {
+                if CreateProjectListSection.showsUnlockMoreButton(tier: tier, projectCount: projectCount) {
                     UnlockMoreCallout(
                         messageKey: CreateProjectListSection.unlockMoreMessageKey,
                         buttonTitleKey: CreateProjectListSection.unlockMoreTitleKey,
                         action: onUnlockMore
                     )
                     .padding(.top, UnlockMoreCalloutLayout.topPadding(after: NomaSpacing.xl))
+                    .padding(.horizontal, CreateProjectListLayout.contentHorizontalPadding)
                 }
 
                 Spacer(minLength: 0)

@@ -17,6 +17,12 @@ final class DailyTaskGroupStore {
     private var userID: String?
     private(set) var groups: [DailyTaskGroup]
 
+    @ObservationIgnored
+    private(set) var storedProjects: [TaskProject]
+
+    @ObservationIgnored
+    private(set) var storedSelectedProjectID: TaskProject.ID?
+
     init(
         userDefaults: UserDefaults = .standard,
         calendar: Calendar = .current,
@@ -30,7 +36,10 @@ final class DailyTaskGroupStore {
             userDefaults: userDefaults,
             storageKey: storageKey ?? DailyTaskGroupStorage.storageKey(forUserID: userID)
         )
-        self.groups = storage.loadGroups()
+        let state = storage.loadState()
+        self.groups = state.groups
+        self.storedProjects = state.projects
+        self.storedSelectedProjectID = state.selectedProjectID
     }
 
     nonisolated static func todayID(calendar: Calendar = .current) -> String {
@@ -65,12 +74,12 @@ final class DailyTaskGroupStore {
         groups.first { $0.id == dayID }?.reminders ?? []
     }
 
-    func projects(forDayID dayID: String) -> [TaskProject] {
-        groups.first { $0.id == dayID }?.projects ?? []
+    func projects(forDayID _: String) -> [TaskProject] {
+        storedProjects
     }
 
-    func selectedProjectID(forDayID dayID: String) -> TaskProject.ID? {
-        groups.first { $0.id == dayID }?.selectedProjectID
+    func selectedProjectID(forDayID _: String) -> TaskProject.ID? {
+        storedSelectedProjectID
     }
 
     func switchUserID(_ userID: String?) {
@@ -81,7 +90,10 @@ final class DailyTaskGroupStore {
             userDefaults: userDefaults,
             storageKey: DailyTaskGroupStorage.storageKey(forUserID: userID)
         )
-        groups = storage.loadGroups()
+        let state = storage.loadState()
+        groups = state.groups
+        storedProjects = state.projects
+        storedSelectedProjectID = state.selectedProjectID
     }
 
     func save(reminders: [CreateReminder], for date: Date) {
@@ -95,12 +107,10 @@ final class DailyTaskGroupStore {
     }
 
     private func save(reminders: [CreateReminder], forDayID dayID: String, date: Date) {
-        let projects = projects(forDayID: dayID)
-        let selectedProjectID = selectedProjectID(forDayID: dayID)
         save(
             reminders: reminders,
-            projects: projects,
-            selectedProjectID: selectedProjectID,
+            projects: storedProjects,
+            selectedProjectID: storedSelectedProjectID,
             forDayID: dayID,
             date: date
         )
@@ -123,28 +133,29 @@ final class DailyTaskGroupStore {
     }
 
     func deleteProject(withID projectID: TaskProject.ID) {
+        storedProjects.removeAll { $0.id == projectID }
+
         groups = groups.compactMap { group in
             var updatedGroup = group
-            updatedGroup.projects.removeAll { $0.id == projectID }
             updatedGroup.reminders.removeAll { $0.projectID == projectID }
 
-            if updatedGroup.selectedProjectID == projectID {
-                updatedGroup.selectedProjectID = nil
-            }
+            return updatedGroup.reminders.isEmpty ? nil : DailyTaskGroup(
+                id: updatedGroup.id,
+                date: updatedGroup.date,
+                reminders: updatedGroup.reminders
+            )
+        }
 
-            return updatedGroup.reminders.isEmpty && updatedGroup.projects.isEmpty ? nil : updatedGroup
+        if storedSelectedProjectID == projectID {
+            storedSelectedProjectID = nil
         }
 
         persist()
     }
 
     func updateProject(_ project: TaskProject) {
-        groups = groups.map { group in
-            var updatedGroup = group
-            updatedGroup.projects = group.projects.map { storedProject in
-                storedProject.id == project.id ? project : storedProject
-            }
-            return updatedGroup
+        storedProjects = storedProjects.map { storedProject in
+            storedProject.id == project.id ? project : storedProject
         }
 
         persist()
@@ -157,25 +168,24 @@ final class DailyTaskGroupStore {
         forDayID dayID: String,
         date: Date
     ) {
-        let validSelectedProjectID = projects.contains { $0.id == selectedProjectID } ? selectedProjectID : nil
+        storedProjects = uniqueProjects(in: projects)
+        storedSelectedProjectID = selectedProjectID.flatMap { projectID in
+            storedProjects.contains { $0.id == projectID } ? projectID : nil
+        }
 
-        if reminders.isEmpty && projects.isEmpty {
+        if reminders.isEmpty {
             groups.removeAll { $0.id == dayID }
         } else if let index = groups.firstIndex(where: { $0.id == dayID }) {
             groups[index] = DailyTaskGroup(
                 id: dayID,
                 date: date,
-                reminders: reminders,
-                projects: projects,
-                selectedProjectID: validSelectedProjectID
+                reminders: reminders
             )
         } else {
             groups.append(DailyTaskGroup(
                 id: dayID,
                 date: date,
-                reminders: reminders,
-                projects: projects,
-                selectedProjectID: validSelectedProjectID
+                reminders: reminders
             ))
         }
 
@@ -184,6 +194,19 @@ final class DailyTaskGroupStore {
     }
 
     private func persist() {
-        storage.save(groups: groups)
+        storage.save(
+            state: DailyTaskGroupState(
+                groups: groups,
+                projects: storedProjects,
+                selectedProjectID: storedSelectedProjectID
+            )
+        )
+    }
+
+    private func uniqueProjects(in projects: [TaskProject]) -> [TaskProject] {
+        var seenIDs = Set<TaskProject.ID>()
+        return projects.filter { project in
+            seenIDs.insert(project.id).inserted
+        }
     }
 }

@@ -33,8 +33,17 @@ struct HomeView: View {
                         CreateView(dayID: dayID)
                     }
                 }
-                .safeAreaBar(edge: .top) {
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        HomeSettingsMenu()
+                    }
+                }
+            }
+            .overlay(alignment: .topLeading) {
+                if path.isEmpty {
                     HomeTopBar()
+                        .padding(.leading, NomaSpacing.xl)
+                        .allowsHitTesting(false)
                 }
             }
         }
@@ -73,7 +82,5 @@ struct HomeView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    private var dailyGroupSummaries: [DailyTaskGroupSummary] {
-        dailyTaskGroups.summaries()
-    }
+    private var dailyGroupSummaries: [DailyTaskGroupSummary] { dailyTaskGroups.summaries() }
 }

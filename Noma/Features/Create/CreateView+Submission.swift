@@ -18,6 +18,60 @@ extension CreateView {
         projects.first { $0.id == selectedProjectID }
     }
 
+    var currentDaySummary: DailyTaskGroupSummary {
+        DailyTaskGroupSummary(
+            group: DailyTaskGroup(
+                id: dayID,
+                date: currentDayDate,
+                reminders: reminders
+            )
+        )
+    }
+
+    var currentDayDate: Date {
+        DailyTaskGroupStore.date(forDayID: dayID) ?? Date()
+    }
+
+    var createNavigationTitle: String {
+        currentDaySummary.title
+    }
+
+    var createNavigationSubtitle: String {
+        DailyTaskGroupsProgressCopy.title(for: currentDaySummary)
+    }
+
+    var visibleReminders: [CreateReminder] {
+        CreateReminderListFilter.visibleReminders(
+            reminders,
+            showsOnlyUnsolved: showsOnlyUnsolvedTasks
+        )
+    }
+
+    @ToolbarContentBuilder
+    var createToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                completeAllRemindersForCurrentDay()
+            } label: {
+                Text("create.toolbar.done.title")
+            }
+            .disabled(!canCompleteAllReminders)
+        }
+
+        ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                toggleUnsolvedFilter()
+            } label: {
+                Image(systemName: CreateReminderFilterToolbarIcon.systemImage(isActive: showsOnlyUnsolvedTasks))
+            }
+            .foregroundStyle(CreateReminderFilterToolbarIcon.foregroundColor(isActive: showsOnlyUnsolvedTasks))
+            .accessibilityLabel(Text("create.toolbar.filter.unsolved.accessibility-label"))
+            .disabled(reminders.isEmpty)
+        }
+    }
+
     func submitReminder(_ submittedText: String) {
         guard canSubmitReminder else { return }
         guard let submission = CreateReminderSubmission.submit(
@@ -111,6 +165,27 @@ extension CreateView {
         saveCurrentDailyGroup()
     }
 
+    var canCompleteAllReminders: Bool {
+        reminders.contains { !$0.isCompleted }
+    }
+
+    func completeAllRemindersForCurrentDay() {
+        guard canCompleteAllReminders else { return }
+
+        hapticFeedback.play(.createTaskSubmit)
+        withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
+            reminders = CreateReminderBatchCompletion.completingAll(reminders)
+        }
+        saveCurrentDailyGroup()
+    }
+
+    func toggleUnsolvedFilter() {
+        hapticFeedback.play(.createTaskSubmit)
+        withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
+            showsOnlyUnsolvedTasks.toggle()
+        }
+    }
+
     func saveCurrentReminders() {
         saveCurrentDailyGroup()
     }
@@ -187,7 +262,8 @@ extension CreateView {
             ScrollViewReader { scrollProxy in
                 ScrollView {
                     CreateReminderList(
-                        reminders: reminders,
+                        reminders: visibleReminders,
+                        reminderCount: reminders.count,
                         projects: projects,
                         minimumHeight: CreateReminderListLayout.minimumHeight(for: proxy.size.height),
                         tier: subscriptionTier.tier,

@@ -17,19 +17,82 @@ struct DailyTaskGroupStorage {
         self.storageKey = storageKey
     }
 
-    func loadGroups() -> [DailyTaskGroup] {
-        guard let data = userDefaults.data(forKey: storageKey),
-              let groups = try? JSONDecoder().decode([DailyTaskGroup].self, from: data) else {
-            return []
+    func loadState() -> DailyTaskGroupState {
+        guard let data = userDefaults.data(forKey: storageKey) else {
+            return DailyTaskGroupState(groups: [], projects: [], selectedProjectID: nil)
         }
 
-        return groups
-            .filter { !$0.reminders.isEmpty || !$0.projects.isEmpty }
-            .sorted { $0.date > $1.date }
+        if let state = try? JSONDecoder().decode(DailyTaskGroupState.self, from: data) {
+            return sanitized(state: state)
+        }
+
+        guard let groups = try? JSONDecoder().decode([DailyTaskGroup].self, from: data) else {
+            return DailyTaskGroupState(groups: [], projects: [], selectedProjectID: nil)
+        }
+
+        return migratedState(from: groups)
+    }
+
+    func loadGroups() -> [DailyTaskGroup] {
+        loadState().groups
     }
 
     func save(groups: [DailyTaskGroup]) {
-        guard let data = try? JSONEncoder().encode(groups) else { return }
+        save(state: migratedState(from: groups))
+    }
+
+    func save(state: DailyTaskGroupState) {
+        guard let data = try? JSONEncoder().encode(sanitized(state: state)) else { return }
         userDefaults.set(data, forKey: storageKey)
+    }
+
+    private func migratedState(from groups: [DailyTaskGroup]) -> DailyTaskGroupState {
+        let projects = uniqueProjects(in: groups.flatMap(\.projects))
+        let selectedProjectID = groups.first { group in
+            projects.contains { $0.id == group.selectedProjectID }
+        }?.selectedProjectID
+
+        return sanitized(
+            state: DailyTaskGroupState(
+                groups: groups,
+                projects: projects,
+                selectedProjectID: selectedProjectID
+            )
+        )
+    }
+
+    private func sanitized(state: DailyTaskGroupState) -> DailyTaskGroupState {
+        let projects = uniqueProjects(in: state.projects)
+        let validProjectIDs = Set(projects.map(\.id))
+        let groups = state.groups
+            .compactMap { group -> DailyTaskGroup? in
+                let reminders = group.reminders.filter { reminder in
+                    guard let projectID = reminder.projectID else { return true }
+                    return validProjectIDs.contains(projectID)
+                }
+                guard !reminders.isEmpty else { return nil }
+                return DailyTaskGroup(
+                    id: group.id,
+                    date: group.date,
+                    reminders: reminders
+                )
+            }
+            .sorted { $0.date > $1.date }
+        let selectedProjectID = state.selectedProjectID.flatMap { projectID in
+            validProjectIDs.contains(projectID) ? projectID : nil
+        }
+
+        return DailyTaskGroupState(
+            groups: groups,
+            projects: projects,
+            selectedProjectID: selectedProjectID
+        )
+    }
+
+    private func uniqueProjects(in projects: [TaskProject]) -> [TaskProject] {
+        var seenIDs = Set<TaskProject.ID>()
+        return projects.filter { project in
+            seenIDs.insert(project.id).inserted
+        }
     }
 }

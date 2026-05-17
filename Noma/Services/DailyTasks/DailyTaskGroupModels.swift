@@ -4,6 +4,8 @@ struct DailyTaskGroup: Codable, Equatable, Identifiable {
     let id: String
     let date: Date
     var reminders: [CreateReminder]
+    // Kept for decoding legacy day-scoped project payloads. New writes keep
+    // projects in DailyTaskGroupState so projects remain available across days.
     var projects: [TaskProject]
     var selectedProjectID: TaskProject.ID?
 
@@ -41,6 +43,12 @@ struct DailyTaskGroup: Codable, Equatable, Identifiable {
     var taskCount: Int { reminders.count }
 }
 
+struct DailyTaskGroupState: Codable, Equatable {
+    var groups: [DailyTaskGroup]
+    var projects: [TaskProject]
+    var selectedProjectID: TaskProject.ID?
+}
+
 struct DailyTaskGroupSummary: Equatable, Identifiable {
     let group: DailyTaskGroup
 
@@ -64,4 +72,11 @@ enum DailyTaskGroupsSection {
 enum DailyTaskGroupsProgressCopy {
     static let ofKey = "home.daily-groups.progress.of"
     static let completedKey = "home.daily-groups.progress.completed"
+
+    static func title(for summary: DailyTaskGroupSummary) -> String {
+        let of = String(localized: String.LocalizationValue(ofKey))
+        let taskCountUnit = String(localized: String.LocalizationValue(summary.taskCountUnitKey))
+        let completed = String(localized: String.LocalizationValue(completedKey))
+        return "\(summary.completedTaskCount) \(of) \(summary.taskCount) \(taskCountUnit) \(completed)"
+    }
 }

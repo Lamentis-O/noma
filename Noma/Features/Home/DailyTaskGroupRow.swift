@@ -41,15 +41,7 @@ struct DailyTaskGroupProgressText: View {
     let summary: DailyTaskGroupSummary
 
     var body: some View {
-        HStack(spacing: 0) {
-            Text("\(summary.completedTaskCount)")
-            Text(" ")
-            Text(LocalizedStringKey(DailyTaskGroupsProgressCopy.ofKey))
-            Text(" \(summary.taskCount) ")
-            Text(LocalizedStringKey(summary.taskCountUnitKey))
-            Text(" ")
-            Text(LocalizedStringKey(DailyTaskGroupsProgressCopy.completedKey))
-        }
+        Text(DailyTaskGroupsProgressCopy.title(for: summary))
         .font(.headline)
         .fontWeight(.regular)
         .foregroundStyle(.textSecondary)

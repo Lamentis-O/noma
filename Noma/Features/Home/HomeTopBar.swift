@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct HomeTopBar: View {
-    @Environment(AuthStateManager.self) private var authState
     @Environment(SubscriptionTierManager.self) private var subscriptionTier
 
     var body: some View {
@@ -11,13 +10,7 @@ struct HomeTopBar: View {
                 .fontWeight(.medium)
 
             subscriptionTierText
-
-            Spacer(minLength: 0)
-
-            settingsMenu
         }
-        .padding(.horizontal, NomaSpacing.lg)
-        .padding(.leading, NomaSpacing.sm)
     }
 
     @ViewBuilder
@@ -32,8 +25,13 @@ struct HomeTopBar: View {
             text.foregroundStyle(.secondary)
         }
     }
+}
 
-    private var settingsMenu: some View {
+struct HomeSettingsMenu: View {
+    @Environment(AuthStateManager.self) private var authState
+    @Environment(SubscriptionTierManager.self) private var subscriptionTier
+
+    var body: some View {
         Menu {
             #if DEBUG
             Toggle(isOn: debugProBinding) {
@@ -54,11 +52,7 @@ struct HomeTopBar: View {
             }
         } label: {
             Image(systemName: "gearshape")
-                .font(.title2)
         }
-        .buttonStyle(.glass)
-        .buttonBorderShape(.circle)
-        .controlSize(.regular)
     }
 
     #if DEBUG

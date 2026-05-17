@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 struct CreateReminder: Codable, Equatable, Identifiable {
     let id: UUID
@@ -62,5 +63,37 @@ enum CreateReminderSubmission {
 enum CreateReminderCompletionFeedback {
     static func feedback(isCompleted: Bool) -> HapticFeedbackClass? {
         isCompleted ? .createTaskSubmit : nil
+    }
+}
+
+enum CreateReminderListFilter {
+    static func visibleReminders(
+        _ reminders: [CreateReminder],
+        showsOnlyUnsolved: Bool
+    ) -> [CreateReminder] {
+        guard showsOnlyUnsolved else { return reminders }
+        return reminders.filter { !$0.isCompleted }
+    }
+}
+
+enum CreateReminderBatchCompletion {
+    static func completingAll(_ reminders: [CreateReminder]) -> [CreateReminder] {
+        reminders.map { reminder in
+            reminder.isCompleted ? reminder : reminder.togglingCompletion()
+        }
+    }
+}
+
+enum CreateReminderFilterToolbarIcon {
+    static func systemImage(isActive _: Bool) -> String {
+        "line.3.horizontal.decrease"
+    }
+
+    static func usesActiveTint(isActive: Bool) -> Bool {
+        isActive
+    }
+
+    static func foregroundColor(isActive: Bool) -> Color {
+        usesActiveTint(isActive: isActive) ? .accentColor : .textPrimary
     }
 }

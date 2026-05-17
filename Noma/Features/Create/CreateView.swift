@@ -23,6 +23,7 @@ struct CreateView: View {
     @State var isKeyboardPresented = false
     @State var isProjectSheetPresented = false
     @State var isUnlockMoreSheetPresented = false
+    @State var showsOnlyUnsolvedTasks = false
     @State var pendingScrollTargetID: String?
     @FocusState var isInputFocused: Bool
 
@@ -66,6 +67,10 @@ struct CreateView: View {
             }) else { return }
             isInputFocused = true
         }
+        .navigationTitle(createNavigationTitle)
+        .navigationSubtitle(createNavigationSubtitle)
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar { createToolbar }
         .sheet(isPresented: $isProjectSheetPresented) { projectSheet }
         .sheet(isPresented: $isUnlockMoreSheetPresented) { unlockMoreSheet }
     }

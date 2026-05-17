@@ -318,6 +318,7 @@ struct CreateReminderRow: View {
 
 struct CreateReminderList: View {
     let reminders: [CreateReminder]
+    let reminderCount: Int
     let projects: [TaskProject]
     let minimumHeight: CGFloat
     let tier: SubscriptionTier
@@ -326,7 +327,7 @@ struct CreateReminderList: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if CreateReminderListSection.showsHeader(reminderCount: reminders.count) {
+            if CreateReminderListSection.showsHeader(reminderCount: reminderCount) {
                 CreateReminderSectionHeader(titleKey: CreateReminderListSection.headerTitleKey)
             }
 
@@ -339,10 +340,15 @@ struct CreateReminderList: View {
                         onDelete: { onDeleteReminder(reminder) },
                         onSwipeDeleteThreshold: onSwipeDeleteThreshold
                     )
-                    .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .bottom)), removal: .opacity.combined(with: .move(edge: .leading))))
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .top)),
+                            removal: .opacity.combined(with: .move(edge: .top))
+                        )
+                    )
                 }
 
-                if CreateReminderListSection.showsUnlockMoreButton(tier: tier, reminderCount: reminders.count) {
+                if CreateReminderListSection.showsUnlockMoreButton(tier: tier, reminderCount: reminderCount) {
                     UnlockMoreCallout(
                         messageKey: CreateReminderListSection.unlockMoreMessageKey,
                         buttonTitleKey: CreateReminderListSection.unlockMoreTitleKey,

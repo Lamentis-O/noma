@@ -23,6 +23,7 @@ enum CreateProjectListSection {
     static let noProjectSubtitleKey = "create.projects.no-project.subtitle"
     static let editProjectTitleKey = "create.projects.edit.title"
     static let deleteProjectTitleKey = "create.projects.delete.title"
+    static let deleteProjectMessageKey = "create.projects.delete.message"
     static let unlockMoreTitleKey = CreateReminderListSection.unlockMoreTitleKey
     static let unlockMoreMessageKey = "create.projects.unlock-more.message"
 
@@ -31,8 +32,31 @@ enum CreateProjectListSection {
     }
 }
 
+enum CreateProjectEditorPresentation: Identifiable {
+    case add
+    case edit(TaskProject)
+
+    var id: String {
+        switch self {
+        case .add:
+            "add"
+        case let .edit(project):
+            project.id.uuidString
+        }
+    }
+
+    var project: TaskProject? {
+        switch self {
+        case .add:
+            nil
+        case let .edit(project):
+            project
+        }
+    }
+}
+
 struct CreateSheet: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss) var dismiss
     @Binding var projects: [TaskProject]
     @Binding var selectedProjectID: TaskProject.ID?
     let reminders: [CreateReminder]
@@ -42,88 +66,44 @@ struct CreateSheet: View {
     let onUpdateProject: (TaskProject) -> Void
     let onDeleteProject: (TaskProject.ID) -> Void
     let onUnlockMore: () -> Void
-    @State private var isAddProjectSheetPresented = false
-    @State private var editingProject: TaskProject?
+    @State var projectEditorPresentation: CreateProjectEditorPresentation?
+    @State var pendingDeleteProjectID: TaskProject.ID?
 
     var body: some View {
         NavigationStack {
             content
-            .padding(.horizontal, NomaSpacing.xl)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle(LocalizedStringKey(CreateProjectListSection.titleKey))
-            .toolbarTitleDisplayMode(.inline)
-            .toolbar {
-                if !projects.isEmpty, tier.canAddProject(toProjectCount: projects.count) {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            editingProject = nil
-                            isAddProjectSheetPresented = true
-                        } label: { Image(systemName: "plus") }
-                        .accessibilityLabel(Text("create.project.empty.add-button"))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .navigationTitle(LocalizedStringKey(CreateProjectListSection.titleKey))
+                .toolbarTitleDisplayMode(.inline)
+                .toolbar {
+                    if !projects.isEmpty, tier.canAddProject(toProjectCount: projects.count) {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button(action: openAddProjectSheet) { Image(systemName: "plus") }
+                                .accessibilityLabel(Text("create.project.empty.add-button"))
+                        }
                     }
+
+                    CloseToolbarButton(accessibilityLabelKey: "create.project.close.accessibility-label", action: { dismiss() })
                 }
-
-                CloseToolbarButton(accessibilityLabelKey: "create.project.close.accessibility-label", action: { dismiss() })
-            }
         }
-        .sheet(isPresented: $isAddProjectSheetPresented) {
-            AddProjectSheet(project: editingProject) { project in
-                editingProject == nil ? onCreateProject(project) : onUpdateProject(project)
-                isAddProjectSheetPresented = false
-                editingProject = nil
+        .sheet(item: $projectEditorPresentation) { presentation in
+            AddProjectSheet(project: presentation.project) { project in
+                saveProject(project)
             }
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationContentInteraction(.scrolls)
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationContentInteraction(.scrolls)
         }
-    }
-}
-
-private extension CreateSheet {
-    @ViewBuilder
-    var content: some View {
-        if projects.isEmpty {
-            VStack {
-                Spacer(minLength: 0)
-                HintView(systemImage: emptyState.systemImage, title: emptyState.title, subtitle: emptyState.subtitle, cta: emptyState.cta)
-                Spacer(minLength: 0)
+        .confirmationDialog(
+            LocalizedStringKey(CreateProjectListSection.deleteProjectTitleKey),
+            isPresented: deleteConfirmationBinding,
+            titleVisibility: .visible
+        ) {
+            Button(LocalizedStringKey(CreateProjectListSection.deleteProjectTitleKey), role: .destructive) {
+                confirmProjectDeletion()
             }
-        } else {
-            CreateProjectList(
-                projects: projects,
-                selectedProjectID: selectedProjectID,
-                reminders: reminders,
-                tier: tier,
-                onSelectProject: selectProject,
-                onEditProject: editProject,
-                onDeleteProject: deleteProject,
-                onUnlockMore: onUnlockMore
-            )
-        }
-    }
-
-    func selectProject(_ projectID: TaskProject.ID?) {
-        onSelectProject(projectID)
-        dismiss()
-    }
-
-    func editProject(_ project: TaskProject) {
-        editingProject = project
-        isAddProjectSheetPresented = true
-    }
-
-    func deleteProject(_ projectID: TaskProject.ID) {
-        onDeleteProject(projectID)
-    }
-
-    var emptyState: CreateProjectEmptyState {
-        CreateProjectEmptyState {
-            guard tier.canAddProject(toProjectCount: projects.count) else {
-                onUnlockMore()
-                return
-            }
-            editingProject = nil
-            isAddProjectSheetPresented = true
+        } message: {
+            Text(LocalizedStringKey(CreateProjectListSection.deleteProjectMessageKey))
         }
     }
 }
