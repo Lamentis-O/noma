@@ -24,7 +24,7 @@ struct DailyTaskGroupStorage {
         }
 
         return groups
-            .filter { !$0.reminders.isEmpty }
+            .filter { !$0.reminders.isEmpty || !$0.projects.isEmpty }
             .sorted { $0.date > $1.date }
     }
 

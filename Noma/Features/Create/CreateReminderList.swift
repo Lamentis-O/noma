@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum CreateReminderListSection {
     static let headerTitleKey = "create.tasks.today.section-header", unlockMoreTitleKey = "create.tasks.unlock-more", unlockMoreMessageKey = "create.tasks.unlock-more.today.message"
@@ -12,14 +13,45 @@ enum CreateReminderListSection {
 }
 
 enum CreateReminderLimitCalloutLayout {
-    static let spacingFromTasks = NomaSpacing.xl, contentSpacing = NomaSpacing.md
-
-    static var topPadding: CGFloat { spacingFromTasks - NomaSpacing.md }
+    static var topPadding: CGFloat { UnlockMoreCalloutLayout.topPadding(after: NomaSpacing.md) }
 }
 
 enum CreateReminderListLayout {
     static let bottomScrollPadding = NomaSpacing.xl, bottomAnchorID = "create-reminder-list-bottom-anchor"
     static func minimumHeight(for viewportHeight: CGFloat) -> CGFloat { max(0, viewportHeight) + NomaSize.scrollDismissSentinel }
+}
+
+enum CreateReminderMetadataIconLayout {
+    static let columnWidth = NomaSize.taskMetadataIconColumn
+    static let spacingToText = NomaSpacing.md
+    static let firstLineCenterOffset = NomaSize.taskFirstLineIconOffset
+}
+
+struct CreateReminderSectionHeader: View {
+    let titleKey: String
+
+    var body: some View {
+        HStack(alignment: .center, spacing: CreateReminderMetadataIconLayout.spacingToText) {
+            Image(systemName: "checklist.unchecked")
+                .font(.headline)
+                .frame(
+                    width: CreateReminderMetadataIconLayout.columnWidth,
+                    height: NomaSize.radioCheckboxOuter,
+                    alignment: .center
+                )
+
+            Text(displayText)
+                .font(.headline)
+                .foregroundStyle(.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.bottom, SectionHeaderLayout.bottomPadding)
+    }
+
+    private var displayText: String {
+        let localizedText = String(localized: String.LocalizationValue(titleKey))
+        return SectionHeaderTextFormatting.titleCased(localizedText)
+    }
 }
 
 enum CreateReminderAutoScroll {
@@ -33,9 +65,18 @@ enum CreateReminderAutoScroll {
 
 enum CreateReminderSwipeAction {
     static let deleteThreshold = NomaSize.taskDeleteSwipeThreshold, minimumDistance: CGFloat = 0
+    static let horizontalActivationBias = NomaSpacing.xs
 
     static func shouldTrackSwipe(translation: CGSize) -> Bool {
-        translation.width < 0 && abs(translation.width) >= abs(translation.height)
+        translation.width < 0 && abs(translation.width) > abs(translation.height) + horizontalActivationBias
+    }
+
+    static func shouldBeginSwipe(translation: CGSize, velocity: CGSize) -> Bool {
+        let horizontalVelocity = abs(velocity.width)
+        let verticalVelocity = abs(velocity.height)
+
+        return translation.width < 0
+            && horizontalVelocity > verticalVelocity * NomaScale.taskSwipeHorizontalDominance
     }
 
     static func offset(for translation: CGFloat) -> CGFloat {
@@ -79,53 +120,142 @@ struct CreateTaskEmptyHint: View {
     }
 }
 
-struct CreateReminderLimitCallout: View {
-    let onUnlockMore: () -> Void
+struct CreateReminderProjectIcon: View {
+    let project: TaskProject?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: CreateReminderLimitCalloutLayout.contentSpacing) {
-            Text(LocalizedStringKey(CreateReminderListSection.unlockMoreMessageKey))
-                .font(.body)
-                .foregroundStyle(.textSecondary)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            PrimaryButton(LocalizedStringKey(CreateReminderListSection.unlockMoreTitleKey), action: onUnlockMore)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+        ZStack(alignment: .center) {
+            if let project {
+                Image(systemName: project.symbolName)
+                    .font(.headline)
+                    .foregroundStyle(project.color)
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(
+            width: CreateReminderMetadataIconLayout.columnWidth,
+            height: NomaSize.radioCheckboxOuter,
+            alignment: .center
+        )
+        .padding(.top, CreateReminderMetadataIconLayout.firstLineCenterOffset)
+    }
+}
+
+struct CreateReminderRowGestureOverlay: UIViewRepresentable {
+    var onTap: () -> Void
+    var onSwipeChanged: (CGSize) -> Void
+    var onSwipeEnded: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onTap: onTap, onSwipeChanged: onSwipeChanged, onSwipeEnded: onSwipeEnded)
+    }
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.isUserInteractionEnabled = true
+
+        let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+
+        let panGesture = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handlePan(_:)))
+        panGesture.cancelsTouchesInView = false
+        panGesture.delegate = context.coordinator
+        view.addGestureRecognizer(panGesture)
+
+        return view
+    }
+
+    func updateUIView(_: UIView, context: Context) {
+        context.coordinator.onTap = onTap
+        context.coordinator.onSwipeChanged = onSwipeChanged
+        context.coordinator.onSwipeEnded = onSwipeEnded
+    }
+
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        var onTap: () -> Void
+        var onSwipeChanged: (CGSize) -> Void
+        var onSwipeEnded: () -> Void
+
+        init(
+            onTap: @escaping () -> Void,
+            onSwipeChanged: @escaping (CGSize) -> Void,
+            onSwipeEnded: @escaping () -> Void
+        ) {
+            self.onTap = onTap
+            self.onSwipeChanged = onSwipeChanged
+            self.onSwipeEnded = onSwipeEnded
+        }
+
+        @objc func handleTap() {
+            onTap()
+        }
+
+        @objc func handlePan(_ gesture: UIPanGestureRecognizer) {
+            switch gesture.state {
+            case .began, .changed:
+                let translation = gesture.translation(in: gesture.view)
+                onSwipeChanged(CGSize(width: translation.x, height: translation.y))
+            case .ended, .cancelled, .failed:
+                onSwipeEnded()
+            default:
+                break
+            }
+        }
+
+        func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+            guard let panGesture = gestureRecognizer as? UIPanGestureRecognizer else { return true }
+            let translation = panGesture.translation(in: panGesture.view)
+            let velocity = panGesture.velocity(in: panGesture.view)
+            return CreateReminderSwipeAction.shouldBeginSwipe(
+                translation: CGSize(width: translation.x, height: translation.y),
+                velocity: CGSize(width: velocity.x, height: velocity.y)
+            )
+        }
+
+        func gestureRecognizer(
+            _: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer
+        ) -> Bool {
+            true
+        }
     }
 }
 
 struct CreateReminderRow: View {
     let reminder: CreateReminder
+    let project: TaskProject?
     let onToggle: () -> Void, onDelete: () -> Void, onSwipeDeleteThreshold: () -> Void
 
     @State private var swipeOffset: CGFloat = 0
     @State private var isSwipeActive = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: NomaSpacing.md) {
+        HStack(alignment: .top, spacing: 0) {
+            CreateReminderProjectIcon(project: project)
+                .padding(.trailing, CreateReminderMetadataIconLayout.spacingToText)
+
             ZStack(alignment: .leading) {
                 reminderText(.textPrimary).opacity(remainingSwipeProgress)
                 reminderText(.textSecondary).opacity(swipeProgress)
             }
 
             swipeActionControl
+                .padding(.leading, NomaSpacing.md)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
-        .onTapGesture(perform: onToggle)
-        .simultaneousGesture(swipeGesture)
+        .overlay {
+            CreateReminderRowGestureOverlay(
+                onTap: onToggle,
+                onSwipeChanged: updateSwipeOffset,
+                onSwipeEnded: finishSwipe
+            )
+        }
     }
 
     private var swipeProgress: CGFloat { CreateReminderSwipeAction.progress(for: swipeOffset) }
     private var remainingSwipeProgress: CGFloat { CreateReminderSwipeAction.remainingProgress(for: swipeOffset) }
-    private var swipeGesture: some Gesture {
-        DragGesture(minimumDistance: CreateReminderSwipeAction.minimumDistance)
-            .onChanged(updateSwipeOffset)
-            .onEnded(finishSwipe)
-    }
 
     private var swipeActionControl: some View {
         ZStack {
@@ -134,7 +264,7 @@ struct CreateReminderRow: View {
                 .opacity(remainingSwipeProgress).scaleEffect(remainingSwipeProgress, anchor: .center)
         }
         .frame(width: NomaSize.radioCheckboxOuter, height: NomaSize.radioCheckboxOuter, alignment: .center)
-        .padding(.top, RadioCheckboxLayout.firstLineCenterOffset)
+        .padding(.top, CreateReminderMetadataIconLayout.firstLineCenterOffset)
     }
 
     private var deleteIcon: some View {
@@ -148,7 +278,7 @@ struct CreateReminderRow: View {
 
     private func reminderText(_ color: Color) -> some View {
         Text(reminder.text)
-            .font(.body)
+            .font(.headline.weight(.regular))
             .foregroundStyle(color)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -158,18 +288,18 @@ struct CreateReminderRow: View {
         NomaScale.pressedControl + ((CreateReminderSwipeAction.progress(for: -CreateReminderSwipeAction.deleteThreshold) - NomaScale.pressedControl) * swipeProgress)
     }
 
-    private func updateSwipeOffset(with value: DragGesture.Value) {
-        guard isSwipeActive || CreateReminderSwipeAction.shouldTrackSwipe(translation: value.translation) else { return }
+    private func updateSwipeOffset(with translation: CGSize) {
+        guard isSwipeActive || CreateReminderSwipeAction.shouldTrackSwipe(translation: translation) else { return }
         isSwipeActive = true
 
-        let nextOffset = CreateReminderSwipeAction.offset(for: value.translation.width)
+        let nextOffset = CreateReminderSwipeAction.offset(for: translation.width)
         if CreateReminderSwipeAction.feedback(previousOffset: swipeOffset, currentOffset: nextOffset) != nil {
             onSwipeDeleteThreshold()
         }
         swipeOffset = nextOffset
     }
 
-    private func finishSwipe(with _: DragGesture.Value) {
+    private func finishSwipe() {
         guard isSwipeActive else {
             swipeOffset = 0
             return
@@ -188,6 +318,7 @@ struct CreateReminderRow: View {
 
 struct CreateReminderList: View {
     let reminders: [CreateReminder]
+    let projects: [TaskProject]
     let minimumHeight: CGFloat
     let tier: SubscriptionTier
     let onUnlockMore: () -> Void, onSwipeDeleteThreshold: () -> Void
@@ -196,13 +327,14 @@ struct CreateReminderList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if CreateReminderListSection.showsHeader(reminderCount: reminders.count) {
-                SectionHeader(CreateReminderListSection.headerTitleKey)
+                CreateReminderSectionHeader(titleKey: CreateReminderListSection.headerTitleKey)
             }
 
             VStack(alignment: .leading, spacing: NomaSpacing.md) {
                 ForEach(reminders) { reminder in
                     CreateReminderRow(
                         reminder: reminder,
+                        project: project(for: reminder),
                         onToggle: { onToggleReminder(reminder) },
                         onDelete: { onDeleteReminder(reminder) },
                         onSwipeDeleteThreshold: onSwipeDeleteThreshold
@@ -211,7 +343,11 @@ struct CreateReminderList: View {
                 }
 
                 if CreateReminderListSection.showsUnlockMoreButton(tier: tier, reminderCount: reminders.count) {
-                    CreateReminderLimitCallout(onUnlockMore: onUnlockMore)
+                    UnlockMoreCallout(
+                        messageKey: CreateReminderListSection.unlockMoreMessageKey,
+                        buttonTitleKey: CreateReminderListSection.unlockMoreTitleKey,
+                        action: onUnlockMore
+                    )
                         .padding(.top, CreateReminderLimitCalloutLayout.topPadding)
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
@@ -225,5 +361,10 @@ struct CreateReminderList: View {
         .padding(.horizontal, NomaSpacing.xl)
         .padding(.top, NomaSpacing.xxl)
         .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .topLeading)
+    }
+
+    private func project(for reminder: CreateReminder) -> TaskProject? {
+        guard let projectID = reminder.projectID else { return nil }
+        return projects.first { $0.id == projectID }
     }
 }

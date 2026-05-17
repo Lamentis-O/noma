@@ -18,6 +18,8 @@ struct CreateView: View {
     @Environment(DailyTaskGroupStore.self) var dailyTaskGroups
     @State var message = ""
     @State var reminders: [CreateReminder] = []
+    @State var projects: [TaskProject] = []
+    @State var selectedProjectID: TaskProject.ID?
     @State var isKeyboardPresented = false
     @State var isProjectSheetPresented = false
     @State var isUnlockMoreSheetPresented = false
@@ -44,15 +46,21 @@ struct CreateView: View {
             }
         }
         .background { NavigationKeyboardDismissObserver(isInputFocused: $isInputFocused) }
+        .ignoresSafeArea(
+            .keyboard,
+            edges: isProjectSheetPresented || isUnlockMoreSheetPresented ? .bottom : []
+        )
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            guard !isProjectSheetPresented, !isUnlockMoreSheetPresented else { return }
             isKeyboardPresented = true
             scrollToReminderListBottomAfterKeyboardFocus()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            guard !isProjectSheetPresented, !isUnlockMoreSheetPresented else { return }
             isKeyboardPresented = false
         }
         .task {
-            reminders = dailyTaskGroups.reminders(forDayID: dayID)
+            loadDailyGroup()
             guard await Self.shouldApplyInitialFocus({
                 try await Task.sleep(nanoseconds: initialFocusDelay)
             }) else { return }
@@ -60,5 +68,13 @@ struct CreateView: View {
         }
         .sheet(isPresented: $isProjectSheetPresented) { projectSheet }
         .sheet(isPresented: $isUnlockMoreSheetPresented) { unlockMoreSheet }
+    }
+
+    func loadDailyGroup() {
+        reminders = dailyTaskGroups.reminders(forDayID: dayID)
+        projects = dailyTaskGroups.projects(forDayID: dayID)
+
+        let storedSelectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: dayID)
+        selectedProjectID = projects.contains { $0.id == storedSelectedProjectID } ? storedSelectedProjectID : nil
     }
 }

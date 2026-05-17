@@ -1,5 +1,13 @@
 import SwiftUI
 
+enum DailyTaskGroupRowInteraction {
+    static let usesScaleButtonStyle = true
+}
+
+enum DailyTaskGroupRowLayout {
+    static let completedIconAdditionalTrailingPadding = NomaSpacing.xs
+}
+
 struct DailyTaskGroupRow: View {
     let summary: DailyTaskGroupSummary
 
@@ -11,7 +19,7 @@ struct DailyTaskGroupRow: View {
                     .fontWeight(.regular)
                     .foregroundStyle(.textPrimary)
 
-                progressText
+                DailyTaskGroupProgressText(summary: summary)
             }
 
             Spacer(minLength: 0)
@@ -20,20 +28,27 @@ struct DailyTaskGroupRow: View {
                 Image(systemName: systemImage)
                     .font(.title3.weight(.bold))
                     .foregroundStyle(.controlSuccess)
+                    .padding(.trailing, DailyTaskGroupRowLayout.completedIconAdditionalTrailingPadding)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
     }
 
-    private var progressText: some View {
+}
+
+struct DailyTaskGroupProgressText: View {
+    let summary: DailyTaskGroupSummary
+
+    var body: some View {
         HStack(spacing: 0) {
-            Text("\(summary.completedTaskCount) ")
+            Text("\(summary.completedTaskCount)")
+            Text(" ")
             Text(LocalizedStringKey(DailyTaskGroupsProgressCopy.ofKey))
             Text(" \(summary.taskCount) ")
             Text(LocalizedStringKey(summary.taskCountUnitKey))
             Text(" ")
-            Text(LocalizedStringKey(DailyTaskGroupsProgressCopy.doneKey))
+            Text(LocalizedStringKey(DailyTaskGroupsProgressCopy.completedKey))
         }
         .font(.headline)
         .fontWeight(.regular)

@@ -6,47 +6,124 @@ struct CreateProjectEmptyState {
     let subtitle: LocalizedStringKey
     let cta: HintCTA?
 
-    static let placeholder = CreateProjectEmptyState(
-        systemImage: "tray.full",
-        title: "create.project.empty.title",
-        subtitle: "create.project.empty.subtitle",
-        cta: nil
-    )
+    static let placeholder = CreateProjectEmptyState(action: {})
+
+    init(action: @escaping () -> Void) {
+        self.systemImage = "tray.full"
+        self.title = "create.project.empty.title"
+        self.subtitle = "create.project.empty.subtitle"
+        self.cta = HintCTA(titleKey: "create.project.empty.add-button", color: .controlActive, action: action)
+    }
+}
+
+enum CreateProjectListSection {
+    static let titleKey = "create.projects.sheet.title"
+    static let selectionInfoKey = "create.projects.selection.info"
+    static let noProjectTitleKey = "create.projects.no-project.title"
+    static let noProjectSubtitleKey = "create.projects.no-project.subtitle"
+    static let editProjectTitleKey = "create.projects.edit.title"
+    static let deleteProjectTitleKey = "create.projects.delete.title"
+    static let unlockMoreTitleKey = CreateReminderListSection.unlockMoreTitleKey
+    static let unlockMoreMessageKey = "create.projects.unlock-more.message"
+
+    static func showsUnlockMoreButton(tier: SubscriptionTier, projectCount: Int) -> Bool {
+        !tier.canAddProject(toProjectCount: projectCount)
+    }
 }
 
 struct CreateSheet: View {
     @Environment(\.dismiss) private var dismiss
-
-    private let emptyState = CreateProjectEmptyState.placeholder
+    @Binding var projects: [TaskProject]
+    @Binding var selectedProjectID: TaskProject.ID?
+    let reminders: [CreateReminder]
+    let tier: SubscriptionTier
+    let onCreateProject: (TaskProject) -> Void
+    let onSelectProject: (TaskProject.ID?) -> Void
+    let onUpdateProject: (TaskProject) -> Void
+    let onDeleteProject: (TaskProject.ID) -> Void
+    let onUnlockMore: () -> Void
+    @State private var isAddProjectSheetPresented = false
+    @State private var editingProject: TaskProject?
 
     var body: some View {
         NavigationStack {
-            VStack {
-                Spacer(minLength: 0)
-
-                HintView(
-                    systemImage: emptyState.systemImage,
-                    title: emptyState.title,
-                    subtitle: emptyState.subtitle,
-                    cta: emptyState.cta
-                )
-
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, NomaSpacing.xxl)
+            content
+            .padding(.horizontal, NomaSpacing.xl)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("Project")
+            .navigationTitle(LocalizedStringKey(CreateProjectListSection.titleKey))
             .toolbarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
+                if !projects.isEmpty, tier.canAddProject(toProjectCount: projects.count) {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            editingProject = nil
+                            isAddProjectSheetPresented = true
+                        } label: { Image(systemName: "plus") }
+                        .accessibilityLabel(Text("create.project.empty.add-button"))
                     }
-                    .accessibilityLabel(Text("create.project.close.accessibility-label"))
                 }
+
+                CloseToolbarButton(accessibilityLabelKey: "create.project.close.accessibility-label", action: { dismiss() })
             }
+        }
+        .sheet(isPresented: $isAddProjectSheetPresented) {
+            AddProjectSheet(project: editingProject) { project in
+                editingProject == nil ? onCreateProject(project) : onUpdateProject(project)
+                isAddProjectSheetPresented = false
+                editingProject = nil
+            }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationContentInteraction(.scrolls)
+        }
+    }
+}
+
+private extension CreateSheet {
+    @ViewBuilder
+    var content: some View {
+        if projects.isEmpty {
+            VStack {
+                Spacer(minLength: 0)
+                HintView(systemImage: emptyState.systemImage, title: emptyState.title, subtitle: emptyState.subtitle, cta: emptyState.cta)
+                Spacer(minLength: 0)
+            }
+        } else {
+            CreateProjectList(
+                projects: projects,
+                selectedProjectID: selectedProjectID,
+                reminders: reminders,
+                tier: tier,
+                onSelectProject: selectProject,
+                onEditProject: editProject,
+                onDeleteProject: deleteProject,
+                onUnlockMore: onUnlockMore
+            )
+        }
+    }
+
+    func selectProject(_ projectID: TaskProject.ID?) {
+        onSelectProject(projectID)
+        dismiss()
+    }
+
+    func editProject(_ project: TaskProject) {
+        editingProject = project
+        isAddProjectSheetPresented = true
+    }
+
+    func deleteProject(_ projectID: TaskProject.ID) {
+        onDeleteProject(projectID)
+    }
+
+    var emptyState: CreateProjectEmptyState {
+        CreateProjectEmptyState {
+            guard tier.canAddProject(toProjectCount: projects.count) else {
+                onUnlockMore()
+                return
+            }
+            editingProject = nil
+            isAddProjectSheetPresented = true
         }
     }
 }

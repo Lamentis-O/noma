@@ -10,6 +10,7 @@ import XCTest
 
 final class NomaTests: XCTestCase {
     func testSpacingContractExposesXsToken() {
+        XCTAssertEqual(NomaSpacing.none, 0)
         XCTAssertEqual(NomaSpacing.xs, 4)
         XCTAssertEqual(NomaSpacing.xl, 24)
         XCTAssertEqual(NomaSpacing.xxl, 32)
@@ -29,8 +30,75 @@ final class NomaTests: XCTestCase {
         XCTAssertTrue(shouldFocus)
     }
 
-    func testProjectEmptyStateOmitsCTAUntilProjectCreationFlowExists() {
-        XCTAssertNil(CreateProjectEmptyState.placeholder.cta)
+    func testProjectEmptyStateEnablesAddProjectCTA() {
+        let emptyState = CreateProjectEmptyState.placeholder
+
+        XCTAssertNotNil(emptyState.cta)
+        XCTAssertEqual(emptyState.cta?.titleKey, "create.project.empty.add-button")
+    }
+
+    func testDailyTaskGroupRowsUseScaleFeedbackAndCompletionCopy() {
+        XCTAssertTrue(DailyTaskGroupRowInteraction.usesScaleButtonStyle)
+        XCTAssertEqual(DailyTaskGroupRowLayout.completedIconAdditionalTrailingPadding, NomaSpacing.xs)
+        XCTAssertEqual(DailyTaskGroupsProgressCopy.completedKey, "home.daily-groups.progress.completed")
+    }
+
+    func testCreateProjectSheetUsesRequestedLayoutAndCopy() {
+        XCTAssertEqual(CreateProjectSheetCopy.titleKey, "create.project.add.title")
+        XCTAssertEqual(CreateProjectSheetCopy.descriptionKey, "create.project.add.description")
+        XCTAssertEqual(CreateProjectSheetLayout.focusedHorizontalPadding, NomaSpacing.sm)
+        XCTAssertEqual(CreateProjectSheetLayout.collapsedHorizontalPadding, NomaSpacing.xxl)
+        XCTAssertEqual(CreateProjectSheetLayout.keyboardSpacing, NomaSpacing.sm)
+        XCTAssertEqual(CreateProjectSheetLayout.collapsedBottomPadding, NomaSpacing.xxl)
+        XCTAssertEqual(CreateProjectSheetLayout.bottomPadding(isKeyboardPresented: true), NomaSpacing.sm)
+        XCTAssertEqual(CreateProjectSheetLayout.horizontalPadding(isKeyboardPresented: true), NomaSpacing.sm)
+        XCTAssertTrue(CreateProjectSheetLayout.usesNativeSheetKeyboardAvoidance)
+        XCTAssertTrue(CreateProjectSheetLayout.usesScrollDrivenKeyboardDismissal)
+        XCTAssertTrue(CreateProjectSheetLayout.usesBottomSafeAreaBar)
+        XCTAssertEqual(
+            CreateProjectSheetLayout.bottomPadding(
+                isKeyboardPresented: false,
+                bottomSafeAreaInset: NomaSpacing.sm
+            ),
+            NomaSpacing.xl
+        )
+    }
+
+    func testProjectTitleInputUsesRoundedFortyPointSecondaryBackgroundField() {
+        XCTAssertEqual(ProjectTitleInputLayout.height, 40)
+        XCTAssertEqual(ProjectTitleInputLayout.cornerRadius, 20)
+        XCTAssertEqual(ProjectTitleInputLayout.placeholderKey, "create.project.title.placeholder")
+        XCTAssertEqual(TaskProjectTitlePolicy.characterLimit, NomaLimit.projectTitleCharacters)
+        XCTAssertEqual(TaskProjectTitlePolicy.characterLimit, 50)
+        XCTAssertEqual(TaskProjectTitlePolicy.normalizedTitle(from: "  Home  \n"), "Home")
+        XCTAssertTrue(TaskProjectTitlePolicy.canCreateProject(title: "Work"))
+        XCTAssertFalse(TaskProjectTitlePolicy.canCreateProject(title: "   "))
+        XCTAssertFalse(TaskProjectTitlePolicy.canCreateProject(title: String(repeating: "a", count: 51)))
+    }
+
+    func testProjectIconPickerProvidesColorsAndSFSymbols() {
+        XCTAssertEqual(ProjectIconPickerSheetCopy.titleKey, "create.project.icon-picker.title")
+        XCTAssertEqual(ProjectIconPickerSheetCopy.doneAccessibilityLabelKey, "create.project.icon-picker.done")
+        XCTAssertEqual(ProjectIconPickerSheetLayout.doneSystemImage, "checkmark")
+        XCTAssertTrue(ProjectIconPickerSheetLayout.usesLargeDetent)
+        XCTAssertTrue(ProjectIconPickerSheetLayout.colorPickerUsesSafeAreaPadding)
+        XCTAssertTrue(ProjectIconPickerSheetLayout.iconGridUsesTopSafeAreaPadding)
+        XCTAssertLessThan(ProjectIconPickerSheetLayout.colorOptionSize, NomaSize.projectControl)
+        XCTAssertEqual(ProjectIconPickerSheetLayout.selectedColorBorderWidth, 4)
+        XCTAssertEqual(AddProjectIconButton.placeholderSystemImage, "plus.circle.dashed")
+        XCTAssertEqual(ProjectIconPickerOption.defaultColorIndex, 0)
+        XCTAssertEqual(ProjectIconPickerOption.defaultSymbol, "folder")
+        XCTAssertGreaterThan(ProjectIconPickerOption.colors.count, 4)
+        XCTAssertTrue(ProjectIconPickerOption.symbols.contains("folder"))
+        XCTAssertFalse(ProjectIconPickerOption.symbols.contains("kettlebell"))
+    }
+
+    func testTaskProjectUsesDefaultFolderIconWhenNoIconIsSelected() {
+        let project = TaskProject(title: "Personal")
+
+        XCTAssertEqual(project.title, "Personal")
+        XCTAssertEqual(project.symbolName, ProjectIconPickerOption.defaultSymbol)
+        XCTAssertEqual(project.colorIndex, ProjectIconPickerOption.defaultColorIndex)
     }
 
     func testHintViewAddsDefaultHorizontalPadding() {
@@ -82,6 +150,18 @@ final class NomaTests: XCTestCase {
         XCTAssertTrue(SubscriptionTier.pro.canAddTask(toGroupWithTaskCount: 50))
     }
 
+    func testFreeTierLimitsProjectsToThreeProjects() {
+        XCTAssertEqual(SubscriptionTier.free.projectLimit, 3)
+        XCTAssertTrue(SubscriptionTier.free.canAddProject(toProjectCount: 2))
+        XCTAssertFalse(SubscriptionTier.free.canAddProject(toProjectCount: 3))
+        XCTAssertNil(SubscriptionTier.pro.projectLimit)
+        XCTAssertTrue(SubscriptionTier.pro.canAddProject(toProjectCount: 30))
+        XCTAssertTrue(CreateProjectListSection.showsUnlockMoreButton(tier: .free, projectCount: 3))
+        XCTAssertFalse(CreateProjectListSection.showsUnlockMoreButton(tier: .free, projectCount: 2))
+        XCTAssertFalse(CreateProjectListSection.showsUnlockMoreButton(tier: .pro, projectCount: 3))
+        XCTAssertEqual(CreateProjectListSection.selectionInfoKey, "create.projects.selection.info")
+    }
+
     func testCreateReminderListShowsUnlockMoreAtFreeLimitOnly() {
         XCTAssertFalse(CreateReminderListSection.showsUnlockMoreButton(tier: .free, reminderCount: 4))
         XCTAssertTrue(CreateReminderListSection.showsUnlockMoreButton(tier: .free, reminderCount: 5))
@@ -111,8 +191,12 @@ final class NomaTests: XCTestCase {
             CreateReminderListSection.unlockMoreMessageKey,
             "create.tasks.unlock-more.today.message"
         )
-        XCTAssertEqual(CreateReminderLimitCalloutLayout.spacingFromTasks, 24)
-        XCTAssertEqual(CreateReminderLimitCalloutLayout.contentSpacing, NomaSpacing.md)
+        XCTAssertEqual(UnlockMoreCalloutLayout.spacingFromPreviousContent, NomaSpacing.xxl)
+        XCTAssertEqual(
+            CreateReminderLimitCalloutLayout.topPadding,
+            UnlockMoreCalloutLayout.topPadding(after: NomaSpacing.md)
+        )
+        XCTAssertEqual(UnlockMoreCalloutLayout.contentSpacing, NomaSpacing.lg)
     }
 
     @MainActor

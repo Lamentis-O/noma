@@ -98,11 +98,16 @@ private struct ReminderSendButton: View {
 
 private struct ReminderTrayButton: View {
     let height: CGFloat
+    let systemImage: String
+    let color: Color
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "tray.full").font(.headline).frame(width: height, height: height)
+            Image(systemName: systemImage)
+                .font(.headline)
+                .foregroundStyle(color)
+                .frame(width: height, height: height)
         }
         .buttonStyle(.plain)
         .frame(width: height, height: height)
@@ -148,6 +153,8 @@ struct ReminderInputBar: View {
     let focus: FocusState<Bool>.Binding
     let placeholder: LocalizedStringKey
     let isSubmissionAvailable: Bool
+    let traySystemImage: String
+    let trayColor: Color
     let onTrayButtonTap: () -> Void
     let onSubmit: (String) -> Void
 
@@ -156,6 +163,8 @@ struct ReminderInputBar: View {
         focus: FocusState<Bool>.Binding,
         placeholder: LocalizedStringKey,
         isSubmissionAvailable: Bool = true,
+        traySystemImage: String = "tray.full",
+        trayColor: Color = .primary,
         onTrayButtonTap: @escaping () -> Void,
         onSubmit: @escaping (String) -> Void
     ) {
@@ -163,6 +172,8 @@ struct ReminderInputBar: View {
         self.focus = focus
         self.placeholder = placeholder
         self.isSubmissionAvailable = isSubmissionAvailable
+        self.traySystemImage = traySystemImage
+        self.trayColor = trayColor
         self.onTrayButtonTap = onTrayButtonTap
         self.onSubmit = onSubmit
     }
@@ -170,7 +181,12 @@ struct ReminderInputBar: View {
     var body: some View {
         GlassEffectContainer(spacing: NomaSpacing.sm) {
             HStack(alignment: .bottom, spacing: NomaSpacing.sm) {
-                ReminderTrayButton(height: trayButtonHeight, action: onTrayButtonTap)
+                ReminderTrayButton(
+                    height: trayButtonHeight,
+                    systemImage: traySystemImage,
+                    color: trayColor,
+                    action: onTrayButtonTap
+                )
 
                 ZStack(alignment: .bottomTrailing) {
                     ReminderTextInput(

@@ -56,11 +56,21 @@ final class DailyTaskGroupStore {
     }
 
     func summaries() -> [DailyTaskGroupSummary] {
-        groups.map(DailyTaskGroupSummary.init(group:))
+        groups
+            .filter { !$0.reminders.isEmpty }
+            .map(DailyTaskGroupSummary.init(group:))
     }
 
     func reminders(forDayID dayID: String) -> [CreateReminder] {
         groups.first { $0.id == dayID }?.reminders ?? []
+    }
+
+    func projects(forDayID dayID: String) -> [TaskProject] {
+        groups.first { $0.id == dayID }?.projects ?? []
+    }
+
+    func selectedProjectID(forDayID dayID: String) -> TaskProject.ID? {
+        groups.first { $0.id == dayID }?.selectedProjectID
     }
 
     func switchUserID(_ userID: String?) {
@@ -75,7 +85,8 @@ final class DailyTaskGroupStore {
     }
 
     func save(reminders: [CreateReminder], for date: Date) {
-        save(reminders: reminders, forDayID: Self.dayID(for: date, calendar: calendar), date: date)
+        let dayID = Self.dayID(for: date, calendar: calendar)
+        save(reminders: reminders, forDayID: dayID, date: date)
     }
 
     func save(reminders: [CreateReminder], forDayID dayID: String) {
@@ -84,12 +95,88 @@ final class DailyTaskGroupStore {
     }
 
     private func save(reminders: [CreateReminder], forDayID dayID: String, date: Date) {
-        if reminders.isEmpty {
+        let projects = projects(forDayID: dayID)
+        let selectedProjectID = selectedProjectID(forDayID: dayID)
+        save(
+            reminders: reminders,
+            projects: projects,
+            selectedProjectID: selectedProjectID,
+            forDayID: dayID,
+            date: date
+        )
+    }
+
+    func save(
+        reminders: [CreateReminder],
+        projects: [TaskProject],
+        selectedProjectID: TaskProject.ID?,
+        forDayID dayID: String
+    ) {
+        let date = Self.date(forDayID: dayID, calendar: calendar) ?? Date()
+        save(
+            reminders: reminders,
+            projects: projects,
+            selectedProjectID: selectedProjectID,
+            forDayID: dayID,
+            date: date
+        )
+    }
+
+    func deleteProject(withID projectID: TaskProject.ID) {
+        groups = groups.compactMap { group in
+            var updatedGroup = group
+            updatedGroup.projects.removeAll { $0.id == projectID }
+            updatedGroup.reminders.removeAll { $0.projectID == projectID }
+
+            if updatedGroup.selectedProjectID == projectID {
+                updatedGroup.selectedProjectID = nil
+            }
+
+            return updatedGroup.reminders.isEmpty && updatedGroup.projects.isEmpty ? nil : updatedGroup
+        }
+
+        persist()
+    }
+
+    func updateProject(_ project: TaskProject) {
+        groups = groups.map { group in
+            var updatedGroup = group
+            updatedGroup.projects = group.projects.map { storedProject in
+                storedProject.id == project.id ? project : storedProject
+            }
+            return updatedGroup
+        }
+
+        persist()
+    }
+
+    private func save(
+        reminders: [CreateReminder],
+        projects: [TaskProject],
+        selectedProjectID: TaskProject.ID?,
+        forDayID dayID: String,
+        date: Date
+    ) {
+        let validSelectedProjectID = projects.contains { $0.id == selectedProjectID } ? selectedProjectID : nil
+
+        if reminders.isEmpty && projects.isEmpty {
             groups.removeAll { $0.id == dayID }
         } else if let index = groups.firstIndex(where: { $0.id == dayID }) {
-            groups[index] = DailyTaskGroup(id: dayID, date: date, reminders: reminders)
+            groups[index] = DailyTaskGroup(
+                id: dayID,
+                date: date,
+                reminders: reminders,
+                projects: projects,
+                selectedProjectID: validSelectedProjectID
+            )
         } else {
-            groups.append(DailyTaskGroup(id: dayID, date: date, reminders: reminders))
+            groups.append(DailyTaskGroup(
+                id: dayID,
+                date: date,
+                reminders: reminders,
+                projects: projects,
+                selectedProjectID: validSelectedProjectID
+            ))
         }
 
         groups.sort { $0.date > $1.date }

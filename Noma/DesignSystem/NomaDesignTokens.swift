@@ -5,6 +5,7 @@ enum NomaMetric {
 }
 
 enum NomaSpacing {
+    static let none: NomaMetric.Value = 0
     static let xs: NomaMetric.Value = 4
     static let sm: NomaMetric.Value = 8
     static let md: NomaMetric.Value = 12
@@ -25,10 +26,17 @@ enum NomaSize {
     static let radioCheckboxInner: NomaMetric.Value = 12
     static let radioCheckboxBorder: NomaMetric.Value = 1.5
     static let radioCheckboxFirstLineOffset: NomaMetric.Value = 1
+    static let taskFirstLineIconOffset: NomaMetric.Value = radioCheckboxFirstLineOffset + scrollDismissSentinel
+    static let projectControl: NomaMetric.Value = 40
+    static let projectColorOption: NomaMetric.Value = NomaSize.projectControl - NomaSpacing.xs
+    static let projectColorSelectionBorder: NomaMetric.Value = NomaSpacing.xs
+    static let projectIconPreview: NomaMetric.Value = 72
+    static let taskMetadataIconColumn: NomaMetric.Value = NomaSpacing.xl
 }
 
 enum NomaRadius {
     static let composer: NomaMetric.Value = 25
+    static let projectControl: NomaMetric.Value = NomaSize.projectControl / 2
 }
 
 enum NomaTiming {
@@ -41,10 +49,15 @@ enum NomaOpacity {
     static let disabledControlBackground = 0.18
 }
 
+enum NomaLimit {
+    static let projectTitleCharacters = 50
+}
+
 enum NomaScale {
     static let pressedControl: CGFloat = 0.96
     static let hintIcon: CGFloat = 1.5
     static let taskDeleteSwipeDamping: CGFloat = NomaSpacing.xl / NomaSpacing.xxl
+    static let taskSwipeHorizontalDominance: CGFloat = 1.5
 }
 
 enum NomaGradient {
@@ -62,4 +75,5 @@ extension ShapeStyle where Self == Color {
     static var controlActive: Color { Color(.label) }
     static var controlError: Color { Color(.systemRed) }
     static var controlSuccess: Color { Color(.systemGreen) }
+    static var secondaryBackground: Color { Color(.secondarySystemBackground) }
 }

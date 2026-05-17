@@ -9,22 +9,37 @@
 import XCTest
 
 final class DailyTaskGroupTests: XCTestCase {
-    func testDailyTaskGroupStoragePersistsOnlyDaysWithTasks() throws {
+    func testDailyTaskGroupStoragePersistsDaysWithTasksOrProjects() throws {
         let storageKey = "NomaTests-\(UUID().uuidString)"
         let defaults = UserDefaults.standard
         defer { defaults.removeObject(forKey: storageKey) }
         let calendar = Calendar(identifier: .gregorian)
         let date = try XCTUnwrap(DateComponents(calendar: calendar, year: 2026, month: 5, day: 16).date)
         let reminder = CreateReminder(id: UUID(uuidString: "00000000-0000-0000-0000-000000000011")!, text: "Plan launch")
+        let project = TaskProject(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000012")!,
+            title: "Work"
+        )
+        let selectedProject = DailyTaskGroup(
+            id: "2026-05-19",
+            date: date.addingTimeInterval(259_200),
+            reminders: [],
+            projects: [project],
+            selectedProjectID: project.id
+        )
         let storage = DailyTaskGroupStorage(userDefaults: defaults, storageKey: storageKey)
 
         storage.save(groups: [
             DailyTaskGroup(id: "2026-05-16", date: date, reminders: [reminder]),
-            DailyTaskGroup(id: "2026-05-17", date: date.addingTimeInterval(86_400), reminders: [])
+            DailyTaskGroup(id: "2026-05-17", date: date.addingTimeInterval(86_400), reminders: [], projects: [project]),
+            DailyTaskGroup(id: "2026-05-18", date: date.addingTimeInterval(172_800), reminders: []),
+            selectedProject
         ])
 
-        XCTAssertEqual(storage.loadGroups().map(\.id), ["2026-05-16"])
-        XCTAssertEqual(storage.loadGroups().first?.reminders, [reminder])
+        XCTAssertEqual(storage.loadGroups().map(\.id), ["2026-05-19", "2026-05-17", "2026-05-16"])
+        XCTAssertEqual(storage.loadGroups().last?.reminders, [reminder])
+        XCTAssertEqual(storage.loadGroups().first?.projects, [project])
+        XCTAssertEqual(storage.loadGroups().first?.selectedProjectID, project.id)
     }
 
     func testDailyTaskGroupStorageScopesSavedGroupsByUserID() throws {
@@ -91,7 +106,7 @@ final class DailyTaskGroupTests: XCTestCase {
         XCTAssertEqual(completedSummary.completedTaskCount, 1)
         XCTAssertEqual(completedSummary.taskCountUnitKey, "home.daily-groups.task-count.singular")
         XCTAssertEqual(DailyTaskGroupsProgressCopy.ofKey, "home.daily-groups.progress.of")
-        XCTAssertEqual(DailyTaskGroupsProgressCopy.doneKey, "home.daily-groups.progress.done")
+        XCTAssertEqual(DailyTaskGroupsProgressCopy.completedKey, "home.daily-groups.progress.completed")
     }
 
     func testDailyTaskGroupRowShowsCompletionIconOnlyWhenAllTasksAreDone() throws {

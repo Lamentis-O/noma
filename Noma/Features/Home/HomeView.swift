@@ -51,17 +51,17 @@ struct HomeView: View {
 
     private var dailyGroupsList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if !dailyTaskGroups.groups.isEmpty {
+            if !dailyGroupSummaries.isEmpty {
                 SectionHeader(DailyTaskGroupsSection.headerTitleKey)
 
                 VStack(alignment: .leading, spacing: NomaSpacing.xl) {
-                    ForEach(dailyTaskGroups.summaries()) { summary in
+                    ForEach(dailyGroupSummaries) { summary in
                         Button {
                             path.append(.create(dayID: summary.id))
                         } label: {
                             DailyTaskGroupRow(summary: summary)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(ScaleButtonStyle())
                     }
                 }
             }
@@ -71,5 +71,9 @@ struct HomeView: View {
         .padding(.horizontal, NomaSpacing.xl)
         .padding(.top, NomaSpacing.xxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private var dailyGroupSummaries: [DailyTaskGroupSummary] {
+        dailyTaskGroups.summaries()
     }
 }

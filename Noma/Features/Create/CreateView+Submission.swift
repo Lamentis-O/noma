@@ -7,14 +7,23 @@ extension CreateView {
             focus: $isInputFocused,
             placeholder: "create.input.placeholder",
             isSubmissionAvailable: canSubmitReminder,
+            traySystemImage: selectedProject?.symbolName ?? "tray.full",
+            trayColor: selectedProject?.color ?? .primary,
             onTrayButtonTap: { isProjectSheetPresented = true },
             onSubmit: submitReminder
         )
     }
 
+    var selectedProject: TaskProject? {
+        projects.first { $0.id == selectedProjectID }
+    }
+
     func submitReminder(_ submittedText: String) {
         guard canSubmitReminder else { return }
-        guard let submission = CreateReminderSubmission.submit(text: submittedText) else { return }
+        guard let submission = CreateReminderSubmission.submit(
+            text: submittedText,
+            projectID: selectedProjectID
+        ) else { return }
 
         message = submission.remainingText
         hapticFeedback.play(.createTaskSubmit)
@@ -37,6 +46,40 @@ extension CreateView {
         #endif
     }
 
+    func unlockMoreProjects() {
+        #if DEBUG
+        subscriptionTier.debugUnlockPro()
+        #else
+        isUnlockMoreSheetPresented = true
+        #endif
+    }
+
+    func addProject(_ project: TaskProject) {
+        projects.append(project)
+        selectedProjectID = project.id
+        saveCurrentDailyGroup()
+    }
+
+    func updateProject(_ project: TaskProject) {
+        dailyTaskGroups.updateProject(project)
+        projects = dailyTaskGroups.projects(forDayID: dayID)
+    }
+
+    func deleteProject(_ projectID: TaskProject.ID) {
+        dailyTaskGroups.deleteProject(withID: projectID)
+
+        withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
+            reminders = dailyTaskGroups.reminders(forDayID: dayID)
+        }
+        projects = dailyTaskGroups.projects(forDayID: dayID)
+        selectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: dayID)
+    }
+
+    func selectProject(_ projectID: TaskProject.ID?) {
+        selectedProjectID = projectID
+        saveCurrentDailyGroup()
+    }
+
     func scrollToReminderListBottomAfterKeyboardFocus() {
         guard let targetID = CreateReminderAutoScroll.targetAfterKeyboardFocus(reminderCount: reminders.count) else {
             return
@@ -56,7 +99,7 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             reminders[index] = updatedReminder
         }
-        saveCurrentReminders()
+        saveCurrentDailyGroup()
     }
 
     func deleteReminder(_ reminder: CreateReminder) {
@@ -65,11 +108,20 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             _ = reminders.remove(at: index)
         }
-        saveCurrentReminders()
+        saveCurrentDailyGroup()
     }
 
     func saveCurrentReminders() {
-        dailyTaskGroups.save(reminders: reminders, forDayID: dayID)
+        saveCurrentDailyGroup()
+    }
+
+    func saveCurrentDailyGroup() {
+        dailyTaskGroups.save(
+            reminders: reminders,
+            projects: projects,
+            selectedProjectID: selectedProjectID,
+            forDayID: dayID
+        )
     }
 
     func playSwipeDeleteThresholdFeedback() {
@@ -91,9 +143,20 @@ extension CreateView {
     var barEdgePadding: CGFloat { isKeyboardPresented ? focusedEdgePadding : collapsedEdgePadding }
 
     var projectSheet: some View {
-        CreateSheet()
-            .presentationDetents([.medium])
+        CreateSheet(
+            projects: $projects,
+            selectedProjectID: $selectedProjectID,
+            reminders: reminders,
+            tier: subscriptionTier.tier,
+            onCreateProject: addProject,
+            onSelectProject: selectProject,
+            onUpdateProject: updateProject,
+            onDeleteProject: deleteProject,
+            onUnlockMore: unlockMoreProjects
+        )
+            .presentationDetents([.large])
             .presentationDragIndicator(.visible)
+            .presentationContentInteraction(.resizes)
     }
 
     var unlockMoreSheet: some View {
@@ -125,6 +188,7 @@ extension CreateView {
                 ScrollView {
                     CreateReminderList(
                         reminders: reminders,
+                        projects: projects,
                         minimumHeight: CreateReminderListLayout.minimumHeight(for: proxy.size.height),
                         tier: subscriptionTier.tier,
                         onUnlockMore: unlockMoreTasks,

@@ -24,9 +24,23 @@ enum SubscriptionTier: Equatable {
         }
     }
 
+    var projectLimit: Int? {
+        switch self {
+        case .free:
+            3
+        case .pro:
+            nil
+        }
+    }
+
     func canAddTask(toGroupWithTaskCount taskCount: Int) -> Bool {
         guard let taskLimitPerGroup else { return true }
         return taskCount < taskLimitPerGroup
+    }
+
+    func canAddProject(toProjectCount projectCount: Int) -> Bool {
+        guard let projectLimit else { return true }
+        return projectCount < projectLimit
     }
 }
 
