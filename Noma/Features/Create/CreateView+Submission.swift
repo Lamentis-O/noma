@@ -78,11 +78,33 @@ extension CreateView {
 
     func submitReminder(_ submittedText: String) {
         guard canSubmitReminder else { return }
-        guard let submission = CreateReminderSubmission.submit(
-            text: submittedText,
-            projects: projects,
-            selectedProjectID: selectedProjectID
-        ) else { return }
+
+        guard subscriptionTier.tier.canUseOnDeviceFoundationModels else {
+            submitReminderImmediately(submittedText)
+            return
+        }
+
+        isSubmittingReminder = true
+
+        Task {
+            let submission = await CreateReminderAISmartCapture.submit(
+                text: submittedText,
+                projects: projects,
+                selectedProjectID: selectedProjectID,
+                tier: subscriptionTier.tier,
+                foundationModel: onDeviceFoundationModel
+            )
+
+            await MainActor.run {
+                isSubmittingReminder = false
+                guard let submission else { return }
+                appendSubmittedReminder(submission)
+            }
+        }
+    }
+
+    func appendSubmittedReminder(_ submission: CreateReminderSubmissionResult) {
+        guard canAddSubmittedReminder else { return }
 
         message = submission.remainingText
         hapticFeedback.play(.createTaskSubmit)
@@ -93,8 +115,22 @@ extension CreateView {
         pendingScrollTargetID = CreateReminderAutoScroll.targetAfterAppending(submission.reminder)
     }
 
-    var canSubmitReminder: Bool {
+    var canAddSubmittedReminder: Bool {
         subscriptionTier.tier.canAddTask(toGroupWithTaskCount: reminders.count)
+    }
+
+    func submitReminderImmediately(_ submittedText: String) {
+        guard let submission = CreateReminderSubmission.submit(
+            text: submittedText,
+            projects: projects,
+            selectedProjectID: selectedProjectID
+        ) else { return }
+
+        appendSubmittedReminder(submission)
+    }
+
+    var canSubmitReminder: Bool {
+        !isSubmittingReminder && subscriptionTier.tier.canAddTask(toGroupWithTaskCount: reminders.count)
     }
 
     func unlockMoreTasks() {

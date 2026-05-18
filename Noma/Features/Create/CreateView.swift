@@ -37,6 +37,7 @@ struct CreateView: View {
 
     @Environment(\.hapticFeedback) var hapticFeedback
     @Environment(SubscriptionTierManager.self) var subscriptionTier
+    @Environment(OnDeviceFoundationModelService.self) var onDeviceFoundationModel
     @Environment(DailyTaskGroupStore.self) var dailyTaskGroups
     @State var message = ""
     @State var reminders: [CreateReminder] = []
@@ -46,6 +47,7 @@ struct CreateView: View {
     @State var isProjectSheetPresented = false
     @State var isUnlockMoreSheetPresented = false
     @State var isDatePickerSheetPresented = false
+    @State var isSubmittingReminder = false
     @State var activeDayID: String
     @State var datePickerSelection: Date
     @State var showsOnlyUnsolvedTasks = false
