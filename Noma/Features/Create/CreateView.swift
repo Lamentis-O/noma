@@ -49,7 +49,7 @@ struct CreateView: View {
     @State var isDatePickerSheetPresented = false
     @State var isSubmittingReminder = false
     @State var isPlanningDay = false
-    @State var dailyPlan: CreateReminderAIPlanningResult?
+    @State var taskOrganization: CreateReminderAIPlanningResult?
     @State var activeDayID: String
     @State var datePickerSelection: Date
     @State var showsOnlyUnsolvedTasks = false

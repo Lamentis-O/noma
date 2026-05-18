@@ -39,89 +39,35 @@
       }
     },
     "create.ai-plan.button.title" : {
-      "comment" : "Pro-only action title for generating an on-device AI plan for the current day.",
+      "comment" : "Pro-only action title for organizing the current task list with on-device AI.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tag mit AI planen"
+            "value" : "Aufgaben mit AI organisieren"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plan day with AI"
+            "value" : "Organize tasks with AI"
           }
         }
       }
     },
-    "create.ai-plan.carry-forward" : {
-      "comment" : "Short line in the Pro AI plan. Placeholder is the number of yesterday tasks recommended for today.",
-      "extractionState" : "stale",
+    "create.ai-generating.task-organization" : {
+      "comment" : "Animated status shown while the on-device AI organizes the current task list.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld von gestern passen heute gut."
+            "value" : "Organisiere deine Aufgaben auf dem Gerät..."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld from yesterday fit today."
-          }
-        }
-      }
-    },
-    "create.ai-plan.focus" : {
-      "comment" : "Short line in the Pro AI plan. Placeholder is the recommended focus task title.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fokus: %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Focus: %@"
-          }
-        }
-      }
-    },
-    "create.ai-plan.title" : {
-      "comment" : "Section title for the Pro on-device AI daily planning summary.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI Tagesplan"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI Daily Plan"
-          }
-        }
-      }
-    },
-    "create.ai-generating.daily-plan" : {
-      "comment" : "Animated status shown while the on-device AI creates a daily plan.",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plane deinen Tag auf dem Gerät..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Planning your day on-device..."
+            "value" : "Organizing your tasks on-device..."
           }
         }
       }

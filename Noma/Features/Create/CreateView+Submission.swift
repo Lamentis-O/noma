@@ -29,7 +29,7 @@ extension CreateView {
             }
 
             if isPlanningDay {
-                CreateAIGeneratingStatus(titleKey: "create.ai-generating.daily-plan")
+                CreateAIGeneratingStatus(titleKey: "create.ai-generating.task-organization")
             }
 
             if isSubmittingReminder {
@@ -69,9 +69,13 @@ extension CreateView {
     }
 
     var visibleReminders: [CreateReminder] {
-        CreateReminderListFilter.visibleReminders(
+        let filteredReminders = CreateReminderListFilter.visibleReminders(
             reminders,
             showsOnlyUnsolved: showsOnlyUnsolvedTasks
+        )
+        return CreateReminderListOrganization.sortedReminders(
+            filteredReminders,
+            using: taskOrganization
         )
     }
 
@@ -350,7 +354,6 @@ extension CreateView {
                 CreateReminderList(
                     reminders: visibleReminders,
                     carryForwardPreviewReminders: carryForwardPreviewReminders,
-                    dailyPlan: dailyPlan,
                     sectionTitle: CreateReminderListSection.headerTitle(for: currentDayDate),
                     reminderCount: reminders.count,
                     projects: projects,

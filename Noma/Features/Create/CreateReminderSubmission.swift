@@ -205,6 +205,51 @@ enum CreateReminderListFilter {
     }
 }
 
+enum CreateReminderListOrganization {
+    static func sortedReminders(
+        _ reminders: [CreateReminder],
+        using organization: CreateReminderAIPlanningResult?
+    ) -> [CreateReminder] {
+        guard let organization, !organization.organizedTasks.isEmpty else { return reminders }
+
+        let originalOffsets = Dictionary(uniqueKeysWithValues: reminders.enumerated().map { ($0.element.id, $0.offset) })
+        let organizationByID = Dictionary(uniqueKeysWithValues: organization.organizedTasks.map { ($0.reminderID, $0) })
+
+        return reminders.sorted { first, second in
+            sortKey(for: first, organizationByID: organizationByID, originalOffsets: originalOffsets)
+                < sortKey(for: second, organizationByID: organizationByID, originalOffsets: originalOffsets)
+        }
+    }
+
+    private static func sortKey(
+        for reminder: CreateReminder,
+        organizationByID: [CreateReminder.ID: CreateReminderAIOrganizedTask],
+        originalOffsets: [CreateReminder.ID: Int]
+    ) -> SortKey {
+        let organization = organizationByID[reminder.id]
+        return SortKey(
+            completionRank: reminder.isCompleted ? 1 : 0,
+            priorityRank: organization?.priorityRank ?? Int.max,
+            category: organization?.category ?? "",
+            originalOffset: originalOffsets[reminder.id] ?? Int.max
+        )
+    }
+
+    private struct SortKey: Comparable {
+        let completionRank: Int
+        let priorityRank: Int
+        let category: String
+        let originalOffset: Int
+
+        static func < (lhs: SortKey, rhs: SortKey) -> Bool {
+            if lhs.completionRank != rhs.completionRank { return lhs.completionRank < rhs.completionRank }
+            if lhs.priorityRank != rhs.priorityRank { return lhs.priorityRank < rhs.priorityRank }
+            if lhs.category != rhs.category { return lhs.category < rhs.category }
+            return lhs.originalOffset < rhs.originalOffset
+        }
+    }
+}
+
 enum CreateReminderBatchCompletion {
     static func completingAll(_ reminders: [CreateReminder]) -> [CreateReminder] {
         reminders.map { reminder in

@@ -4,7 +4,7 @@ extension CreateView {
     func loadDailyGroup() {
         reminders = dailyTaskGroups.reminders(forDayID: activeDayID)
         projects = dailyTaskGroups.projects(forDayID: activeDayID)
-        dailyPlan = nil
+        taskOrganization = nil
         isPlanningDay = false
 
         let storedSelectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: activeDayID)

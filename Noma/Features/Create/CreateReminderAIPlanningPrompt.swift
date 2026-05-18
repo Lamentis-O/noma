@@ -17,11 +17,13 @@ extension CreateReminderAIPlanning {
             .flatMap { String(data: $0, encoding: .utf8) } ?? #"{"currentReminders":[],"carryForwardReminders":[],"projects":[]}"#
 
         return """
-        Daily planning context JSON:
+        Task organization context JSON:
         \(encodedContext)
 
         Return one JSON object only with this schema:
-        {"summary":"one short planning sentence in the locale","focusReminderID":"existing reminder id or null","carryForwardReminderIDs":["existing yesterday reminder id"],"deferredReminderIDs":["existing reminder id"]}
+        {"taskOrganization":[{"id":"existing reminder id","priorityRank":1,"category":"short internal category"}],"carryForwardReminderIDs":["existing yesterday reminder id"]}
+        Include every current reminder in taskOrganization when possible. Use priorityRank 1 for the most important task, then 2, 3, and so on.
+        Use category only as internal organization metadata; keep it short and stable, such as work, personal, errands, admin, health, home, finance, or focus.
         Use carryForwardReminderIDs only for yesterday tasks worth adding to today. Use empty arrays when none clearly fit.
         """
     }

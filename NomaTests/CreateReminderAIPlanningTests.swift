@@ -21,37 +21,41 @@ final class CreateReminderAIPlanningTests: XCTestCase {
         XCTAssertNil(result)
     }
 
-    func testProPlanUsesValidModelIDs() async {
-        let currentReminder = CreateReminder(
+    func testProPlanUsesValidOrganizationMetadata() async {
+        let firstReminder = CreateReminder(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000102")!,
             text: "Ship build"
         )
-        let carryForwardReminder = CreateReminder(
+        let secondReminder = CreateReminder(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000103")!,
             text: "Send invoice"
         )
         let model = OnDeviceFoundationModelService(
             client: CapturingAIPlanningModelClient(
-                response: #"{"summary":"Start with the build, then bring forward the invoice.","focusReminderID":"00000000-0000-0000-0000-000000000102","carryForwardReminderIDs":["00000000-0000-0000-0000-000000000103"],"deferredReminderIDs":[]}"#
+                response: #"{"taskOrganization":[{"id":"00000000-0000-0000-0000-000000000103","priorityRank":1,"category":"finance"},{"id":"00000000-0000-0000-0000-000000000102","priorityRank":2,"category":"release"}],"carryForwardReminderIDs":[]}"#
             )
         )
 
         let result = await CreateReminderAIPlanning.plan(
-            currentReminders: [currentReminder],
-            carryForwardReminders: [carryForwardReminder],
+            currentReminders: [firstReminder, secondReminder],
+            carryForwardReminders: [],
             projects: [],
             tier: .pro,
             foundationModel: model,
             localeIdentifier: "en_US"
         )
 
-        XCTAssertEqual(result?.summary, "Start with the build, then bring forward the invoice.")
-        XCTAssertEqual(result?.focusReminderID, currentReminder.id)
-        XCTAssertEqual(result?.carryForwardReminderIDs, [carryForwardReminder.id])
-        XCTAssertEqual(result?.deferredReminderIDs, [])
+        XCTAssertEqual(
+            result?.organizedTasks,
+            [
+                CreateReminderAIOrganizedTask(reminderID: secondReminder.id, priorityRank: 1, category: "finance"),
+                CreateReminderAIOrganizedTask(reminderID: firstReminder.id, priorityRank: 2, category: "release")
+            ]
+        )
+        XCTAssertEqual(result?.carryForwardReminderIDs, [])
     }
 
-    func testProPlanDropsUnknownAndWrongBucketIDs() async {
+    func testProPlanDropsUnknownOrganizationIDsAndWrongCarryForwardBucketIDs() async {
         let currentReminder = CreateReminder(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000104")!,
             text: "Review launch notes"
@@ -62,7 +66,7 @@ final class CreateReminderAIPlanningTests: XCTestCase {
         )
         let model = OnDeviceFoundationModelService(
             client: CapturingAIPlanningModelClient(
-                response: #"{"summary":"Keep launch first.","focusReminderID":"00000000-0000-0000-0000-000000000199","carryForwardReminderIDs":["00000000-0000-0000-0000-000000000104","00000000-0000-0000-0000-000000000105"],"deferredReminderIDs":["00000000-0000-0000-0000-000000000105","00000000-0000-0000-0000-000000000199"]}"#
+                response: #"{"taskOrganization":[{"id":"00000000-0000-0000-0000-000000000104","priorityRank":0,"category":""},{"id":"00000000-0000-0000-0000-000000000199","priorityRank":1,"category":"unknown"}],"carryForwardReminderIDs":["00000000-0000-0000-0000-000000000104","00000000-0000-0000-0000-000000000105"]}"#
             )
         )
 
@@ -75,9 +79,11 @@ final class CreateReminderAIPlanningTests: XCTestCase {
             localeIdentifier: "en_US"
         )
 
-        XCTAssertNil(result?.focusReminderID)
+        XCTAssertEqual(
+            result?.organizedTasks,
+            [CreateReminderAIOrganizedTask(reminderID: currentReminder.id, priorityRank: 1, category: "general")]
+        )
         XCTAssertEqual(result?.carryForwardReminderIDs, [carryForwardReminder.id])
-        XCTAssertEqual(result?.deferredReminderIDs, [carryForwardReminder.id])
     }
 
     func testProPlanReturnsNilForInvalidJSON() async {
@@ -120,7 +126,7 @@ private struct CapturingAIPlanningModelClient: OnDeviceFoundationModelClient {
 
 private struct UnavailableAIPlanningModelClient: OnDeviceFoundationModelClient {
     func availability() -> OnDeviceFoundationModelAvailability {
-        XCTFail("Free daily planning must not check Foundation Models availability.")
+        XCTFail("Free task organization must not check Foundation Models availability.")
         return .available
     }
 
@@ -129,7 +135,7 @@ private struct UnavailableAIPlanningModelClient: OnDeviceFoundationModelClient {
         instructions _: String,
         maximumResponseTokens _: Int?
     ) async throws -> String {
-        XCTFail("Free daily planning must not generate a Foundation Models response.")
-        return #"{"summary":"Ignored","focusReminderID":null,"carryForwardReminderIDs":[],"deferredReminderIDs":[]}"#
+        XCTFail("Free task organization must not generate a Foundation Models response.")
+        return #"{"taskOrganization":[],"carryForwardReminderIDs":[]}"#
     }
 }

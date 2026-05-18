@@ -4,9 +4,6 @@ enum CreateReminderListSection {
     static let headerTitleFormatKey = "create.tasks.date.section-header", unlockMoreTitleKey = "create.tasks.unlock-more", unlockMoreMessageKey = "create.tasks.unlock-more.today.message"
     static let carryForwardPreviewTitleKey = "create.tasks.yesterday.section-header"
     static let carryForwardPreviewSystemImage = "clock.arrow.circlepath"
-    static let aiPlanTitleKey = "create.ai-plan.title"
-    static let aiPlanFocusKey = "create.ai-plan.focus"
-    static let aiPlanCarryForwardKey = "create.ai-plan.carry-forward"
 
     static func headerTitle(for date: Date) -> String {
         let format = String(localized: String.LocalizationValue(headerTitleFormatKey))
@@ -339,7 +336,6 @@ struct CreateReminderScrollContainer<Content: View>: View {
 struct CreateReminderList: View {
     let reminders: [CreateReminder]
     let carryForwardPreviewReminders: [CreateReminder]
-    let dailyPlan: CreateReminderAIPlanningResult?
     let sectionTitle: String
     let reminderCount: Int
     let projects: [TaskProject]
@@ -350,14 +346,6 @@ struct CreateReminderList: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let dailyPlan {
-                CreateReminderAIPlanningSummary(
-                    plan: dailyPlan,
-                    reminders: reminders,
-                    carryForwardPreviewReminders: carryForwardPreviewReminders
-                )
-            }
-
             if CreateReminderListSection.showsHeader(
                 reminderCount: reminderCount,
                 carryForwardPreviewCount: carryForwardPreviewReminders.count

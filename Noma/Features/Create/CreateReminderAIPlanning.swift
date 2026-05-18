@@ -1,10 +1,14 @@
 import Foundation
 
 struct CreateReminderAIPlanningResult: Equatable {
-    let summary: String
-    let focusReminderID: CreateReminder.ID?
+    let organizedTasks: [CreateReminderAIOrganizedTask]
     let carryForwardReminderIDs: [CreateReminder.ID]
-    let deferredReminderIDs: [CreateReminder.ID]
+}
+
+struct CreateReminderAIOrganizedTask: Equatable {
+    let reminderID: CreateReminder.ID
+    let priorityRank: Int
+    let category: String
 }
 
 enum CreateReminderAIPlanning {
@@ -29,17 +33,10 @@ enum CreateReminderAIPlanning {
                 ),
                 instructions: instructions,
                 tier: tier,
-                maximumResponseTokens: 320
+                maximumResponseTokens: 420
             )
-            guard let suggestion = try AIPlanningSuggestion.decode(from: response) else {
-                return nil
-            }
-
-            return result(
-                from: suggestion,
-                currentReminders: currentReminders,
-                carryForwardReminders: carryForwardReminders
-            )
+            guard let suggestion = try AIPlanningSuggestion.decode(from: response) else { return nil }
+            return result(from: suggestion, currentReminders: currentReminders, carryForwardReminders: carryForwardReminders)
         } catch {
             return nil
         }
@@ -50,30 +47,12 @@ enum CreateReminderAIPlanning {
         currentReminders: [CreateReminder],
         carryForwardReminders: [CreateReminder]
     ) -> CreateReminderAIPlanningResult? {
-        let summary = normalizedSummary(suggestion.summary)
-        guard !summary.isEmpty else { return nil }
-
         let knownReminderIDs = Set((currentReminders + carryForwardReminders).map(\.id))
         let carryForwardIDs = validatedIDs(suggestion.carryForwardReminderIDs, allowedIDs: Set(carryForwardReminders.map(\.id)))
-        let deferredIDs = validatedIDs(suggestion.deferredReminderIDs, allowedIDs: knownReminderIDs)
-        let focusID = suggestion.focusReminderID
-            .flatMap(UUID.init(uuidString:))
-            .flatMap { knownReminderIDs.contains($0) ? $0 : nil }
+        let organizedTasks = validatedOrganizedTasks(suggestion.taskOrganization, allowedIDs: knownReminderIDs)
+        guard !organizedTasks.isEmpty || !carryForwardIDs.isEmpty else { return nil }
 
-        return CreateReminderAIPlanningResult(
-            summary: summary,
-            focusReminderID: focusID,
-            carryForwardReminderIDs: carryForwardIDs,
-            deferredReminderIDs: deferredIDs
-        )
-    }
-
-    private static func normalizedSummary(_ text: String) -> String {
-        let normalized = CreateReminderSubmission.normalizedText(from: text)
-        guard normalized.count <= summaryCharacterLimit else {
-            return String(normalized.prefix(summaryCharacterLimit)).trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        return normalized
+        return CreateReminderAIPlanningResult(organizedTasks: organizedTasks, carryForwardReminderIDs: carryForwardIDs)
     }
 
     private static func validatedIDs(_ rawIDs: [String], allowedIDs: Set<UUID>) -> [UUID] {
@@ -83,13 +62,35 @@ enum CreateReminderAIPlanning {
             .uniqued()
     }
 
-    private static let summaryCharacterLimit = 180
+    private static func validatedOrganizedTasks(
+        _ rawTasks: [AIPlanningSuggestion.OrganizedTask],
+        allowedIDs: Set<UUID>
+    ) -> [CreateReminderAIOrganizedTask] {
+        var seenIDs = Set<UUID>()
+        return rawTasks.compactMap { rawTask in
+            guard let reminderID = UUID(uuidString: rawTask.id),
+                  allowedIDs.contains(reminderID),
+                  seenIDs.insert(reminderID).inserted
+            else { return nil }
+
+            return CreateReminderAIOrganizedTask(reminderID: reminderID, priorityRank: max(1, rawTask.priorityRank), category: normalizedCategory(rawTask.category))
+        }
+    }
+
+    private static func normalizedCategory(_ category: String) -> String {
+        let normalized = CreateReminderSubmission.normalizedText(from: category)
+        guard !normalized.isEmpty else { return defaultCategory }
+        return String(normalized.prefix(categoryCharacterLimit))
+    }
+
+    private static let categoryCharacterLimit = 40
+    private static let defaultCategory = "general"
 
     private static let instructions = """
-    You are Noma's private on-device daily planning model.
-    Help the user choose a realistic plan for today using only the provided tasks and projects.
+    You are Noma's private on-device task organization model.
+    Organize the user's existing tasks using only the provided task and project context.
     Never invent tasks or projects. Never return markdown, explanations, or extra keys.
-    Prefer a concise, calm, useful summary in the user's locale.
+    Prefer lower priorityRank values for tasks that are important, concrete, or time-sensitive.
     """
 }
 

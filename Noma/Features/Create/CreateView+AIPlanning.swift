@@ -5,7 +5,7 @@ extension CreateView {
         subscriptionTier.tier.canUseOnDeviceFoundationModels
             && CreateReminderSubmission.normalizedText(from: message).isEmpty
             && !isPlanningDay
-            && dailyPlan == nil
+            && taskOrganization == nil
             && (!reminders.isEmpty || !carryForwardReminders.isEmpty)
     }
 
@@ -13,20 +13,20 @@ extension CreateView {
         CreateComposerSuggestionButton(
             systemImage: "sparkles",
             titleKey: "create.ai-plan.button.title",
-            action: generateDailyPlan
+            action: organizeTasksWithAI
         )
     }
 
     func carryForwardOpenTasks() {
         guard !isPlanningDay else { return }
-        addCarryForwardReminders(dailyPlan.map(carryForwardReminders(for:)) ?? carryForwardReminders)
+        addCarryForwardReminders(taskOrganization.map(carryForwardReminders(for:)) ?? carryForwardReminders)
     }
 
-    func generateDailyPlan() {
-        generateDailyPlan(afterPlanning: { _ in })
+    func organizeTasksWithAI() {
+        organizeTasksWithAI(afterPlanning: { _ in })
     }
 
-    private func generateDailyPlan(afterPlanning: @escaping (CreateReminderAIPlanningResult?) -> Void) {
+    private func organizeTasksWithAI(afterPlanning: @escaping (CreateReminderAIPlanningResult?) -> Void) {
         guard !isPlanningDay else { return }
 
         isPlanningDay = true
@@ -42,7 +42,7 @@ extension CreateView {
             await MainActor.run {
                 withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
                     isPlanningDay = false
-                    dailyPlan = plan
+                    taskOrganization = plan
                 }
                 afterPlanning(plan)
             }

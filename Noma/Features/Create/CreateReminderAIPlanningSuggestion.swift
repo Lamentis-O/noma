@@ -1,10 +1,14 @@
 import Foundation
 
 struct AIPlanningSuggestion: Decodable {
-    let summary: String
-    let focusReminderID: String?
+    let taskOrganization: [OrganizedTask]
     let carryForwardReminderIDs: [String]
-    let deferredReminderIDs: [String]
+
+    struct OrganizedTask: Decodable {
+        let id: String
+        let priorityRank: Int
+        let category: String
+    }
 
     static func decode(from response: String) throws -> AIPlanningSuggestion? {
         guard let data = FoundationModelJSONExtractor.jsonObjectData(from: response) else { return nil }
