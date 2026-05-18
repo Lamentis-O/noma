@@ -81,8 +81,7 @@ extension CreateView {
         guard let submission = CreateReminderSubmission.submit(
             text: submittedText,
             projects: projects,
-            selectedProjectID: selectedProjectID,
-            tier: subscriptionTier.tier
+            selectedProjectID: selectedProjectID
         ) else { return }
 
         message = submission.remainingText
