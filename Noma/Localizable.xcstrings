@@ -92,23 +92,6 @@
         }
       }
     },
-    "create.suggested-project.title" : {
-      "comment" : "Action title for assigning new tasks to the most frequently used project.",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zu %@ hinzufügen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to %@"
-          }
-        }
-      }
-    },
     "create.project.add.description" : {
       "comment" : "Description text in the Add Project sheet explaining what projects are for.",
       "extractionState" : "stale",
@@ -553,6 +536,23 @@
         }
       }
     },
+    "create.suggested-project.title" : {
+      "comment" : "Action title for assigning new tasks to the most frequently used project.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu %@ hinzufügen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to %@"
+          }
+        }
+      }
+    },
     "create.tasks.empty.today.subtitle" : {
       "comment" : "Subtitle for the empty task list hint in the create task view.",
       "extractionState" : "stale",
@@ -838,6 +838,78 @@
     },
     "Noma" : {
 
+    },
+    "notifications.daily-planning.body" : {
+      "comment" : "Morning local notification body reminding the user to plan today's tasks.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nimm dir kurz Zeit, die wichtigsten Aufgaben für heute festzulegen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take a moment to choose the tasks that matter today."
+          }
+        }
+      }
+    },
+    "notifications.daily-planning.title" : {
+      "comment" : "Morning local notification title reminding the user to plan today's tasks.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plane deinen Tag"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan your day"
+          }
+        }
+      }
+    },
+    "notifications.open-tasks.body" : {
+      "comment" : "Evening local notification body reminding the user about open tasks.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schau dir die Aufgaben an, die heute noch offen sind."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review the tasks that are still open today."
+          }
+        }
+      }
+    },
+    "notifications.open-tasks.title" : {
+      "comment" : "Evening local notification title reminding the user about open tasks.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offene Aufgaben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open tasks"
+          }
+        }
+      }
     },
     "Project" : {
       "comment" : "Navigation title for the project picker sheet.",

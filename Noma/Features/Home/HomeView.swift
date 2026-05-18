@@ -6,6 +6,7 @@ private enum HomeRoute: Hashable {
 
 struct HomeView: View {
     @Environment(DailyTaskGroupStore.self) private var dailyTaskGroups
+    @Environment(DailyTaskNotificationScheduler.self) private var dailyTaskNotifications
     @State private var path: [HomeRoute] = []
 
     var body: some View {
@@ -33,11 +34,8 @@ struct HomeView: View {
                         CreateView(dayID: dayID)
                     }
                 }
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        HomeSettingsMenu()
-                    }
-                }
+                .toolbar { ToolbarItem(placement: .topBarTrailing) { HomeSettingsMenu() } }
+                .onChange(of: dailyTaskGroups.groups, initial: true) { _, _ in refreshDailyTaskNotifications() }
             }
             .overlay(alignment: .topLeading) {
                 if path.isEmpty {
@@ -50,10 +48,7 @@ struct HomeView: View {
     }
 
     private var createButton: some View {
-        PrimaryGlassButton(
-            title: "create.button.title",
-            systemImage: "square.and.pencil"
-        ) {
+        PrimaryGlassButton(title: "create.button.title", systemImage: "square.and.pencil") {
             path.append(.create(dayID: dailyTaskGroups.todayID()))
         }
     }
@@ -80,4 +75,9 @@ struct HomeView: View {
 
     private var dailyGroupSummaries: [DailyTaskGroupSummary] { dailyTaskGroups.summaries() }
     private var commonProjectSummaries: [CommonProjectSummary] { dailyTaskGroups.commonProjectSummaries() }
+
+    private func refreshDailyTaskNotifications() {
+        let todayReminders = dailyTaskGroups.reminders(forDayID: dailyTaskGroups.todayID())
+        Task { await dailyTaskNotifications.refreshDailyTaskReminders(for: todayReminders) }
+    }
 }
