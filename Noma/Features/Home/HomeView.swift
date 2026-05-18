@@ -1,12 +1,14 @@
 import SwiftUI
 
-private enum HomeRoute: Hashable {
+enum HomeRoute: Hashable {
     case create(dayID: String)
+    case project(TaskProject.ID)
 }
 
 struct HomeView: View {
-    @Environment(DailyTaskGroupStore.self) private var dailyTaskGroups
-    @State private var path: [HomeRoute] = []
+    @Environment(DailyTaskGroupStore.self) var dailyTaskGroups
+    @Environment(DailyTaskNotificationScheduler.self) var dailyTaskNotifications
+    @State var path: [HomeRoute] = []
 
     var body: some View {
         GeometryReader { proxy in
@@ -31,45 +33,20 @@ struct HomeView: View {
                     switch route {
                     case let .create(dayID):
                         CreateView(dayID: dayID)
+                    case let .project(projectID):
+                        ProjectDetailView(projectID: projectID)
                     }
                 }
-                .safeAreaBar(edge: .top) {
+                .toolbar { ToolbarItem(placement: .topBarTrailing) { HomeSettingsMenu() } }
+                .onChange(of: dailyTaskGroups.groups, initial: true) { _, _ in refreshDailyTaskNotifications() }
+            }
+            .overlay(alignment: .topLeading) {
+                if path.isEmpty {
                     HomeTopBar()
+                        .padding(.leading, NomaSpacing.xl)
+                        .allowsHitTesting(false)
                 }
             }
         }
-    }
-
-    private var createButton: some View {
-        PrimaryGlassButton(
-            title: "create.button.title",
-            systemImage: "square.and.pencil"
-        ) {
-            path.append(.create(dayID: dailyTaskGroups.todayID()))
-        }
-    }
-
-    private var dailyGroupsList: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if !dailyTaskGroups.groups.isEmpty {
-                SectionHeader(DailyTaskGroupsSection.headerTitleKey)
-
-                VStack(alignment: .leading, spacing: NomaSpacing.xl) {
-                    ForEach(dailyTaskGroups.summaries()) { summary in
-                        Button {
-                            path.append(.create(dayID: summary.id))
-                        } label: {
-                            DailyTaskGroupRow(summary: summary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, NomaSpacing.xl)
-        .padding(.top, NomaSpacing.xxl)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }

@@ -1,9 +1,13 @@
 import SwiftUI
 
 struct HintCTA {
-    let title: LocalizedStringKey
+    let titleKey: String
     var color: Color = .primary
     let action: () -> Void
+
+    var title: LocalizedStringKey {
+        LocalizedStringKey(titleKey)
+    }
 }
 
 enum HintViewLayout {

@@ -10,27 +10,81 @@ import XCTest
 
 final class NomaTests: XCTestCase {
     func testSpacingContractExposesXsToken() {
+        XCTAssertEqual(NomaSpacing.none, 0)
         XCTAssertEqual(NomaSpacing.xs, 4)
         XCTAssertEqual(NomaSpacing.xl, 24)
         XCTAssertEqual(NomaSpacing.xxl, 32)
     }
 
-    func testCreateViewDoesNotFocusInputWhenInitialDelayIsCancelled() async {
-        let shouldFocus = await CreateView.shouldApplyInitialFocus {
-            throw CancellationError()
-        }
+    func testProjectEmptyStateEnablesAddProjectCTA() {
+        let emptyState = CreateProjectEmptyState.placeholder
 
-        XCTAssertFalse(shouldFocus)
+        XCTAssertNotNil(emptyState.cta)
+        XCTAssertEqual(emptyState.cta?.titleKey, "create.project.empty.add-button")
     }
 
-    func testCreateViewFocusesInputAfterInitialDelayCompletes() async {
-        let shouldFocus = await CreateView.shouldApplyInitialFocus {}
-
-        XCTAssertTrue(shouldFocus)
+    func testDailyTaskGroupRowsUseScaleFeedbackAndCompletionCopy() {
+        XCTAssertTrue(DailyTaskGroupRowInteraction.usesScaleButtonStyle)
+        XCTAssertEqual(DailyTaskGroupRowLayout.completedIconAdditionalTrailingPadding, NomaSpacing.xs)
+        XCTAssertEqual(DailyTaskGroupsProgressCopy.completedKey, "home.daily-groups.progress.completed")
     }
 
-    func testProjectEmptyStateOmitsCTAUntilProjectCreationFlowExists() {
-        XCTAssertNil(CreateProjectEmptyState.placeholder.cta)
+    func testCreateProjectSheetUsesRequestedLayoutAndCopy() {
+        XCTAssertEqual(CreateProjectSheetCopy.titleKey, "create.project.add.title")
+        XCTAssertEqual(CreateProjectSheetCopy.descriptionKey, "create.project.add.description")
+        XCTAssertEqual(CreateProjectSheetLayout.focusedHorizontalPadding, NomaSpacing.sm)
+        XCTAssertEqual(CreateProjectSheetLayout.collapsedHorizontalPadding, NomaSpacing.xxl)
+        XCTAssertEqual(CreateProjectSheetLayout.keyboardSpacing, NomaSpacing.sm)
+        XCTAssertEqual(CreateProjectSheetLayout.collapsedBottomPadding, NomaSpacing.xxl)
+        XCTAssertEqual(CreateProjectSheetLayout.bottomPadding(isKeyboardPresented: true), NomaSpacing.sm)
+        XCTAssertEqual(CreateProjectSheetLayout.horizontalPadding(isKeyboardPresented: true), NomaSpacing.sm)
+        XCTAssertTrue(CreateProjectSheetLayout.usesNativeSheetKeyboardAvoidance)
+        XCTAssertTrue(CreateProjectSheetLayout.usesScrollDrivenKeyboardDismissal)
+        XCTAssertTrue(CreateProjectSheetLayout.usesBottomSafeAreaBar)
+        XCTAssertEqual(
+            CreateProjectSheetLayout.bottomPadding(
+                isKeyboardPresented: false,
+                bottomSafeAreaInset: NomaSpacing.sm
+            ),
+            NomaSpacing.xl
+        )
+    }
+
+    func testProjectTitleInputUsesRoundedFortyPointSecondaryBackgroundField() {
+        XCTAssertEqual(ProjectTitleInputLayout.height, 40)
+        XCTAssertEqual(ProjectTitleInputLayout.cornerRadius, 20)
+        XCTAssertEqual(ProjectTitleInputLayout.placeholderKey, "create.project.title.placeholder")
+        XCTAssertEqual(TaskProjectTitlePolicy.characterLimit, NomaLimit.projectTitleCharacters)
+        XCTAssertEqual(TaskProjectTitlePolicy.characterLimit, 50)
+        XCTAssertEqual(TaskProjectTitlePolicy.normalizedTitle(from: "  Home  \n"), "Home")
+        XCTAssertTrue(TaskProjectTitlePolicy.canCreateProject(title: "Work"))
+        XCTAssertFalse(TaskProjectTitlePolicy.canCreateProject(title: "   "))
+        XCTAssertFalse(TaskProjectTitlePolicy.canCreateProject(title: String(repeating: "a", count: 51)))
+    }
+
+    func testProjectIconPickerProvidesColorsAndSFSymbols() {
+        XCTAssertEqual(ProjectIconPickerSheetCopy.titleKey, "create.project.icon-picker.title")
+        XCTAssertEqual(ProjectIconPickerSheetCopy.doneAccessibilityLabelKey, "create.project.icon-picker.done")
+        XCTAssertEqual(ProjectIconPickerSheetLayout.doneSystemImage, "checkmark")
+        XCTAssertTrue(ProjectIconPickerSheetLayout.usesLargeDetent)
+        XCTAssertTrue(ProjectIconPickerSheetLayout.colorPickerUsesSafeAreaPadding)
+        XCTAssertTrue(ProjectIconPickerSheetLayout.iconGridUsesTopSafeAreaPadding)
+        XCTAssertLessThan(ProjectIconPickerSheetLayout.colorOptionSize, NomaSize.projectControl)
+        XCTAssertEqual(ProjectIconPickerSheetLayout.selectedColorBorderWidth, 4)
+        XCTAssertEqual(AddProjectIconButton.placeholderSystemImage, "plus.circle.dashed")
+        XCTAssertEqual(ProjectIconPickerOption.defaultColorIndex, 0)
+        XCTAssertEqual(ProjectIconPickerOption.defaultSymbol, "folder")
+        XCTAssertGreaterThan(ProjectIconPickerOption.colors.count, 4)
+        XCTAssertTrue(ProjectIconPickerOption.symbols.contains("folder"))
+        XCTAssertFalse(ProjectIconPickerOption.symbols.contains("kettlebell"))
+    }
+
+    func testTaskProjectUsesDefaultFolderIconWhenNoIconIsSelected() {
+        let project = TaskProject(title: "Personal")
+
+        XCTAssertEqual(project.title, "Personal")
+        XCTAssertEqual(project.symbolName, ProjectIconPickerOption.defaultSymbol)
+        XCTAssertEqual(project.colorIndex, ProjectIconPickerOption.defaultColorIndex)
     }
 
     func testHintViewAddsDefaultHorizontalPadding() {
@@ -47,7 +101,7 @@ final class NomaTests: XCTestCase {
         XCTAssertNil(emptyState.cta)
     }
 
-    func testCreateReminderAutoScrollTargetsBottomAnchorAfterSubmission() {
+    func testCreateReminderAutoScrollTargetsSubmittedReminderAfterSubmission() {
         let reminder = CreateReminder(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
             text: "Last task"
@@ -55,19 +109,28 @@ final class NomaTests: XCTestCase {
 
         XCTAssertEqual(
             CreateReminderAutoScroll.targetAfterAppending(reminder),
-            CreateReminderListLayout.bottomAnchorID
+            CreateReminderAutoScroll.targetID(for: reminder)
         )
     }
 
-    func testCreateReminderAutoScrollTargetsBottomAnchorAfterKeyboardFocusWithTasks() {
+    func testCreateReminderAutoScrollTargetsLastVisibleTaskAfterKeyboardFocus() {
+        let firstReminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!,
+            text: "First task"
+        )
+        let lastReminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000005")!,
+            text: "Last task"
+        )
+
         XCTAssertEqual(
-            CreateReminderAutoScroll.targetAfterKeyboardFocus(reminderCount: 1),
-            CreateReminderListLayout.bottomAnchorID
+            CreateReminderAutoScroll.targetAfterKeyboardFocus(visibleReminders: [firstReminder, lastReminder]),
+            CreateReminderAutoScroll.targetID(for: lastReminder)
         )
     }
 
     func testCreateReminderAutoScrollIgnoresKeyboardFocusWithoutTasks() {
-        XCTAssertNil(CreateReminderAutoScroll.targetAfterKeyboardFocus(reminderCount: 0))
+        XCTAssertNil(CreateReminderAutoScroll.targetAfterKeyboardFocus(visibleReminders: []))
     }
 
     func testFreeTierLimitsTaskGroupsToFiveTasks() {
@@ -80,6 +143,18 @@ final class NomaTests: XCTestCase {
         XCTAssertNil(SubscriptionTier.pro.taskLimitPerGroup)
         XCTAssertTrue(SubscriptionTier.pro.canAddTask(toGroupWithTaskCount: 5))
         XCTAssertTrue(SubscriptionTier.pro.canAddTask(toGroupWithTaskCount: 50))
+    }
+
+    func testFreeTierLimitsProjectsToThreeProjects() {
+        XCTAssertEqual(SubscriptionTier.free.projectLimit, 3)
+        XCTAssertTrue(SubscriptionTier.free.canAddProject(toProjectCount: 2))
+        XCTAssertFalse(SubscriptionTier.free.canAddProject(toProjectCount: 3))
+        XCTAssertNil(SubscriptionTier.pro.projectLimit)
+        XCTAssertTrue(SubscriptionTier.pro.canAddProject(toProjectCount: 30))
+        XCTAssertTrue(CreateProjectListSection.showsUnlockMoreButton(tier: .free, projectCount: 3))
+        XCTAssertFalse(CreateProjectListSection.showsUnlockMoreButton(tier: .free, projectCount: 2))
+        XCTAssertFalse(CreateProjectListSection.showsUnlockMoreButton(tier: .pro, projectCount: 3))
+        XCTAssertEqual(CreateProjectListSection.selectionInfoKey, "create.projects.selection.info")
     }
 
     func testCreateReminderListShowsUnlockMoreAtFreeLimitOnly() {
@@ -111,8 +186,12 @@ final class NomaTests: XCTestCase {
             CreateReminderListSection.unlockMoreMessageKey,
             "create.tasks.unlock-more.today.message"
         )
-        XCTAssertEqual(CreateReminderLimitCalloutLayout.spacingFromTasks, 24)
-        XCTAssertEqual(CreateReminderLimitCalloutLayout.contentSpacing, NomaSpacing.md)
+        XCTAssertEqual(UnlockMoreCalloutLayout.spacingFromPreviousContent, NomaSpacing.xxl)
+        XCTAssertEqual(
+            CreateReminderLimitCalloutLayout.topPadding,
+            UnlockMoreCalloutLayout.topPadding(after: NomaSpacing.md)
+        )
+        XCTAssertEqual(UnlockMoreCalloutLayout.contentSpacing, NomaSpacing.lg)
     }
 
     @MainActor
@@ -132,6 +211,47 @@ final class NomaTests: XCTestCase {
     func testCreateViewOnlyUsesScrollViewAfterTasksWereAdded() {
         XCTAssertFalse(CreateViewContentMode.usesScrollView(reminderCount: 0))
         XCTAssertTrue(CreateViewContentMode.usesScrollView(reminderCount: 1))
+    }
+
+    func testCreateViewUsesScrollViewForCarryForwardPreview() {
+        XCTAssertTrue(CreateViewContentMode.usesScrollView(reminderCount: 0, carryForwardPreviewCount: 1))
+    }
+
+    func testCarryForwardPreviewExcludesTasksAlreadyAddedToday() {
+        let projectID = UUID(uuidString: "00000000-0000-0000-0000-000000000051")!
+        let previousOpenReminders = [
+            CreateReminder(text: "Move invoice", projectID: projectID),
+            CreateReminder(text: "Send update")
+        ]
+        let currentReminders = [
+            CreateReminder(text: "Move invoice", projectID: projectID)
+        ]
+
+        XCTAssertEqual(
+            CreateReminderCarryForwardPreview.visibleReminders(
+                currentReminders: currentReminders,
+                previousOpenReminders: previousOpenReminders
+            )
+            .map(\.text),
+            ["Send update"]
+        )
+    }
+
+    func testCarryForwardPreviewCompletionMarksOriginalReminderDone() {
+        let reminderID = UUID(uuidString: "00000000-0000-0000-0000-000000000052")!
+        let targetReminder = CreateReminder(id: reminderID, text: "Send update")
+        let reminders = [
+            CreateReminder(text: "Keep open"),
+            targetReminder
+        ]
+
+        let updatedReminders = CreateReminderCarryForwardCompletion.completing(
+            targetReminder,
+            in: reminders
+        )
+
+        XCTAssertFalse(updatedReminders[0].isCompleted)
+        XCTAssertTrue(updatedReminders[1].isCompleted)
     }
 
     func testCreateReminderSubmissionTrimsSubmittedText() {
@@ -195,10 +315,10 @@ final class NomaTests: XCTestCase {
         XCTAssertTrue(staleGuard.acceptsIncomingText("Next task"))
     }
 
-    func testCreateReminderListLayoutLeavesScrollRoomAboveComposer() {
+    func testCreateReminderListLayoutUsesOnlySentinelBottomAnchor() {
         XCTAssertEqual(
             CreateReminderListLayout.bottomScrollPadding,
-            NomaSpacing.xl
+            NomaSize.scrollDismissSentinel
         )
     }
 
@@ -227,7 +347,14 @@ final class NomaTests: XCTestCase {
     }
 
     func testCreateReminderListSectionUsesLocalizedTaskHeaderForEnteredTasks() {
-        XCTAssertEqual(CreateReminderListSection.headerTitleKey, "create.tasks.today.section-header")
+        let date = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 5, day: 18))!
+        let headerTitle = CreateReminderListSection.headerTitle(for: date)
+        let dateText = date.formatted(date: .abbreviated, time: .omitted)
+
+        XCTAssertEqual(CreateReminderListSection.headerTitleFormatKey, "create.tasks.date.section-header")
+        XCTAssertEqual(CreateReminderListSection.carryForwardPreviewTitleKey, "create.tasks.yesterday.section-header")
+        XCTAssertEqual(CreateReminderListSection.carryForwardPreviewSystemImage, "clock.arrow.circlepath")
+        XCTAssertTrue(headerTitle.contains(dateText))
         XCTAssertFalse(CreateReminderListSection.showsHeader(reminderCount: 0))
         XCTAssertTrue(CreateReminderListSection.showsHeader(reminderCount: 1))
     }
