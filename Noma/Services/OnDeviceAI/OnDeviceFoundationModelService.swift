@@ -16,6 +16,7 @@ enum OnDeviceFoundationModelAvailability: Equatable {
 
 enum OnDeviceFoundationModelError: Error, Equatable {
     case emptyPrompt
+    case emptyResponse
     case unavailable(OnDeviceFoundationModelAvailability)
 }
 
@@ -31,6 +32,7 @@ protocol OnDeviceFoundationModelClient: Sendable {
 @Observable
 final class OnDeviceFoundationModelService {
     @ObservationIgnored private let client: any OnDeviceFoundationModelClient
+    @ObservationIgnored private let generationQueue = FoundationModelGenerationQueue()
 
     init(client: any OnDeviceFoundationModelClient = AppleOnDeviceFoundationModelClient()) {
         self.client = client
@@ -55,12 +57,18 @@ final class OnDeviceFoundationModelService {
             throw OnDeviceFoundationModelError.unavailable(modelAvailability)
         }
 
-        return try await client.generateResponse(
-            prompt: normalizedPrompt,
-            instructions: instructions,
-            maximumResponseTokens: maximumResponseTokens
-        )
-        .trimmingCharacters(in: .whitespacesAndNewlines)
+        let client = self.client
+        return try await generationQueue.generate {
+            let response = try await client.generateResponse(
+                prompt: normalizedPrompt,
+                instructions: instructions,
+                maximumResponseTokens: maximumResponseTokens
+            )
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            guard !response.isEmpty else { throw OnDeviceFoundationModelError.emptyResponse }
+            return response
+        }
     }
 }
 

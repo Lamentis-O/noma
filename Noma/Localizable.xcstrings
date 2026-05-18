@@ -38,6 +38,111 @@
         }
       }
     },
+    "create.ai-plan.button.title" : {
+      "comment" : "Pro-only action title for generating an on-device AI plan for the current day.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag mit AI planen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan day with AI"
+          }
+        }
+      }
+    },
+    "create.ai-plan.carry-forward" : {
+      "comment" : "Short line in the Pro AI plan. Placeholder is the number of yesterday tasks recommended for today.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld von gestern passen heute gut."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld from yesterday fit today."
+          }
+        }
+      }
+    },
+    "create.ai-plan.focus" : {
+      "comment" : "Short line in the Pro AI plan. Placeholder is the recommended focus task title.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fokus: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus: %@"
+          }
+        }
+      }
+    },
+    "create.ai-plan.title" : {
+      "comment" : "Section title for the Pro on-device AI daily planning summary.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI Tagesplan"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI Daily Plan"
+          }
+        }
+      }
+    },
+    "create.ai-generating.daily-plan" : {
+      "comment" : "Animated status shown while the on-device AI creates a daily plan.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plane deinen Tag auf dem Gerät..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planning your day on-device..."
+          }
+        }
+      }
+    },
+    "create.ai-generating.smart-capture" : {
+      "comment" : "Animated status shown while the on-device AI cleans up a submitted task.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfeinere deine Aufgabe auf dem Gerät..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refining your task on-device..."
+          }
+        }
+      }
+    },
     "create.button.title" : {
       "comment" : "Primary button title for opening the create flow from the Home screen.",
       "localizations" : {

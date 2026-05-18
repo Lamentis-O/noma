@@ -48,6 +48,8 @@ struct CreateView: View {
     @State var isUnlockMoreSheetPresented = false
     @State var isDatePickerSheetPresented = false
     @State var isSubmittingReminder = false
+    @State var isPlanningDay = false
+    @State var dailyPlan: CreateReminderAIPlanningResult?
     @State var activeDayID: String
     @State var datePickerSelection: Date
     @State var showsOnlyUnsolvedTasks = false
@@ -69,19 +71,7 @@ struct CreateView: View {
                 content(in: proxy)
             }
             .safeAreaBar(edge: .bottom, spacing: barSpacing) {
-                VStack(alignment: .leading, spacing: NomaSpacing.xl) {
-                    if showsSuggestedProjectButton {
-                        suggestedProjectButton
-                    }
-
-                    if showsCarryForwardButton {
-                        carryForwardButton
-                    }
-
-                    composerBar
-                }
-                .frame(width: barWidth(in: proxy), alignment: .leading)
-                .padding(.bottom, barBottomPadding(in: proxy))
+                bottomComposerContent(in: proxy)
             }
         }
         .background { NavigationKeyboardDismissObserver(isInputFocused: $isInputFocused) }

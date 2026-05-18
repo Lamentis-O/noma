@@ -14,6 +14,34 @@ extension CreateView {
         )
     }
 
+    func bottomComposerContent(in proxy: GeometryProxy) -> some View {
+        VStack(alignment: .leading, spacing: NomaSpacing.xl) {
+            if showsSuggestedProjectButton {
+                suggestedProjectButton
+            }
+
+            if showsCarryForwardButton {
+                carryForwardButton
+            }
+
+            if showsAIPlanningButton {
+                aiPlanningButton
+            }
+
+            if isPlanningDay {
+                CreateAIGeneratingStatus(titleKey: "create.ai-generating.daily-plan")
+            }
+
+            if isSubmittingReminder {
+                CreateAIGeneratingStatus(titleKey: "create.ai-generating.smart-capture")
+            }
+
+            composerBar
+        }
+        .frame(width: barWidth(in: proxy), alignment: .leading)
+        .padding(.bottom, barBottomPadding(in: proxy))
+    }
+
     var selectedProject: TaskProject? {
         projects.first { $0.id == selectedProjectID }
     }
@@ -322,6 +350,7 @@ extension CreateView {
                 CreateReminderList(
                     reminders: visibleReminders,
                     carryForwardPreviewReminders: carryForwardPreviewReminders,
+                    dailyPlan: dailyPlan,
                     sectionTitle: CreateReminderListSection.headerTitle(for: currentDayDate),
                     reminderCount: reminders.count,
                     projects: projects,
