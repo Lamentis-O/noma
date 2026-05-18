@@ -15,9 +15,15 @@ extension CreateView {
 
     var carryForwardButton: some View {
         Button(action: carryForwardOpenTasks) {
-            Label("create.carry-forward-yesterday.title", systemImage: "arrow.uturn.left.circle")
-                .font(.headline)
-                .foregroundStyle(.textPrimary)
+            HStack(spacing: 0) {
+                Image(systemName: "text.line.3.summary")
+                    .font(.headline)
+                    .frame(width: NomaSize.projectControl + NomaSpacing.xs)
+
+                Text("create.carry-forward-yesterday.title")
+                    .font(.headline)
+            }
+            .foregroundStyle(.textPrimary)
         }
         .buttonStyle(ScaleButtonStyle())
     }

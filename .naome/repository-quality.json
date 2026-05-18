@@ -28,6 +28,7 @@
   "generatedPaths": [
     "**/*.min.js",
     "**/*.map",
+    "**/*.xcstrings",
     "**/dist/**",
     "**/build/**"
   ],
