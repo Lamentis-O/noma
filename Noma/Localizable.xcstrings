@@ -81,13 +81,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erinnerung hinzufügen"
+            "value" : "Hier tippen..."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add reminder"
+            "value" : "Type here..."
           }
         }
       }
