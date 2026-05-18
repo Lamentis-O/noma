@@ -2,6 +2,70 @@
 import XCTest
 
 final class CreateReminderAIPlanningTests: XCTestCase {
+    func testAutomaticPlanningRunsAfterUserAddsTaskWhenProAndNotAlreadyPlanning() {
+        XCTAssertEqual(
+            CreateReminderAIPlanningTrigger.actionAfterUserAddedTask(
+                canUseOnDeviceFoundationModels: true,
+                isPlanningDay: false
+            ),
+            .startNow
+        )
+    }
+
+    func testAutomaticPlanningSchedulesAnotherPassWhenUserAddsTaskDuringPlanning() {
+        XCTAssertEqual(
+            CreateReminderAIPlanningTrigger.actionAfterUserAddedTask(
+                canUseOnDeviceFoundationModels: true,
+                isPlanningDay: true
+            ),
+            .scheduleAfterCurrentPlanning
+        )
+    }
+
+    func testAutomaticPlanningDoesNotRunForFreeTier() {
+        XCTAssertEqual(
+            CreateReminderAIPlanningTrigger.actionAfterUserAddedTask(
+                canUseOnDeviceFoundationModels: false,
+                isPlanningDay: false
+            ),
+            .skip
+        )
+    }
+
+    func testPlanningResultIsIgnoredAfterDayChanges() {
+        XCTAssertFalse(
+            CreateReminderAIPlanningResultAcceptance.acceptsResult(
+                originatingDayID: "2026-05-19",
+                activeDayID: "2026-05-20"
+            )
+        )
+    }
+
+    func testPlanningResultIsAcceptedForOriginatingDay() {
+        XCTAssertTrue(
+            CreateReminderAIPlanningResultAcceptance.acceptsResult(
+                originatingDayID: "2026-05-19",
+                activeDayID: "2026-05-19"
+            )
+        )
+    }
+
+    func testCarryForwardFallsBackWhenAIPlanRecommendsNoItems() {
+        let reminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000107")!,
+            text: "Send report"
+        )
+        let plan = CreateReminderAIPlanningResult(
+            organizedTasks: [],
+            carryForwardReminderIDs: []
+        )
+
+        XCTAssertEqual(
+            CreateReminderCarryForwardAIRecommendation.reminders(from: [reminder], using: plan),
+            [reminder]
+        )
+    }
+
     func testFreeTierDoesNotCallModel() async {
         let currentReminder = CreateReminder(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000101")!,

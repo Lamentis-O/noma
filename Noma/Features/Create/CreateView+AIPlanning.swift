@@ -1,77 +1,97 @@
 import SwiftUI
 
 extension CreateView {
-    var showsAIPlanningButton: Bool {
-        subscriptionTier.tier.canUseOnDeviceFoundationModels
-            && CreateReminderSubmission.normalizedText(from: message).isEmpty
-            && !isPlanningDay
-            && taskOrganization == nil
-            && (!reminders.isEmpty || !carryForwardReminders.isEmpty)
-    }
-
-    var aiPlanningButton: some View {
-        CreateComposerSuggestionButton(
-            systemImage: "sparkles",
-            titleKey: "create.ai-plan.button.title",
-            action: organizeTasksWithAI
+    func carryForwardOpenTasks() {
+        guard !isPlanningDay else { return }
+        addCarryForwardReminders(
+            CreateReminderCarryForwardAIRecommendation.reminders(
+                from: carryForwardReminders,
+                using: taskOrganization
+            )
         )
     }
 
-    func carryForwardOpenTasks() {
-        guard !isPlanningDay else { return }
-        addCarryForwardReminders(taskOrganization.map(carryForwardReminders(for:)) ?? carryForwardReminders)
+    func organizeTasksWithAIAfterUserAddedTask() {
+        switch CreateReminderAIPlanningTrigger.actionAfterUserAddedTask(
+            canUseOnDeviceFoundationModels: subscriptionTier.tier.canUseOnDeviceFoundationModels,
+            isPlanningDay: isPlanningDay
+        ) {
+        case .skip:
+            return
+        case .scheduleAfterCurrentPlanning:
+            shouldPlanAgainAfterCurrentPlanning = true
+            return
+        case .startNow:
+            startAIPlanning()
+        }
     }
 
-    func organizeTasksWithAI() {
-        organizeTasksWithAI(afterPlanning: { _ in })
-    }
-
-    private func organizeTasksWithAI(afterPlanning: @escaping (CreateReminderAIPlanningResult?) -> Void) {
-        guard !isPlanningDay else { return }
-
+    private func startAIPlanning() {
+        let originatingDayID = activeDayID
+        let currentReminders = reminders
+        let currentCarryForwardReminders = carryForwardReminders
+        let currentProjects = projects
         isPlanningDay = true
         Task {
             let plan = await CreateReminderAIPlanning.plan(
-                currentReminders: reminders,
-                carryForwardReminders: carryForwardReminders,
-                projects: projects,
+                currentReminders: currentReminders,
+                carryForwardReminders: currentCarryForwardReminders,
+                projects: currentProjects,
                 tier: subscriptionTier.tier,
                 foundationModel: onDeviceFoundationModel
             )
 
             await MainActor.run {
+                guard CreateReminderAIPlanningResultAcceptance.acceptsResult(
+                    originatingDayID: originatingDayID,
+                    activeDayID: activeDayID
+                ) else { return }
                 withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
                     isPlanningDay = false
                     taskOrganization = plan
                 }
-                afterPlanning(plan)
+                if shouldPlanAgainAfterCurrentPlanning {
+                    shouldPlanAgainAfterCurrentPlanning = false
+                    startAIPlanning()
+                }
             }
         }
     }
 
-    func carryForwardReminders(for plan: CreateReminderAIPlanningResult) -> [CreateReminder] {
-        let recommendedIDs = Set(plan.carryForwardReminderIDs)
-        return carryForwardReminders.filter { recommendedIDs.contains($0.id) }
+}
+
+enum CreateReminderAIPlanningTrigger {
+    enum Action: Equatable {
+        case skip
+        case startNow
+        case scheduleAfterCurrentPlanning
+    }
+
+    static func actionAfterUserAddedTask(
+        canUseOnDeviceFoundationModels: Bool,
+        isPlanningDay: Bool
+    ) -> Action {
+        guard canUseOnDeviceFoundationModels else { return .skip }
+        return isPlanningDay ? .scheduleAfterCurrentPlanning : .startNow
     }
 }
 
-private struct CreateComposerSuggestionButton: View {
-    let systemImage: String
-    let titleKey: LocalizedStringKey
-    let action: () -> Void
+enum CreateReminderAIPlanningResultAcceptance {
+    static func acceptsResult(originatingDayID: String, activeDayID: String) -> Bool {
+        originatingDayID == activeDayID
+    }
+}
 
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: NomaSpacing.sm) {
-                Image(systemName: systemImage)
-                    .font(.headline)
-                    .frame(width: ReminderInputBarLayout.minimumHeight)
-
-                Text(titleKey)
-                    .font(.headline)
-            }
-            .foregroundStyle(.textPrimary)
+enum CreateReminderCarryForwardAIRecommendation {
+    static func reminders(
+        from carryForwardReminders: [CreateReminder],
+        using plan: CreateReminderAIPlanningResult?
+    ) -> [CreateReminder] {
+        guard let plan, !plan.carryForwardReminderIDs.isEmpty else {
+            return carryForwardReminders
         }
-        .buttonStyle(ScaleButtonStyle())
+
+        let recommendedIDs = Set(plan.carryForwardReminderIDs)
+        return carryForwardReminders.filter { recommendedIDs.contains($0.id) }
     }
 }

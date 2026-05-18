@@ -44,107 +44,6 @@ struct CreateReminderSubmissionResult: Equatable {
     let remainingText: String
 }
 
-struct CreateReminderCaptureIntent: Equatable {
-    let normalizedText: String
-    let projectID: TaskProject.ID?
-}
-
-enum CreateReminderCaptureIntelligence {
-    static func intent(from text: String, projects: [TaskProject]) -> CreateReminderCaptureIntent {
-        let normalizedText = CreateReminderSubmission.normalizedText(from: text)
-        guard !normalizedText.isEmpty else {
-            return CreateReminderCaptureIntent(normalizedText: "", projectID: nil)
-        }
-
-        if let explicitProject = explicitProject(in: normalizedText, projects: projects) {
-            return explicitProject
-        }
-
-        return CreateReminderCaptureIntent(normalizedText: normalizedText, projectID: nil)
-    }
-
-    private static func explicitProject(
-        in normalizedText: String,
-        projects: [TaskProject]
-    ) -> CreateReminderCaptureIntent? {
-        for project in projects {
-            if let intent = hashIntent(for: project, in: normalizedText) {
-                return intent
-            }
-
-            if let intent = bracketIntent(for: project, in: normalizedText) {
-                return intent
-            }
-
-            if let intent = prefixIntent(for: project, in: normalizedText) {
-                return intent
-            }
-        }
-
-        return nil
-    }
-
-    private static func hashIntent(
-        for project: TaskProject,
-        in normalizedText: String
-    ) -> CreateReminderCaptureIntent? {
-        let marker = "#\(markerTitle(for: project))"
-        guard let markerRange = normalizedText.range(
-            of: marker,
-            options: [.caseInsensitive, .diacriticInsensitive]
-        ) else { return nil }
-        let cleanedText = normalizedText.replacingCharacters(in: markerRange, with: "")
-
-        return cleanedIntent(cleanedText: cleanedText, projectID: project.id)
-    }
-
-    private static func bracketIntent(
-        for project: TaskProject,
-        in normalizedText: String
-    ) -> CreateReminderCaptureIntent? {
-        anchoredIntent(marker: "[\(project.title)]", projectID: project.id, in: normalizedText)
-    }
-
-    private static func prefixIntent(
-        for project: TaskProject,
-        in normalizedText: String
-    ) -> CreateReminderCaptureIntent? {
-        anchoredIntent(marker: "\(project.title):", projectID: project.id, in: normalizedText)
-    }
-
-    private static func anchoredIntent(
-        marker: String,
-        projectID: TaskProject.ID,
-        in normalizedText: String
-    ) -> CreateReminderCaptureIntent? {
-        guard let markerRange = normalizedText.range(
-            of: marker,
-            options: [.anchored, .caseInsensitive, .diacriticInsensitive]
-        ) else { return nil }
-        let cleanedText = String(normalizedText[markerRange.upperBound...])
-
-        return cleanedIntent(cleanedText: cleanedText, projectID: projectID)
-    }
-
-    private static func cleanedIntent(
-        cleanedText: String,
-        projectID: TaskProject.ID
-    ) -> CreateReminderCaptureIntent? {
-        let normalizedText = CreateReminderSubmission.normalizedText(from: cleanedText)
-        guard !normalizedText.isEmpty else { return nil }
-
-        return CreateReminderCaptureIntent(normalizedText: normalizedText, projectID: projectID)
-    }
-
-    private static func markerTitle(for project: TaskProject) -> String {
-        project.title
-            .components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }
-            .joined()
-    }
-
-}
-
 enum CreateReminderSubmission {
     static let characterLimit = 1000
 
@@ -186,6 +85,38 @@ enum CreateReminderSubmission {
         guard let reminder = reminder(from: intent.normalizedText, id: id, projectID: projectID) else { return nil }
 
         return CreateReminderSubmissionResult(reminder: reminder, remainingText: "")
+    }
+}
+
+enum CreateReminderDraftReconciliation {
+    static func reconciledDraft(
+        currentDraft: String,
+        submittedText: String,
+        remainingText: String
+    ) -> String {
+        guard currentDraft.isEmpty || currentDraft == submittedText else {
+            return currentDraft
+        }
+
+        return remainingText
+    }
+}
+
+enum CreateReminderSubmittedProjectResolution {
+    static func projectID(
+        submittedProjectID: TaskProject.ID?,
+        currentProjects: [TaskProject],
+        selectedProjectID: TaskProject.ID?
+    ) -> TaskProject.ID? {
+        if let submittedProjectID, currentProjects.contains(where: { $0.id == submittedProjectID }) {
+            return submittedProjectID
+        }
+
+        if let selectedProjectID, currentProjects.contains(where: { $0.id == selectedProjectID }) {
+            return selectedProjectID
+        }
+
+        return nil
     }
 }
 

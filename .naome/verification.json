@@ -31,7 +31,7 @@
     },
     {
       "id": "xcode-build-ios-simulator",
-      "command": "xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data build",
+      "command": "xcodebuild -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /private/tmp/noma-derived-data build",
       "cwd": ".",
       "purpose": "Compile the Noma iOS app for the iOS Simulator.",
       "cost": "medium",
@@ -45,7 +45,7 @@
     },
     {
       "id": "xcode-test-iphone-17-pro",
-      "command": "xcodebuild test -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,id=E394FB54-CFA1-4765-B2FE-B7A90FE4A0AA' -derivedDataPath /private/tmp/noma-derived-data",
+      "command": "xcodebuild test -project Noma.xcodeproj -scheme Noma -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /private/tmp/noma-derived-data",
       "cwd": ".",
       "purpose": "Run unit and UI tests on the latest available iPhone 17 Pro simulator.",
       "cost": "medium",

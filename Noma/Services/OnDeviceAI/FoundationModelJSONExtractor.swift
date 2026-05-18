@@ -7,8 +7,16 @@ enum FoundationModelJSONExtractor {
             return data
         }
 
-        guard let startIndex = trimmedResponse.firstIndex(of: "{") else { return nil }
-        return balancedJSONObjectData(in: trimmedResponse, startingAt: startIndex)
+        var searchStart = trimmedResponse.startIndex
+        while let startIndex = trimmedResponse[searchStart...].firstIndex(of: "{") {
+            if let data = balancedJSONObjectData(in: trimmedResponse, startingAt: startIndex),
+               canDecodeJSON(from: data) {
+                return data
+            }
+            searchStart = trimmedResponse.index(after: startIndex)
+        }
+
+        return nil
     }
 
     private static func balancedJSONObjectData(

@@ -24,10 +24,6 @@ extension CreateView {
                 carryForwardButton
             }
 
-            if showsAIPlanningButton {
-                aiPlanningButton
-            }
-
             if isPlanningDay {
                 CreateAIGeneratingStatus(titleKey: "create.ai-generating.task-organization")
             }
@@ -110,9 +106,10 @@ extension CreateView {
 
     func submitReminder(_ submittedText: String) {
         guard canSubmitReminder else { return }
+        let originatingDayID = activeDayID
 
         guard subscriptionTier.tier.canUseOnDeviceFoundationModels else {
-            submitReminderImmediately(submittedText)
+            submitReminderImmediately(submittedText, originatingDayID: originatingDayID)
             return
         }
 
@@ -129,36 +126,67 @@ extension CreateView {
 
             await MainActor.run {
                 isSubmittingReminder = false
+                guard activeDayID == originatingDayID else { return }
                 guard let submission else { return }
-                appendSubmittedReminder(submission)
+                appendSubmittedReminder(
+                    submission,
+                    submittedText: submittedText,
+                    originatingDayID: originatingDayID
+                )
             }
         }
     }
 
-    func appendSubmittedReminder(_ submission: CreateReminderSubmissionResult) {
+    func appendSubmittedReminder(
+        _ submission: CreateReminderSubmissionResult,
+        submittedText: String,
+        originatingDayID: String
+    ) {
+        guard activeDayID == originatingDayID else { return }
         guard canAddSubmittedReminder else { return }
 
-        message = submission.remainingText
+        let submittedProjectID = CreateReminderSubmittedProjectResolution.projectID(
+            submittedProjectID: submission.reminder.projectID,
+            currentProjects: projects,
+            selectedProjectID: selectedProjectID
+        )
+        let submittedReminder = CreateReminder(
+            id: submission.reminder.id,
+            text: submission.reminder.text,
+            isCompleted: submission.reminder.isCompleted,
+            projectID: submittedProjectID
+        )
+        message = CreateReminderDraftReconciliation.reconciledDraft(
+            currentDraft: message,
+            submittedText: submittedText,
+            remainingText: submission.remainingText
+        )
+        taskOrganization = nil
         hapticFeedback.play(.createTaskSubmit)
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
-            reminders.append(submission.reminder)
+            reminders.append(submittedReminder)
         }
         saveCurrentReminders()
-        pendingScrollTargetID = CreateReminderAutoScroll.targetAfterAppending(submission.reminder)
+        pendingScrollTargetID = CreateReminderAutoScroll.targetAfterAppending(submittedReminder)
+        organizeTasksWithAIAfterUserAddedTask()
     }
 
     var canAddSubmittedReminder: Bool {
         subscriptionTier.tier.canAddTask(toGroupWithTaskCount: reminders.count)
     }
 
-    func submitReminderImmediately(_ submittedText: String) {
+    func submitReminderImmediately(_ submittedText: String, originatingDayID: String) {
         guard let submission = CreateReminderSubmission.submit(
             text: submittedText,
             projects: projects,
             selectedProjectID: selectedProjectID
         ) else { return }
 
-        appendSubmittedReminder(submission)
+        appendSubmittedReminder(
+            submission,
+            submittedText: submittedText,
+            originatingDayID: originatingDayID
+        )
     }
 
     var canSubmitReminder: Bool {
@@ -226,6 +254,7 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             reminders[index] = updatedReminder
         }
+        taskOrganization = nil
         saveCurrentDailyGroup()
     }
 
@@ -235,6 +264,7 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             _ = reminders.remove(at: index)
         }
+        taskOrganization = nil
         saveCurrentDailyGroup()
     }
 
@@ -249,6 +279,7 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             reminders = CreateReminderBatchCompletion.completingAll(reminders)
         }
+        taskOrganization = nil
         saveCurrentDailyGroup()
     }
 

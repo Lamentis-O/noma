@@ -113,6 +113,7 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             reminders.append(contentsOf: remindersToAdd)
         }
+        taskOrganization = nil
         saveCurrentDailyGroup()
         pendingScrollTargetID = CreateReminderListLayout.bottomAnchorID
     }

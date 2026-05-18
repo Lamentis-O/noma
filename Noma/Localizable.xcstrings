@@ -38,23 +38,6 @@
         }
       }
     },
-    "create.ai-plan.button.title" : {
-      "comment" : "Pro-only action title for organizing the current task list with on-device AI.",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufgaben mit AI organisieren"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Organize tasks with AI"
-          }
-        }
-      }
-    },
     "create.ai-generating.task-organization" : {
       "comment" : "Animated status shown while the on-device AI organizes the current task list.",
       "localizations" : {

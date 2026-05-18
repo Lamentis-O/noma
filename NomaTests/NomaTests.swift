@@ -328,6 +328,17 @@ final class NomaTests: XCTestCase {
         XCTAssertNil(intent.projectID)
     }
 
+    func testTaskCaptureIntelligenceRequiresHashMarkerBoundary() {
+        let project = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000066")!, title: "Work")
+        let intent = CreateReminderCaptureIntelligence.intent(
+            from: "Read #workflow notes",
+            projects: [project]
+        )
+
+        XCTAssertEqual(intent.normalizedText, "Read #workflow notes")
+        XCTAssertNil(intent.projectID)
+    }
+
     func testCreateReminderSubmissionUsesExplicitProjectOverSelectedProject() {
         let work = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000063")!, title: "Work")
         let home = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000064")!, title: "Home")
@@ -341,6 +352,42 @@ final class NomaTests: XCTestCase {
         XCTAssertEqual(result?.reminder.text, "Send launch update")
         XCTAssertEqual(result?.reminder.projectID, work.id)
         XCTAssertEqual(result?.remainingText, "")
+    }
+
+    func testDraftReconciliationPreservesNewDraftTypedDuringAsyncSubmit() {
+        XCTAssertEqual(
+            CreateReminderDraftReconciliation.reconciledDraft(
+                currentDraft: "Next task",
+                submittedText: "Call Mika",
+                remainingText: ""
+            ),
+            "Next task"
+        )
+    }
+
+    func testDraftReconciliationClearsOnlyUnchangedAsyncSubmitDraft() {
+        XCTAssertEqual(
+            CreateReminderDraftReconciliation.reconciledDraft(
+                currentDraft: "",
+                submittedText: "Call Mika",
+                remainingText: ""
+            ),
+            ""
+        )
+    }
+
+    func testSubmittedReminderDropsDeletedProjectReference() {
+        let deletedProjectID = UUID(uuidString: "00000000-0000-0000-0000-000000000067")!
+        let selectedProject = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000068")!, title: "Inbox")
+
+        XCTAssertEqual(
+            CreateReminderSubmittedProjectResolution.projectID(
+                submittedProjectID: deletedProjectID,
+                currentProjects: [selectedProject],
+                selectedProjectID: selectedProject.id
+            ),
+            selectedProject.id
+        )
     }
 
     func testReminderInputRejectsSubmittedTextWrittenBackAfterClear() {
@@ -357,6 +404,10 @@ final class NomaTests: XCTestCase {
             CreateReminderListLayout.bottomScrollPadding,
             NomaSize.scrollDismissSentinel
         )
+    }
+
+    func testCreateReminderRowsUseLargerVerticalSpacingBetweenTasks() {
+        XCTAssertEqual(CreateReminderRowsLayout.spacingBetweenTasks, NomaSpacing.md)
     }
 
     func testSectionHeaderLayoutUsesTwentyFourPointBottomPadding() {

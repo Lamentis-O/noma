@@ -286,7 +286,7 @@ struct CreateReminderRows: View {
     let onSwipeDeleteThreshold: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: NomaSpacing.sm) {
+        VStack(alignment: .leading, spacing: CreateReminderRowsLayout.spacingBetweenTasks) {
             ForEach(reminders) { reminder in
                 CreateReminderRow(
                     reminder: reminder,
@@ -310,6 +310,10 @@ struct CreateReminderRows: View {
         guard let projectID = reminder.projectID else { return nil }
         return projects.first { $0.id == projectID }
     }
+}
+
+enum CreateReminderRowsLayout {
+    static let spacingBetweenTasks = NomaSpacing.md
 }
 
 struct CreateReminderScrollContainer<Content: View>: View {

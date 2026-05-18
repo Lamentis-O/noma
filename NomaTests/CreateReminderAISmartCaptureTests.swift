@@ -103,6 +103,63 @@ final class CreateReminderAISmartCaptureTests: XCTestCase {
         XCTAssertEqual(result?.reminder.text, "Send update")
         XCTAssertEqual(result?.reminder.projectID, selectedProject.id)
     }
+
+    func testProSmartCapturePreservesModelTitleNewlines() async {
+        let model = OnDeviceFoundationModelService(
+            client: CapturingFoundationModelClient(
+                response: #"{"title":"Buy milk\nPick up keys","projectID":null,"projectTitle":null}"#
+            )
+        )
+
+        let result = await CreateReminderAISmartCapture.submit(
+            text: "buy milk\npick up keys",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000083")!,
+            projects: [],
+            selectedProjectID: nil,
+            tier: .pro,
+            foundationModel: model
+        )
+
+        XCTAssertEqual(result?.reminder.text, "Buy milk\nPick up keys")
+    }
+
+    func testProSmartCaptureFallsBackWhenModelReturnsEmptyTitle() async {
+        let model = OnDeviceFoundationModelService(
+            client: CapturingFoundationModelClient(
+                response: #"{"title":"","projectID":null,"projectTitle":null}"#
+            )
+        )
+
+        let result = await CreateReminderAISmartCapture.submit(
+            text: "Tomorrow 9am !",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000084")!,
+            projects: [],
+            selectedProjectID: nil,
+            tier: .pro,
+            foundationModel: model
+        )
+
+        XCTAssertEqual(result?.reminder.text, "Tomorrow 9am !")
+    }
+
+    func testSmartCaptureParsesFirstValidJSONObject() async {
+        let model = OnDeviceFoundationModelService(
+            client: CapturingFoundationModelClient(
+                response: #"I matched {Work}. {"title":"Send update","projectID":null,"projectTitle":null}"#
+            )
+        )
+
+        let result = await CreateReminderAISmartCapture.submit(
+            text: "send update",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000085")!,
+            projects: [],
+            selectedProjectID: nil,
+            tier: .pro,
+            foundationModel: model
+        )
+
+        XCTAssertEqual(result?.reminder.text, "Send update")
+    }
 }
 
 private struct CapturingFoundationModelClient: OnDeviceFoundationModelClient {
