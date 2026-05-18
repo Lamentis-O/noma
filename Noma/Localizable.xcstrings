@@ -92,6 +92,23 @@
         }
       }
     },
+    "create.suggested-project.title" : {
+      "comment" : "Action title for assigning new tasks to the most frequently used project.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu %@ hinzufügen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to %@"
+          }
+        }
+      }
+    },
     "create.project.add.description" : {
       "comment" : "Description text in the Add Project sheet explaining what projects are for.",
       "extractionState" : "stale",

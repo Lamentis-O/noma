@@ -76,13 +76,15 @@ final class DailyTaskGroupStore {
     }
 
     func commonProjectSummaries(limit: Int = 3) -> [CommonProjectSummary] {
-        storedProjects
+        let reminders = allReminders()
+
+        return storedProjects
             .map { project in
-                let reminders = groups.flatMap(\.reminders).filter { $0.projectID == project.id }
+                let projectReminders = reminders.filter { $0.projectID == project.id }
                 return CommonProjectSummary(
                     project: project,
-                    taskCount: reminders.count,
-                    unsolvedTaskCount: reminders.filter { !$0.isCompleted }.count
+                    taskCount: projectReminders.count,
+                    unsolvedTaskCount: projectReminders.filter { !$0.isCompleted }.count
                 )
             }
             .filter { $0.taskCount > 0 }
@@ -93,11 +95,15 @@ final class DailyTaskGroupStore {
                 return $0.taskCount > $1.taskCount
             }
             .prefix(limit)
-            .map { $0 }
+            .map(\.self)
     }
 
     func reminders(forDayID dayID: String) -> [CreateReminder] {
         groups.first { $0.id == dayID }?.reminders ?? []
+    }
+
+    func allReminders() -> [CreateReminder] {
+        groups.flatMap(\.reminders)
     }
 
     func openRemindersFromPreviousDay(beforeDayID dayID: String) -> [CreateReminder] {

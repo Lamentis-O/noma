@@ -59,7 +59,7 @@ struct CreateSheet: View {
     @Environment(\.dismiss) var dismiss
     @Binding var projects: [TaskProject]
     @Binding var selectedProjectID: TaskProject.ID?
-    let reminders: [CreateReminder]
+    let allReminders: [CreateReminder]
     let tier: SubscriptionTier
     let onCreateProject: (TaskProject) -> Void
     let onSelectProject: (TaskProject.ID?) -> Void

@@ -136,7 +136,7 @@ struct CreateProjectList: View {
     let projects: [TaskProject]
     let projectCount: Int
     let selectedProjectID: TaskProject.ID?
-    let reminders: [CreateReminder]
+    let allReminders: [CreateReminder]
     let tier: SubscriptionTier
     let onSelectProject: (TaskProject.ID?) -> Void
     let onEditProject: (TaskProject) -> Void
@@ -156,7 +156,7 @@ struct CreateProjectList: View {
                     .padding(.horizontal, CreateProjectListLayout.contentHorizontalPadding)
 
                 CreateProjectClearSelectionRow(
-                    summary: TaskProjectSummary.withoutProject(reminders: reminders),
+                    summary: TaskProjectSummary.withoutProject(reminders: allReminders),
                     isSelected: selectedProjectID == nil
                 ) {
                     onSelectProject(nil)
@@ -165,7 +165,7 @@ struct CreateProjectList: View {
                 ForEach(projects) { project in
                     CreateProjectRow(
                         project: project,
-                        summary: TaskProjectSummary.summary(for: project, reminders: reminders),
+                        summary: TaskProjectSummary.summary(for: project, reminders: allReminders),
                         isSelected: project.id == selectedProjectID,
                         onEdit: { onEditProject(project) },
                         onDelete: { onDeleteProject(project.id) }

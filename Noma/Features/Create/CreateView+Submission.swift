@@ -221,7 +221,7 @@ extension CreateView {
         CreateSheet(
             projects: $projects,
             selectedProjectID: $selectedProjectID,
-            reminders: reminders,
+            allReminders: dailyTaskGroups.allReminders(),
             tier: subscriptionTier.tier,
             onCreateProject: addProject,
             onSelectProject: selectProject,

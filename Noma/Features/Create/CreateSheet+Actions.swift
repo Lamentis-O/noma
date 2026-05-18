@@ -19,7 +19,7 @@ extension CreateSheet {
                 projects: visibleProjects,
                 projectCount: projects.count,
                 selectedProjectID: selectedProjectID,
-                reminders: reminders,
+                allReminders: allReminders,
                 tier: tier,
                 onSelectProject: selectProject,
                 onEditProject: editProject,

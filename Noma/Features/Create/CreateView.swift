@@ -41,6 +41,10 @@ struct CreateView: View {
             }
             .safeAreaBar(edge: .bottom, spacing: barSpacing) {
                 VStack(alignment: .leading, spacing: NomaSpacing.xl) {
+                    if showsSuggestedProjectButton {
+                        suggestedProjectButton
+                    }
+
                     if showsCarryForwardButton {
                         carryForwardButton
                     }
@@ -76,11 +80,4 @@ struct CreateView: View {
         .sheet(isPresented: $isUnlockMoreSheetPresented) { unlockMoreSheet }
     }
 
-    func loadDailyGroup() {
-        reminders = dailyTaskGroups.reminders(forDayID: dayID)
-        projects = dailyTaskGroups.projects(forDayID: dayID)
-
-        let storedSelectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: dayID)
-        selectedProjectID = projects.contains { $0.id == storedSelectedProjectID } ? storedSelectedProjectID : nil
-    }
 }
