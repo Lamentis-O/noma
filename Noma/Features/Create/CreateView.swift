@@ -43,14 +43,12 @@ struct CreateView: View {
                 VStack(alignment: .leading, spacing: NomaSpacing.xl) {
                     if showsCarryForwardButton {
                         carryForwardButton
-                            .padding(.leading, NomaSpacing.xl)
                     }
 
                     composerBar
-                        .frame(width: barWidth(in: proxy))
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.bottom, barBottomPadding(in: proxy))
+                .frame(width: barWidth(in: proxy), alignment: .leading)
+                .padding(.bottom, barBottomPadding(in: proxy))
             }
         }
         .background { NavigationKeyboardDismissObserver(isInputFocused: $isInputFocused) }
