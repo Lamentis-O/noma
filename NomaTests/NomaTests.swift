@@ -343,6 +343,50 @@ final class NomaTests: XCTestCase {
         XCTAssertEqual(result?.remainingText, "")
     }
 
+    func testProSmartCaptureDetectsTimingAndPriorityHints() {
+        let result = CreateReminderSubmission.submit(
+            text: "Morgen 9 Uhr ! Zahnarzt",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000066")!,
+            projects: [],
+            tier: .pro
+        )
+
+        XCTAssertEqual(result?.reminder.text, "Zahnarzt")
+        XCTAssertEqual(result?.reminder.priority, .high)
+        XCTAssertEqual(result?.reminder.timing, .tomorrow)
+        XCTAssertEqual(result?.reminder.timeText, "9 Uhr")
+    }
+
+    func testFreeSmartCaptureKeepsTimingAndPriorityAsText() {
+        let result = CreateReminderSubmission.submit(
+            text: "Morgen 9 Uhr ! Zahnarzt",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000067")!,
+            projects: [],
+            tier: .free
+        )
+
+        XCTAssertEqual(result?.reminder.text, "Morgen 9 Uhr ! Zahnarzt")
+        XCTAssertNil(result?.reminder.priority)
+        XCTAssertNil(result?.reminder.timing)
+        XCTAssertNil(result?.reminder.timeText)
+    }
+
+    func testProSmartCaptureCombinesProjectTimingAndPriority() {
+        let work = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000068")!, title: "Work")
+        let result = CreateReminderSubmission.submit(
+            text: "Work: Tomorrow 09:30 urgent Send launch update",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000069")!,
+            projects: [work],
+            tier: .pro
+        )
+
+        XCTAssertEqual(result?.reminder.text, "Send launch update")
+        XCTAssertEqual(result?.reminder.projectID, work.id)
+        XCTAssertEqual(result?.reminder.priority, .high)
+        XCTAssertEqual(result?.reminder.timing, .tomorrow)
+        XCTAssertEqual(result?.reminder.timeText, "09:30")
+    }
+
     func testReminderInputRejectsSubmittedTextWrittenBackAfterClear() {
         var staleGuard = ReminderInputStaleTextGuard()
 
