@@ -16,11 +16,11 @@ final class NomaTests: XCTestCase {
         XCTAssertEqual(NomaSpacing.xxl, 32)
     }
 
-    func testProjectEmptyStateEnablesAddProjectCTA() {
+    func testProjectEmptyStateUsesSheetBottomBarForAddProjectCTA() {
         let emptyState = CreateProjectEmptyState.placeholder
 
-        XCTAssertNotNil(emptyState.cta)
-        XCTAssertEqual(emptyState.cta?.titleKey, "create.project.empty.add-button")
+        XCTAssertNil(emptyState.cta)
+        XCTAssertTrue(CreateProjectSheetLayout.usesBottomSafeAreaBar)
     }
 
     func testDailyTaskGroupRowsUseScaleFeedbackAndCompletionCopy() {
