@@ -8,7 +8,7 @@ extension CreateView {
             placeholder: "create.input.placeholder",
             isSubmissionAvailable: canSubmitReminder,
             traySystemImage: selectedProject?.symbolName ?? "tray.full",
-            trayColor: selectedProject?.color ?? .primary,
+            trayColor: TaskProjectIconPresentation.appSurfaceColor,
             onTrayButtonTap: { isProjectSheetPresented = true },
             onSubmit: submitReminder
         )
@@ -21,7 +21,7 @@ extension CreateView {
     var currentDaySummary: DailyTaskGroupSummary {
         DailyTaskGroupSummary(
             group: DailyTaskGroup(
-                id: dayID,
+                id: activeDayID,
                 date: currentDayDate,
                 reminders: reminders
             )
@@ -29,7 +29,7 @@ extension CreateView {
     }
 
     var currentDayDate: Date {
-        DailyTaskGroupStore.date(forDayID: dayID) ?? Date()
+        DailyTaskGroupStore.date(forDayID: activeDayID) ?? Date()
     }
 
     var createNavigationTitle: String {
@@ -49,26 +49,30 @@ extension CreateView {
 
     @ToolbarContentBuilder
     var createToolbar: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            TaskNavigationTitleButton(
+                title: createNavigationTitle,
+                subtitle: createNavigationSubtitle,
+                accessibilityLabelKey: "create.date-picker.open.accessibility-label",
+                action: openDatePickerSheet
+            )
+        }
+
         ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                completeAllRemindersForCurrentDay()
-            } label: {
-                Text("create.toolbar.done.title")
-            }
-            .disabled(!canCompleteAllReminders)
+            TaskDoneToolbarButton(
+                isDisabled: !canCompleteAllReminders,
+                action: completeAllRemindersForCurrentDay
+            )
         }
 
         ToolbarSpacer(.fixed, placement: .topBarTrailing)
 
         ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                toggleUnsolvedFilter()
-            } label: {
-                Image(systemName: CreateReminderFilterToolbarIcon.systemImage(isActive: showsOnlyUnsolvedTasks))
-            }
-            .foregroundStyle(CreateReminderFilterToolbarIcon.foregroundColor(isActive: showsOnlyUnsolvedTasks))
-            .accessibilityLabel(Text("create.toolbar.filter.unsolved.accessibility-label"))
-            .disabled(reminders.isEmpty)
+            TaskFilterToolbarButton(
+                isActive: showsOnlyUnsolvedTasks,
+                isDisabled: reminders.isEmpty,
+                action: toggleUnsolvedFilter
+            )
         }
     }
 
@@ -116,17 +120,17 @@ extension CreateView {
 
     func updateProject(_ project: TaskProject) {
         dailyTaskGroups.updateProject(project)
-        projects = dailyTaskGroups.projects(forDayID: dayID)
+        projects = dailyTaskGroups.projects(forDayID: activeDayID)
     }
 
     func deleteProject(_ projectID: TaskProject.ID) {
         dailyTaskGroups.deleteProject(withID: projectID)
 
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
-            reminders = dailyTaskGroups.reminders(forDayID: dayID)
+            reminders = dailyTaskGroups.reminders(forDayID: activeDayID)
         }
-        projects = dailyTaskGroups.projects(forDayID: dayID)
-        selectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: dayID)
+        projects = dailyTaskGroups.projects(forDayID: activeDayID)
+        selectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: activeDayID)
     }
 
     func selectProject(_ projectID: TaskProject.ID?) {
@@ -135,7 +139,7 @@ extension CreateView {
     }
 
     func scrollToReminderListBottomAfterKeyboardFocus() {
-        guard let targetID = CreateReminderAutoScroll.targetAfterKeyboardFocus(reminderCount: reminders.count) else {
+        guard let targetID = CreateReminderAutoScroll.targetAfterKeyboardFocus(visibleReminders: visibleReminders) else {
             return
         }
 
@@ -180,10 +184,11 @@ extension CreateView {
     }
 
     func toggleUnsolvedFilter() {
-        hapticFeedback.play(.createTaskSubmit)
-        withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
-            showsOnlyUnsolvedTasks.toggle()
-        }
+        CreateReminderFilterToggle.toggle(
+            isActive: showsOnlyUnsolvedTasks,
+            hapticFeedback: hapticFeedback,
+            setIsActive: { showsOnlyUnsolvedTasks = $0 }
+        )
     }
 
     func saveCurrentReminders() {
@@ -195,7 +200,7 @@ extension CreateView {
             reminders: reminders,
             projects: projects,
             selectedProjectID: selectedProjectID,
-            forDayID: dayID
+            forDayID: activeDayID
         )
     }
 
@@ -206,13 +211,16 @@ extension CreateView {
     var barSpacing: CGFloat { max(0, isKeyboardPresented ? focusedKeyboardSpacing : 0) }
 
     func barWidth(in proxy: GeometryProxy) -> CGFloat {
-        let width = max(0, proxy.size.width - (barEdgePadding * 2))
-        return width.isFinite ? width : 0
+        BottomComposerBarLayout.width(in: proxy, edgePadding: barEdgePadding)
     }
 
     func barBottomPadding(in proxy: GeometryProxy) -> CGFloat {
-        let padding = isKeyboardPresented ? focusedEdgePadding : max(0, collapsedEdgePadding - proxy.safeAreaInsets.bottom)
-        return padding.isFinite ? padding : 0
+        BottomComposerBarLayout.bottomPadding(
+            isKeyboardPresented: isKeyboardPresented,
+            focusedPadding: focusedEdgePadding,
+            collapsedPadding: collapsedEdgePadding,
+            safeAreaBottom: proxy.safeAreaInsets.bottom
+        )
     }
 
     var barEdgePadding: CGFloat { isKeyboardPresented ? focusedEdgePadding : collapsedEdgePadding }
@@ -242,28 +250,51 @@ extension CreateView {
         .presentationDragIndicator(.visible)
     }
 
+    var datePickerSheet: some View {
+        CreateDatePickerSheet(
+            selectedDate: $datePickerSelection,
+            onSetDate: { selectDay(datePickerSelection) }
+        )
+            .presentationDetents([.fraction(NomaScale.datePickerSheetFraction)])
+            .presentationDragIndicator(.visible)
+    }
+
+    func openDatePickerSheet() {
+        datePickerSelection = currentDayDate
+        isDatePickerSheetPresented = true
+    }
+
+    func selectDay(_ date: Date) {
+        let newDayID = DailyTaskGroupStore.dayID(for: date)
+        guard newDayID != activeDayID else { return }
+
+        saveCurrentDailyGroup()
+        activeDayID = newDayID
+        showsOnlyUnsolvedTasks = false
+        pendingScrollTargetID = nil
+        loadDailyGroup()
+    }
+
     @ViewBuilder
     func content(in proxy: GeometryProxy) -> some View {
-        if CreateViewContentMode.usesScrollView(reminderCount: reminders.count) {
-            ScrollViewReader { scrollProxy in
-                ScrollView {
-                    CreateReminderList(
-                        reminders: visibleReminders,
-                        reminderCount: reminders.count,
-                        projects: projects,
-                        minimumHeight: CreateReminderListLayout.minimumHeight(for: proxy.size.height),
-                        tier: subscriptionTier.tier,
-                        onUnlockMore: unlockMoreTasks,
-                        onSwipeDeleteThreshold: playSwipeDeleteThresholdFeedback,
-                        onToggleReminder: toggleReminder,
-                        onDeleteReminder: deleteReminder
-                    )
-                }
-                .scrollIndicators(.hidden)
-                .scrollDismissesKeyboard(.interactively)
-                .task(id: pendingScrollTargetID) {
-                    await scrollToPendingTarget(using: scrollProxy)
-                }
+        if CreateViewContentMode.usesScrollView(
+            reminderCount: reminders.count,
+            carryForwardPreviewCount: carryForwardPreviewReminders.count
+        ) {
+            CreateReminderScrollContainer(pendingScrollTargetID: $pendingScrollTargetID) {
+                CreateReminderList(
+                    reminders: visibleReminders,
+                    carryForwardPreviewReminders: carryForwardPreviewReminders,
+                    sectionTitle: CreateReminderListSection.headerTitle(for: currentDayDate),
+                    reminderCount: reminders.count,
+                    projects: projects,
+                    tier: subscriptionTier.tier,
+                    onUnlockMore: unlockMoreTasks,
+                    onSwipeDeleteThreshold: playSwipeDeleteThresholdFeedback,
+                    onToggleReminder: toggleReminder,
+                    onDeleteReminder: deleteReminder,
+                    onCompleteCarryForwardReminder: completeCarryForwardReminder
+                )
             }
         } else {
             CreateTaskEmptyHint()
@@ -272,14 +303,4 @@ extension CreateView {
         }
     }
 
-    @MainActor
-    func scrollToPendingTarget(using scrollProxy: ScrollViewProxy) async {
-        guard let pendingScrollTargetID else { return }
-
-        await Task.yield()
-        withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
-            scrollProxy.scrollTo(pendingScrollTargetID, anchor: .bottom)
-        }
-        self.pendingScrollTargetID = nil
-    }
 }

@@ -82,12 +82,6 @@ extension CreateSheet {
     }
 
     var emptyState: CreateProjectEmptyState {
-        CreateProjectEmptyState {
-            guard tier.canAddProject(toProjectCount: projects.count) else {
-                unlockMoreProjects()
-                return
-            }
-            openAddProjectSheet()
-        }
+        .placeholder
     }
 }

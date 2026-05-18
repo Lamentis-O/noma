@@ -169,6 +169,9 @@ final class DailyTaskGroupTests: XCTestCase {
             XCTAssertEqual(summaries.map(\.project.id), [personal.id, work.id, home.id])
             XCTAssertEqual(summaries.map(\.taskCount), [3, 2, 1])
             XCTAssertEqual(summaries.map(\.unsolvedTaskCount), [2, 1, 1])
+            XCTAssertEqual(CommonProjectsSection.headerTitleKey, "home.common-projects.section-header")
+            XCTAssertEqual(CommonProjectsSection.taskCountText(for: summaries[0]), "3")
+            XCTAssertTrue(TaskProjectIconPresentation.usesNeutralTintInAppSurfaces)
         }
     }
 

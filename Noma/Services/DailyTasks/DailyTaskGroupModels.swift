@@ -78,6 +78,10 @@ struct CommonProjectSummary: Equatable, Identifiable {
 
 enum CommonProjectsSection {
     static let headerTitleKey = "home.common-projects.section-header"
+
+    static func taskCountText(for summary: CommonProjectSummary) -> String {
+        "\(summary.taskCount)"
+    }
 }
 
 enum DailyTaskGroupsSection {

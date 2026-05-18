@@ -2,6 +2,6 @@
   "name": "noma",
   "private": true,
   "dependencies": {
-    "@lamentis/naome": "^1.4.9"
+    "@lamentis/naome": "1.4.12"
   }
 }

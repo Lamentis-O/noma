@@ -51,7 +51,11 @@ struct AddProjectSheet: View {
         self.project = project
         self.onSave = onSave
         _title = State(initialValue: project?.title ?? "")
-        _selectedColorIndex = State(initialValue: project?.colorIndex ?? ProjectIconPickerOption.defaultColorIndex)
+        _selectedColorIndex = State(
+            initialValue: ProjectIconPickerOption.normalizedColorIndex(
+                project?.colorIndex ?? ProjectIconPickerOption.defaultColorIndex
+            )
+        )
         _selectedSymbol = State(initialValue: project?.symbolName ?? ProjectIconPickerOption.defaultSymbol)
         _hasSelectedIcon = State(initialValue: project != nil)
     }
@@ -98,7 +102,7 @@ struct AddProjectSheet: View {
 }
 
 private extension AddProjectSheet {
-    var selectedColor: Color { ProjectIconPickerOption.colors[selectedColorIndex] }
+    var selectedColor: Color { ProjectIconPickerOption.color(for: selectedColorIndex) }
     var canCreateProject: Bool { TaskProjectTitlePolicy.canCreateProject(title: title) }
     var normalizedTitle: String { TaskProjectTitlePolicy.normalizedTitle(from: title) }
     var navigationTitleKey: String { project == nil ? CreateProjectSheetCopy.titleKey : CreateProjectSheetCopy.editTitleKey }
@@ -107,7 +111,12 @@ private extension AddProjectSheet {
 
     private func saveProject() {
         guard canCreateProject else { return }
-        onSave(TaskProject(id: project?.id ?? UUID(), title: normalizedTitle, symbolName: selectedSymbol, colorIndex: selectedColorIndex))
+        onSave(TaskProject(
+            id: project?.id ?? UUID(),
+            title: normalizedTitle,
+            symbolName: selectedSymbol,
+            colorIndex: ProjectIconPickerOption.normalizedColorIndex(selectedColorIndex)
+        ))
         dismiss()
     }
 

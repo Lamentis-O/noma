@@ -65,7 +65,13 @@ private struct ProjectColorOptionButton: View {
             .frame(width: NomaSize.projectControl, height: NomaSize.projectControl)
         }
         .buttonStyle(ScaleButtonStyle())
-        .accessibilityHidden(true)
+        .accessibilityLabel(Text(ProjectIconPickerSheetCopy.colorAccessibilityLabel(for: index)))
+        .accessibilityValue(
+            isSelected
+                ? Text(LocalizedStringKey(ProjectIconPickerSheetCopy.selectedAccessibilityValueKey))
+                : Text("")
+        )
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

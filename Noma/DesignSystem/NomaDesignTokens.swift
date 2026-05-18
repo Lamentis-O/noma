@@ -57,6 +57,8 @@ enum NomaScale {
     static let hintIcon: CGFloat = 1.5
     static let taskDeleteSwipeDamping: CGFloat = NomaSpacing.xl / NomaSpacing.xxl
     static let taskSwipeHorizontalDominance: CGFloat = 1.5
+    static let datePickerSheetFraction: CGFloat =
+        (NomaSpacing.xl + (NomaSpacing.xs / NomaSpacing.sm * NomaSpacing.xs)) / NomaSize.projectControl
 }
 
 enum NomaGradient {

@@ -101,7 +101,7 @@ final class NomaTests: XCTestCase {
         XCTAssertNil(emptyState.cta)
     }
 
-    func testCreateReminderAutoScrollTargetsBottomAnchorAfterSubmission() {
+    func testCreateReminderAutoScrollTargetsSubmittedReminderAfterSubmission() {
         let reminder = CreateReminder(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
             text: "Last task"
@@ -109,19 +109,28 @@ final class NomaTests: XCTestCase {
 
         XCTAssertEqual(
             CreateReminderAutoScroll.targetAfterAppending(reminder),
-            CreateReminderListLayout.bottomAnchorID
+            CreateReminderAutoScroll.targetID(for: reminder)
         )
     }
 
-    func testCreateReminderAutoScrollTargetsBottomAnchorAfterKeyboardFocusWithTasks() {
+    func testCreateReminderAutoScrollTargetsLastVisibleTaskAfterKeyboardFocus() {
+        let firstReminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!,
+            text: "First task"
+        )
+        let lastReminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000005")!,
+            text: "Last task"
+        )
+
         XCTAssertEqual(
-            CreateReminderAutoScroll.targetAfterKeyboardFocus(reminderCount: 1),
-            CreateReminderListLayout.bottomAnchorID
+            CreateReminderAutoScroll.targetAfterKeyboardFocus(visibleReminders: [firstReminder, lastReminder]),
+            CreateReminderAutoScroll.targetID(for: lastReminder)
         )
     }
 
     func testCreateReminderAutoScrollIgnoresKeyboardFocusWithoutTasks() {
-        XCTAssertNil(CreateReminderAutoScroll.targetAfterKeyboardFocus(reminderCount: 0))
+        XCTAssertNil(CreateReminderAutoScroll.targetAfterKeyboardFocus(visibleReminders: []))
     }
 
     func testFreeTierLimitsTaskGroupsToFiveTasks() {
@@ -204,6 +213,47 @@ final class NomaTests: XCTestCase {
         XCTAssertTrue(CreateViewContentMode.usesScrollView(reminderCount: 1))
     }
 
+    func testCreateViewUsesScrollViewForCarryForwardPreview() {
+        XCTAssertTrue(CreateViewContentMode.usesScrollView(reminderCount: 0, carryForwardPreviewCount: 1))
+    }
+
+    func testCarryForwardPreviewExcludesTasksAlreadyAddedToday() {
+        let projectID = UUID(uuidString: "00000000-0000-0000-0000-000000000051")!
+        let previousOpenReminders = [
+            CreateReminder(text: "Move invoice", projectID: projectID),
+            CreateReminder(text: "Send update")
+        ]
+        let currentReminders = [
+            CreateReminder(text: "Move invoice", projectID: projectID)
+        ]
+
+        XCTAssertEqual(
+            CreateReminderCarryForwardPreview.visibleReminders(
+                currentReminders: currentReminders,
+                previousOpenReminders: previousOpenReminders
+            )
+            .map(\.text),
+            ["Send update"]
+        )
+    }
+
+    func testCarryForwardPreviewCompletionMarksOriginalReminderDone() {
+        let reminderID = UUID(uuidString: "00000000-0000-0000-0000-000000000052")!
+        let targetReminder = CreateReminder(id: reminderID, text: "Send update")
+        let reminders = [
+            CreateReminder(text: "Keep open"),
+            targetReminder
+        ]
+
+        let updatedReminders = CreateReminderCarryForwardCompletion.completing(
+            targetReminder,
+            in: reminders
+        )
+
+        XCTAssertFalse(updatedReminders[0].isCompleted)
+        XCTAssertTrue(updatedReminders[1].isCompleted)
+    }
+
     func testCreateReminderSubmissionTrimsSubmittedText() {
         let reminder = CreateReminderSubmission.reminder(from: "  Call Mika  ")
 
@@ -265,10 +315,10 @@ final class NomaTests: XCTestCase {
         XCTAssertTrue(staleGuard.acceptsIncomingText("Next task"))
     }
 
-    func testCreateReminderListLayoutLeavesScrollRoomAboveComposer() {
+    func testCreateReminderListLayoutUsesOnlySentinelBottomAnchor() {
         XCTAssertEqual(
             CreateReminderListLayout.bottomScrollPadding,
-            NomaSpacing.xl
+            NomaSize.scrollDismissSentinel
         )
     }
 
@@ -297,7 +347,14 @@ final class NomaTests: XCTestCase {
     }
 
     func testCreateReminderListSectionUsesLocalizedTaskHeaderForEnteredTasks() {
-        XCTAssertEqual(CreateReminderListSection.headerTitleKey, "create.tasks.today.section-header")
+        let date = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 5, day: 18))!
+        let headerTitle = CreateReminderListSection.headerTitle(for: date)
+        let dateText = date.formatted(date: .abbreviated, time: .omitted)
+
+        XCTAssertEqual(CreateReminderListSection.headerTitleFormatKey, "create.tasks.date.section-header")
+        XCTAssertEqual(CreateReminderListSection.carryForwardPreviewTitleKey, "create.tasks.yesterday.section-header")
+        XCTAssertEqual(CreateReminderListSection.carryForwardPreviewSystemImage, "clock.arrow.circlepath")
+        XCTAssertTrue(headerTitle.contains(dateText))
         XCTAssertFalse(CreateReminderListSection.showsHeader(reminderCount: 0))
         XCTAssertTrue(CreateReminderListSection.showsHeader(reminderCount: 1))
     }

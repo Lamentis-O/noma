@@ -10,7 +10,6 @@ private enum CreateProjectListLayout {
 
 struct CreateProjectRow: View {
     let project: TaskProject
-    let summary: TaskProjectSummary
     let isSelected: Bool
     let onEdit: () -> Void
     let onDelete: () -> Void
@@ -19,7 +18,6 @@ struct CreateProjectRow: View {
     var body: some View {
         CreateProjectSelectionRow(
             title: project.title,
-            summary: summary,
             isSelected: isSelected,
             icon: projectIcon,
             action: action
@@ -39,7 +37,7 @@ struct CreateProjectRow: View {
     private var projectIcon: some View {
         Image(systemName: project.symbolName)
             .font(.headline.weight(.bold))
-            .foregroundStyle(project.color)
+            .foregroundStyle(TaskProjectIconPresentation.appSurfaceColor)
             .frame(width: NomaSize.projectControl, height: NomaSize.projectControl)
             .background {
                 Circle().fill(.secondaryBackground)
@@ -49,14 +47,12 @@ struct CreateProjectRow: View {
 }
 
 struct CreateProjectClearSelectionRow: View {
-    let summary: TaskProjectSummary
     let isSelected: Bool
     let action: () -> Void
 
     var body: some View {
         CreateProjectSelectionRow(
             title: String(localized: String.LocalizationValue(CreateProjectListSection.noProjectTitleKey)),
-            summary: summary,
             isSelected: isSelected,
             icon: icon,
             action: action
@@ -76,7 +72,6 @@ struct CreateProjectClearSelectionRow: View {
 
 struct CreateProjectSelectionRow<Icon: View>: View {
     let title: String
-    let summary: TaskProjectSummary
     let isSelected: Bool
     let icon: Icon
     let action: () -> Void
@@ -91,8 +86,8 @@ struct CreateProjectSelectionRow<Icon: View>: View {
                         .font(.headline)
                         .fontWeight(.medium)
                         .foregroundStyle(.textPrimary)
-
-                    CreateProjectStatsText(summary: summary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -113,22 +108,6 @@ struct CreateProjectSelectionRow<Icon: View>: View {
             RoundedRectangle(cornerRadius: CreateProjectListLayout.cardRadius, style: .continuous)
         )
         .padding(.horizontal, CreateProjectListLayout.cardHorizontalPadding)
-    }
-}
-
-struct CreateProjectStatsText: View {
-    let summary: TaskProjectSummary
-
-    var body: some View {
-        HStack(spacing: 0) {
-            Text("\(summary.taskCount) ")
-            Text(LocalizedStringKey(summary.taskUnitKey))
-            Text(", \(summary.unsolvedTaskCount) ")
-            Text(LocalizedStringKey(TaskProjectStatsCopy.unsolvedKey))
-        }
-        .font(.headline)
-        .fontWeight(.medium)
-        .foregroundStyle(.textSecondary)
     }
 }
 
@@ -156,7 +135,6 @@ struct CreateProjectList: View {
                     .padding(.horizontal, CreateProjectListLayout.contentHorizontalPadding)
 
                 CreateProjectClearSelectionRow(
-                    summary: TaskProjectSummary.withoutProject(reminders: allReminders),
                     isSelected: selectedProjectID == nil
                 ) {
                     onSelectProject(nil)
@@ -165,7 +143,6 @@ struct CreateProjectList: View {
                 ForEach(projects) { project in
                     CreateProjectRow(
                         project: project,
-                        summary: TaskProjectSummary.summary(for: project, reminders: allReminders),
                         isSelected: project.id == selectedProjectID,
                         onEdit: { onEditProject(project) },
                         onDelete: { onDeleteProject(project.id) }

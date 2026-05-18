@@ -1,13 +1,14 @@
 import SwiftUI
 
-private enum HomeRoute: Hashable {
+enum HomeRoute: Hashable {
     case create(dayID: String)
+    case project(TaskProject.ID)
 }
 
 struct HomeView: View {
-    @Environment(DailyTaskGroupStore.self) private var dailyTaskGroups
-    @Environment(DailyTaskNotificationScheduler.self) private var dailyTaskNotifications
-    @State private var path: [HomeRoute] = []
+    @Environment(DailyTaskGroupStore.self) var dailyTaskGroups
+    @Environment(DailyTaskNotificationScheduler.self) var dailyTaskNotifications
+    @State var path: [HomeRoute] = []
 
     var body: some View {
         GeometryReader { proxy in
@@ -32,6 +33,8 @@ struct HomeView: View {
                     switch route {
                     case let .create(dayID):
                         CreateView(dayID: dayID)
+                    case let .project(projectID):
+                        ProjectDetailView(projectID: projectID)
                     }
                 }
                 .toolbar { ToolbarItem(placement: .topBarTrailing) { HomeSettingsMenu() } }
@@ -45,39 +48,5 @@ struct HomeView: View {
                 }
             }
         }
-    }
-
-    private var createButton: some View {
-        PrimaryGlassButton(title: "create.button.title", systemImage: "square.and.pencil") {
-            path.append(.create(dayID: dailyTaskGroups.todayID()))
-        }
-    }
-
-    private var dailyGroupsList: some View {
-        VStack(alignment: .leading, spacing: NomaSpacing.xxl) {
-            if !commonProjectSummaries.isEmpty {
-                CommonProjectsSectionView(summaries: commonProjectSummaries)
-            }
-
-            if !dailyGroupSummaries.isEmpty {
-                DailyGroupsSectionView(
-                    summaries: dailyGroupSummaries,
-                    onSelectGroup: { path.append(.create(dayID: $0.id)) }
-                )
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, NomaSpacing.xl)
-        .padding(.top, NomaSpacing.xxl)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    }
-
-    private var dailyGroupSummaries: [DailyTaskGroupSummary] { dailyTaskGroups.summaries() }
-    private var commonProjectSummaries: [CommonProjectSummary] { dailyTaskGroups.commonProjectSummaries() }
-
-    private func refreshDailyTaskNotifications() {
-        let todayReminders = dailyTaskGroups.reminders(forDayID: dailyTaskGroups.todayID())
-        Task { await dailyTaskNotifications.refreshDailyTaskReminders(for: todayReminders) }
     }
 }

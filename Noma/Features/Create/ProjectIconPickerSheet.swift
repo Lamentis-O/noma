@@ -3,6 +3,13 @@ import SwiftUI
 enum ProjectIconPickerSheetCopy {
     static let titleKey = "create.project.icon-picker.title"
     static let doneAccessibilityLabelKey = "create.project.icon-picker.done"
+    static let colorAccessibilityLabelKey = "create.project.icon-picker.color.accessibility-label"
+    static let selectedAccessibilityValueKey = "create.project.icon-picker.color.selected"
+
+    static func colorAccessibilityLabel(for index: Int) -> String {
+        let format = String(localized: String.LocalizationValue(colorAccessibilityLabelKey))
+        return String.localizedStringWithFormat(format, index + 1)
+    }
 }
 
 enum ProjectIconPickerSheetLayout {
@@ -59,6 +66,14 @@ enum ProjectIconPickerOption {
         "heart",
         "gift"
     ]
+
+    static func normalizedColorIndex(_ index: Int) -> Int {
+        colors.indices.contains(index) ? index : defaultColorIndex
+    }
+
+    static func color(for index: Int) -> Color {
+        colors[normalizedColorIndex(index)]
+    }
 }
 
 struct ProjectIconPickerSheet: View {
@@ -72,7 +87,7 @@ struct ProjectIconPickerSheet: View {
     )
 
     private var selectedColor: Color {
-        ProjectIconPickerOption.colors[selectedColorIndex]
+        ProjectIconPickerOption.color(for: selectedColorIndex)
     }
 
     var body: some View {
@@ -107,8 +122,7 @@ struct ProjectIconPickerSheet: View {
             .tint(.primary)
             .foregroundStyle(.primaryBackground)
             .buttonStyle(.glassProminent)
-            .buttonBorderShape(.circle)
-            .accessibilityLabel(Text(ProjectIconPickerSheetCopy.doneAccessibilityLabelKey))
+            .accessibilityLabel(Text(LocalizedStringKey(ProjectIconPickerSheetCopy.doneAccessibilityLabelKey)))
         }
     }
 }

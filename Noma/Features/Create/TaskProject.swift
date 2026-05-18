@@ -26,6 +26,12 @@ struct TaskProject: Codable, Identifiable, Equatable {
     }
 }
 
+enum TaskProjectIconPresentation {
+    static let usesNeutralTintInAppSurfaces = true
+
+    static var appSurfaceColor: Color { .textPrimary }
+}
+
 enum TaskProjectTitlePolicy {
     static let characterLimit = NomaLimit.projectTitleCharacters
 

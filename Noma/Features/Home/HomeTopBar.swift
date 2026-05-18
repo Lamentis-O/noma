@@ -11,7 +11,7 @@ struct HomeTopBar: View {
 
             subscriptionTierText
         }
-        .padding(.top, NomaSpacing.xs)
+        .padding(.top, NomaSpacing.sm)
     }
 
     @ViewBuilder

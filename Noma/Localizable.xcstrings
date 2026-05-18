@@ -1,10 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    ", %lld " : {
-
-    },
-    "%lld " : {
+    "" : {
 
     },
     "auth.apple.button.title" : {
@@ -71,6 +68,93 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add from yesterday"
+          }
+        }
+      }
+    },
+    "create.date-picker.close.accessibility-label" : {
+      "comment" : "Accessibility label for closing the create date picker sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datumsauswahl schließen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close date picker"
+          }
+        }
+      }
+    },
+    "create.date-picker.label" : {
+      "comment" : "Hidden label for the date picker in the create view date sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datum"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        }
+      }
+    },
+    "create.date-picker.open.accessibility-label" : {
+      "comment" : "Accessibility label for opening the create view date picker sheet from the navigation title.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datum ändern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change date"
+          }
+        }
+      }
+    },
+    "create.date-picker.set-date" : {
+      "comment" : "Primary button title in the create date picker sheet. The placeholder is the selected date.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datum auf %@ setzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set Date %@"
+          }
+        }
+      }
+    },
+    "create.date-picker.title" : {
+      "comment" : "Navigation title for the create date picker sheet.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datum wählen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Date"
           }
         }
       }
@@ -183,6 +267,7 @@
     },
     "create.project.empty.add-button" : {
       "comment" : "Primary call-to-action title in the empty project sheet.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -245,6 +330,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choose project icon"
+          }
+        }
+      }
+    },
+    "create.project.icon-picker.color.accessibility-label" : {
+      "comment" : "Accessibility label for a selectable project color swatch. The placeholder is the swatch position.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projektfarbe %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Project color %lld"
+          }
+        }
+      }
+    },
+    "create.project.icon-picker.color.selected" : {
+      "comment" : "Accessibility value for the selected project color swatch.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgewählt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected"
           }
         }
       }
@@ -317,6 +438,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Project title"
+          }
+        }
+      }
+    },
+    "create.projects.create-new.title" : {
+      "comment" : "Bottom call-to-action title in the Projects sheet.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neues Projekt erstellen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create New Project"
           }
         }
       }
@@ -553,6 +692,24 @@
         }
       }
     },
+    "create.tasks.date.section-header" : {
+      "comment" : "Section header format shown above reminders entered in the create task view. The placeholder is the selected day.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgaben für %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks for %@"
+          }
+        }
+      }
+    },
     "create.tasks.empty.today.subtitle" : {
       "comment" : "Subtitle for the empty task list hint in the create task view.",
       "extractionState" : "stale",
@@ -589,24 +746,6 @@
         }
       }
     },
-    "create.tasks.today.section-header" : {
-      "comment" : "Section header shown above reminders entered in the create task view.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufgaben für heute"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tasks for today"
-          }
-        }
-      }
-    },
     "create.tasks.unlock-more" : {
       "comment" : "Button title shown when the free task limit for a group is reached.",
       "extractionState" : "stale",
@@ -639,6 +778,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The Free tier lets you create up to 5 tasks for today. With Pro, you can add unlimited tasks."
+          }
+        }
+      }
+    },
+    "create.tasks.yesterday.section-header" : {
+      "comment" : "Section header shown above open tasks from the previous day in the create task view.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offen von gestern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open from yesterday"
           }
         }
       }
@@ -735,13 +892,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Häufige Projekte"
+            "value" : "Projekte"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Common Projects"
+            "value" : "Projects"
           }
         }
       }
@@ -925,6 +1082,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Project"
+          }
+        }
+      }
+    },
+    "project.detail.progress.incomplete" : {
+      "comment" : "Project detail navigation subtitle suffix for incomplete tasks.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "offen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "incomplete"
+          }
+        }
+      }
+    },
+    "project.detail.today.section-header" : {
+      "comment" : "Section header above today's tasks in the project detail view.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgaben für heute"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks for today"
           }
         }
       }

@@ -76,12 +76,15 @@ private struct ReminderSendButton: View {
                 .font(.headline.weight(.bold))
                 .foregroundStyle(.primaryBackground)
                 .frame(width: NomaSize.sendButton, height: NomaSize.sendButton)
-                .background { Circle().fill(background) }
+                .background {
+                    Circle()
+                        .fill(background)
+                        .animation(.smooth(duration: NomaTiming.controlFeedback), value: state.sendButtonTone)
+                }
         }
         .buttonStyle(.plain)
         .disabled(!state.canSubmit)
         .accessibilityLabel(Text("create.send.accessibility-label"))
-        .animation(.smooth(duration: NomaTiming.controlFeedback), value: state)
     }
 
     private var background: Color {

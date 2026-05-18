@@ -2,10 +2,10 @@ import SwiftUI
 
 extension CreateView {
     func loadDailyGroup() {
-        reminders = dailyTaskGroups.reminders(forDayID: dayID)
-        projects = dailyTaskGroups.projects(forDayID: dayID)
+        reminders = dailyTaskGroups.reminders(forDayID: activeDayID)
+        projects = dailyTaskGroups.projects(forDayID: activeDayID)
 
-        let storedSelectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: dayID)
+        let storedSelectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: activeDayID)
         selectedProjectID = projects.contains { $0.id == storedSelectedProjectID } ? storedSelectedProjectID : nil
     }
 
@@ -23,17 +23,33 @@ extension CreateView {
     }
 
     var carryForwardReminders: [CreateReminder] {
-        let currentReminderKeys = Set(reminders.map(CarryForwardReminderKey.init(reminder:)))
+        CreateReminderCarryForwardPreview.visibleReminders(
+            currentReminders: reminders,
+            previousOpenReminders: previousDayReminders.filter { !$0.isCompleted }
+        )
+    }
 
-        return dailyTaskGroups
-            .openRemindersFromPreviousDay(beforeDayID: dayID)
-            .filter { !currentReminderKeys.contains(CarryForwardReminderKey(reminder: $0)) }
+    var previousDayID: String? {
+        guard let activeDate = DailyTaskGroupStore.date(forDayID: activeDayID),
+              let previousDate = Calendar.current.date(byAdding: .day, value: -1, to: activeDate)
+        else { return nil }
+
+        return DailyTaskGroupStore.dayID(for: previousDate)
+    }
+
+    var previousDayReminders: [CreateReminder] {
+        guard let previousDayID else { return [] }
+        return dailyTaskGroups.reminders(forDayID: previousDayID)
     }
 
     var showsCarryForwardButton: Bool {
         subscriptionTier.tier == .pro
             && CreateReminderSubmission.normalizedText(from: message).isEmpty
             && !carryForwardReminders.isEmpty
+    }
+
+    var carryForwardPreviewReminders: [CreateReminder] {
+        showsCarryForwardButton ? carryForwardReminders : []
     }
 
     @ViewBuilder
@@ -45,7 +61,7 @@ extension CreateView {
                 HStack(spacing: NomaSpacing.sm) {
                     Image(systemName: suggestedProject.symbolName)
                         .font(.headline)
-                        .foregroundStyle(suggestedProject.color)
+                        .foregroundStyle(TaskProjectIconPresentation.appSurfaceColor)
                         .frame(width: ReminderInputBarLayout.minimumHeight)
 
                     Text(suggestedProjectTitle(for: suggestedProject))
@@ -98,14 +114,17 @@ extension CreateView {
         saveCurrentDailyGroup()
         pendingScrollTargetID = CreateReminderListLayout.bottomAnchorID
     }
-}
 
-private struct CarryForwardReminderKey: Hashable {
-    let text: String
-    let projectID: TaskProject.ID?
+    func completeCarryForwardReminder(_ reminder: CreateReminder) {
+        guard let previousDayID else { return }
 
-    nonisolated init(reminder: CreateReminder) {
-        self.text = reminder.text
-        self.projectID = reminder.projectID
+        hapticFeedback.play(.createTaskSubmit)
+        let updatedPreviousReminders = CreateReminderCarryForwardCompletion.completing(
+            reminder,
+            in: previousDayReminders
+        )
+        withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
+            dailyTaskGroups.save(reminders: updatedPreviousReminders, forDayID: previousDayID)
+        }
     }
 }
