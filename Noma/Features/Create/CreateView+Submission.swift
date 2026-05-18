@@ -80,7 +80,8 @@ extension CreateView {
         guard canSubmitReminder else { return }
         guard let submission = CreateReminderSubmission.submit(
             text: submittedText,
-            projectID: selectedProjectID
+            projects: projects,
+            selectedProjectID: selectedProjectID
         ) else { return }
 
         message = submission.remainingText
