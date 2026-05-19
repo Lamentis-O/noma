@@ -14,6 +14,30 @@ extension CreateView {
         )
     }
 
+    func bottomComposerContent(in proxy: GeometryProxy) -> some View {
+        VStack(alignment: .leading, spacing: NomaSpacing.xl) {
+            if showsSuggestedProjectButton {
+                suggestedProjectButton
+            }
+
+            if showsCarryForwardButton {
+                carryForwardButton
+            }
+
+            if isPlanningDay {
+                CreateAIGeneratingStatus(titleKey: "create.ai-generating.task-organization")
+            }
+
+            if isSubmittingReminder {
+                CreateAIGeneratingStatus(titleKey: "create.ai-generating.smart-capture")
+            }
+
+            composerBar
+        }
+        .frame(width: barWidth(in: proxy), alignment: .leading)
+        .padding(.bottom, barBottomPadding(in: proxy))
+    }
+
     var selectedProject: TaskProject? {
         projects.first { $0.id == selectedProjectID }
     }
@@ -41,9 +65,13 @@ extension CreateView {
     }
 
     var visibleReminders: [CreateReminder] {
-        CreateReminderListFilter.visibleReminders(
+        let filteredReminders = CreateReminderListFilter.visibleReminders(
             reminders,
             showsOnlyUnsolved: showsOnlyUnsolvedTasks
+        )
+        return CreateReminderListOrganization.sortedReminders(
+            filteredReminders,
+            using: taskOrganization
         )
     }
 
@@ -78,22 +106,117 @@ extension CreateView {
 
     func submitReminder(_ submittedText: String) {
         guard canSubmitReminder else { return }
-        guard let submission = CreateReminderSubmission.submit(
-            text: submittedText,
-            projectID: selectedProjectID
-        ) else { return }
+        let originatingDayID = activeDayID
 
-        message = submission.remainingText
+        guard subscriptionTier.tier.canUseOnDeviceFoundationModels else {
+            submitReminderImmediately(submittedText, originatingDayID: originatingDayID)
+            return
+        }
+
+        isSubmittingReminder = true
+
+        Task {
+            let submission = await CreateReminderAISmartCapture.submit(
+                text: submittedText,
+                projects: projects,
+                selectedProjectID: selectedProjectID,
+                tier: subscriptionTier.tier,
+                foundationModel: onDeviceFoundationModel
+            )
+
+            await MainActor.run {
+                isSubmittingReminder = false
+                guard let submission else { return }
+                appendSubmittedReminder(
+                    submission,
+                    submittedText: submittedText,
+                    originatingDayID: originatingDayID
+                )
+            }
+        }
+    }
+
+    func appendSubmittedReminder(
+        _ submission: CreateReminderSubmissionResult,
+        submittedText: String,
+        originatingDayID: String
+    ) {
+        guard activeDayID == originatingDayID else {
+            persistSubmittedReminderToOriginatingDay(
+                submission,
+                originatingDayID: originatingDayID
+            )
+            return
+        }
+
+        guard let updatedReminders = CreateReminderSubmissionPersistence.updatedRemindersAfterAppending(
+            sourceReminders: reminders,
+            submission: submission,
+            projects: projects,
+            selectedProjectID: selectedProjectID,
+            tier: subscriptionTier.tier
+        ) else { return }
+        guard let submittedReminder = updatedReminders.last else { return }
+
+        message = CreateReminderDraftReconciliation.reconciledDraft(
+            currentDraft: message,
+            submittedText: submittedText,
+            remainingText: submission.remainingText
+        )
+        taskOrganization = nil
         hapticFeedback.play(.createTaskSubmit)
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
-            reminders.append(submission.reminder)
+            reminders = updatedReminders
         }
         saveCurrentReminders()
-        pendingScrollTargetID = CreateReminderAutoScroll.targetAfterAppending(submission.reminder)
+        pendingScrollTargetID = CreateReminderAutoScroll.targetAfterAppending(submittedReminder)
+        organizeTasksWithAIAfterUserAddedTask()
+    }
+
+    func persistSubmittedReminderToOriginatingDay(
+        _ submission: CreateReminderSubmissionResult,
+        originatingDayID: String
+    ) {
+        let sourceReminders = dailyTaskGroups.reminders(forDayID: originatingDayID)
+        let sourceProjects = dailyTaskGroups.projects(forDayID: originatingDayID)
+        let sourceSelectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: originatingDayID)
+
+        guard let updatedReminders = CreateReminderSubmissionPersistence.updatedRemindersAfterAppending(
+            sourceReminders: sourceReminders,
+            submission: submission,
+            projects: sourceProjects,
+            selectedProjectID: sourceSelectedProjectID,
+            tier: subscriptionTier.tier
+        ) else { return }
+
+        dailyTaskGroups.save(
+            reminders: updatedReminders,
+            projects: sourceProjects,
+            selectedProjectID: sourceSelectedProjectID,
+            forDayID: originatingDayID
+        )
+    }
+
+    var canAddSubmittedReminder: Bool {
+        subscriptionTier.tier.canAddTask(toGroupWithTaskCount: reminders.count)
+    }
+
+    func submitReminderImmediately(_ submittedText: String, originatingDayID: String) {
+        guard let submission = CreateReminderSubmission.submit(
+            text: submittedText,
+            projects: projects,
+            selectedProjectID: selectedProjectID
+        ) else { return }
+
+        appendSubmittedReminder(
+            submission,
+            submittedText: submittedText,
+            originatingDayID: originatingDayID
+        )
     }
 
     var canSubmitReminder: Bool {
-        subscriptionTier.tier.canAddTask(toGroupWithTaskCount: reminders.count)
+        !isSubmittingReminder && subscriptionTier.tier.canAddTask(toGroupWithTaskCount: reminders.count)
     }
 
     func unlockMoreTasks() {
@@ -157,6 +280,7 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             reminders[index] = updatedReminder
         }
+        taskOrganization = nil
         saveCurrentDailyGroup()
     }
 
@@ -166,6 +290,7 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             _ = reminders.remove(at: index)
         }
+        taskOrganization = nil
         saveCurrentDailyGroup()
     }
 
@@ -180,6 +305,7 @@ extension CreateView {
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             reminders = CreateReminderBatchCompletion.completingAll(reminders)
         }
+        taskOrganization = nil
         saveCurrentDailyGroup()
     }
 

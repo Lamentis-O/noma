@@ -4,6 +4,8 @@ extension CreateView {
     func loadDailyGroup() {
         reminders = dailyTaskGroups.reminders(forDayID: activeDayID)
         projects = dailyTaskGroups.projects(forDayID: activeDayID)
+        taskOrganization = nil
+        isPlanningDay = false
 
         let storedSelectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: activeDayID)
         selectedProjectID = projects.contains { $0.id == storedSelectedProjectID } ? storedSelectedProjectID : nil
@@ -101,17 +103,29 @@ extension CreateView {
         saveCurrentDailyGroup()
     }
 
-    func carryForwardOpenTasks() {
-        let remindersToAdd = carryForwardReminders.map { reminder in
+    func addCarryForwardReminders(_ remindersToCarryForward: [CreateReminder]) {
+        let remindersToAdd = remindersToCarryForward.map { reminder in
             CreateReminder(text: reminder.text, projectID: reminder.projectID)
         }
         guard !remindersToAdd.isEmpty else { return }
+        let sourceDayID = previousDayID
+        let sourceReminders = previousDayReminders
 
         hapticFeedback.play(.createTaskSubmit)
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
             reminders.append(contentsOf: remindersToAdd)
         }
+        taskOrganization = nil
         saveCurrentDailyGroup()
+        if let sourceDayID {
+            dailyTaskGroups.save(
+                reminders: CreateReminderCarryForwardTransfer.sourceRemindersAfterTransfer(
+                    sourceReminders: sourceReminders,
+                    transferredReminders: remindersToCarryForward
+                ),
+                forDayID: sourceDayID
+            )
+        }
         pendingScrollTargetID = CreateReminderListLayout.bottomAnchorID
     }
 

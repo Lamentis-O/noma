@@ -15,6 +15,8 @@ enum SubscriptionTier: Equatable {
 
     var usesProminentTextGradient: Bool { self == .pro }
 
+    var canUseOnDeviceFoundationModels: Bool { self == .pro }
+
     var taskLimitPerGroup: Int? {
         switch self {
         case .free:

@@ -16,11 +16,11 @@ final class NomaTests: XCTestCase {
         XCTAssertEqual(NomaSpacing.xxl, 32)
     }
 
-    func testProjectEmptyStateEnablesAddProjectCTA() {
+    func testProjectEmptyStateUsesSheetBottomBarForAddProjectCTA() {
         let emptyState = CreateProjectEmptyState.placeholder
 
-        XCTAssertNotNil(emptyState.cta)
-        XCTAssertEqual(emptyState.cta?.titleKey, "create.project.empty.add-button")
+        XCTAssertNil(emptyState.cta)
+        XCTAssertTrue(CreateProjectSheetLayout.usesBottomSafeAreaBar)
     }
 
     func testDailyTaskGroupRowsUseScaleFeedbackAndCompletionCopy() {
@@ -306,6 +306,129 @@ final class NomaTests: XCTestCase {
         XCTAssertEqual(result?.remainingText, "")
     }
 
+    func testTaskCaptureIntelligenceAssignsExplicitHashProject() {
+        let project = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000061")!, title: "Work")
+        let intent = CreateReminderCaptureIntelligence.intent(
+            from: "Send launch update #work",
+            projects: [project]
+        )
+
+        XCTAssertEqual(intent.normalizedText, "Send launch update")
+        XCTAssertEqual(intent.projectID, project.id)
+    }
+
+    func testTaskCaptureIntelligenceKeepsUnknownProjectMarker() {
+        let project = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000062")!, title: "Home")
+        let intent = CreateReminderCaptureIntelligence.intent(
+            from: "Send launch update #work",
+            projects: [project]
+        )
+
+        XCTAssertEqual(intent.normalizedText, "Send launch update #work")
+        XCTAssertNil(intent.projectID)
+    }
+
+    func testTaskCaptureIntelligenceRequiresHashMarkerBoundary() {
+        let project = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000066")!, title: "Work")
+        let intent = CreateReminderCaptureIntelligence.intent(
+            from: "Read #workflow notes",
+            projects: [project]
+        )
+
+        XCTAssertEqual(intent.normalizedText, "Read #workflow notes")
+        XCTAssertNil(intent.projectID)
+    }
+
+    func testCreateReminderSubmissionUsesExplicitProjectOverSelectedProject() {
+        let work = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000063")!, title: "Work")
+        let home = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000064")!, title: "Home")
+        let result = CreateReminderSubmission.submit(
+            text: "Work: Send launch update",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000065")!,
+            projects: [work, home],
+            selectedProjectID: home.id
+        )
+
+        XCTAssertEqual(result?.reminder.text, "Send launch update")
+        XCTAssertEqual(result?.reminder.projectID, work.id)
+        XCTAssertEqual(result?.remainingText, "")
+    }
+
+    func testDraftReconciliationPreservesNewDraftTypedDuringAsyncSubmit() {
+        XCTAssertEqual(
+            CreateReminderDraftReconciliation.reconciledDraft(
+                currentDraft: "Next task",
+                submittedText: "Call Mika",
+                remainingText: ""
+            ),
+            "Next task"
+        )
+    }
+
+    func testDraftReconciliationClearsOnlyUnchangedAsyncSubmitDraft() {
+        XCTAssertEqual(
+            CreateReminderDraftReconciliation.reconciledDraft(
+                currentDraft: "",
+                submittedText: "Call Mika",
+                remainingText: ""
+            ),
+            ""
+        )
+    }
+
+    func testSubmittedReminderDropsDeletedProjectReference() {
+        let deletedProjectID = UUID(uuidString: "00000000-0000-0000-0000-000000000067")!
+        let selectedProject = TaskProject(id: UUID(uuidString: "00000000-0000-0000-0000-000000000068")!, title: "Inbox")
+
+        XCTAssertEqual(
+            CreateReminderSubmittedProjectResolution.projectID(
+                submittedProjectID: deletedProjectID,
+                currentProjects: [selectedProject],
+                selectedProjectID: selectedProject.id
+            ),
+            selectedProject.id
+        )
+    }
+
+    func testSubmittedReminderPersistenceAppendsToOriginatingDayAfterActiveDayChanges() {
+        let existingReminder = CreateReminder(text: "Existing source task")
+        let submittedReminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000069")!,
+            text: "Submitted while switching days"
+        )
+        let submission = CreateReminderSubmissionResult(reminder: submittedReminder, remainingText: "")
+
+        XCTAssertEqual(
+            CreateReminderSubmissionPersistence.updatedRemindersAfterAppending(
+                sourceReminders: [existingReminder],
+                submission: submission,
+                projects: [],
+                selectedProjectID: nil,
+                tier: .pro
+            ),
+            [existingReminder, submittedReminder]
+        )
+    }
+
+    func testCarryForwardTransferRemovesTransferredTasksFromSourceDay() {
+        let transferredReminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000070")!,
+            text: "Move invoice"
+        )
+        let remainingReminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000071")!,
+            text: "Keep yesterday"
+        )
+
+        XCTAssertEqual(
+            CreateReminderCarryForwardTransfer.sourceRemindersAfterTransfer(
+                sourceReminders: [transferredReminder, remainingReminder],
+                transferredReminders: [transferredReminder]
+            ),
+            [remainingReminder]
+        )
+    }
+
     func testReminderInputRejectsSubmittedTextWrittenBackAfterClear() {
         var staleGuard = ReminderInputStaleTextGuard()
 
@@ -320,6 +443,10 @@ final class NomaTests: XCTestCase {
             CreateReminderListLayout.bottomScrollPadding,
             NomaSize.scrollDismissSentinel
         )
+    }
+
+    func testCreateReminderRowsUseLargerVerticalSpacingBetweenTasks() {
+        XCTAssertEqual(CreateReminderRowsLayout.spacingBetweenTasks, NomaSpacing.md)
     }
 
     func testSectionHeaderLayoutUsesTwentyFourPointBottomPadding() {

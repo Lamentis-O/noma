@@ -67,6 +67,16 @@ enum CreateReminderCarryForwardCompletion {
     }
 }
 
+enum CreateReminderCarryForwardTransfer {
+    static func sourceRemindersAfterTransfer(
+        sourceReminders: [CreateReminder],
+        transferredReminders: [CreateReminder]
+    ) -> [CreateReminder] {
+        let transferredIDs = Set(transferredReminders.map(\.id))
+        return sourceReminders.filter { !transferredIDs.contains($0.id) }
+    }
+}
+
 struct CreateReminderRowGestureOverlay: UIViewRepresentable {
     var onTap: () -> Void
     var onSwipeChanged: (CGSize) -> Void

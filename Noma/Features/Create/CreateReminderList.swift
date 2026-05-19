@@ -286,21 +286,23 @@ struct CreateReminderRows: View {
     let onSwipeDeleteThreshold: () -> Void
 
     var body: some View {
-        ForEach(reminders) { reminder in
-            CreateReminderRow(
-                reminder: reminder,
-                project: project(for: reminder),
-                onToggle: { onToggleReminder(reminder) },
-                onDelete: { onDeleteReminder(reminder) },
-                onSwipeDeleteThreshold: onSwipeDeleteThreshold
-            )
-            .id(CreateReminderAutoScroll.targetID(for: reminder))
-            .transition(
-                .asymmetric(
-                    insertion: .opacity.combined(with: .move(edge: .top)),
-                    removal: .opacity.combined(with: .move(edge: .top))
+        VStack(alignment: .leading, spacing: CreateReminderRowsLayout.spacingBetweenTasks) {
+            ForEach(reminders) { reminder in
+                CreateReminderRow(
+                    reminder: reminder,
+                    project: project(for: reminder),
+                    onToggle: { onToggleReminder(reminder) },
+                    onDelete: { onDeleteReminder(reminder) },
+                    onSwipeDeleteThreshold: onSwipeDeleteThreshold
                 )
-            )
+                .id(CreateReminderAutoScroll.targetID(for: reminder))
+                .transition(
+                    .asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: .top)),
+                        removal: .opacity.combined(with: .move(edge: .top))
+                    )
+                )
+            }
         }
     }
 
@@ -308,6 +310,10 @@ struct CreateReminderRows: View {
         guard let projectID = reminder.projectID else { return nil }
         return projects.first { $0.id == projectID }
     }
+}
+
+enum CreateReminderRowsLayout {
+    static let spacingBetweenTasks = NomaSpacing.md
 }
 
 struct CreateReminderScrollContainer<Content: View>: View {
