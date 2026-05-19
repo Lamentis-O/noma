@@ -108,6 +108,8 @@ extension CreateView {
             CreateReminder(text: reminder.text, projectID: reminder.projectID)
         }
         guard !remindersToAdd.isEmpty else { return }
+        let sourceDayID = previousDayID
+        let sourceReminders = previousDayReminders
 
         hapticFeedback.play(.createTaskSubmit)
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
@@ -115,6 +117,15 @@ extension CreateView {
         }
         taskOrganization = nil
         saveCurrentDailyGroup()
+        if let sourceDayID {
+            dailyTaskGroups.save(
+                reminders: CreateReminderCarryForwardTransfer.sourceRemindersAfterTransfer(
+                    sourceReminders: sourceReminders,
+                    transferredReminders: remindersToCarryForward
+                ),
+                forDayID: sourceDayID
+            )
+        }
         pendingScrollTargetID = CreateReminderListLayout.bottomAnchorID
     }
 

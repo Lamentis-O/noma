@@ -126,7 +126,6 @@ extension CreateView {
 
             await MainActor.run {
                 isSubmittingReminder = false
-                guard activeDayID == originatingDayID else { return }
                 guard let submission else { return }
                 appendSubmittedReminder(
                     submission,
@@ -142,20 +141,23 @@ extension CreateView {
         submittedText: String,
         originatingDayID: String
     ) {
-        guard activeDayID == originatingDayID else { return }
-        guard canAddSubmittedReminder else { return }
+        guard activeDayID == originatingDayID else {
+            persistSubmittedReminderToOriginatingDay(
+                submission,
+                originatingDayID: originatingDayID
+            )
+            return
+        }
 
-        let submittedProjectID = CreateReminderSubmittedProjectResolution.projectID(
-            submittedProjectID: submission.reminder.projectID,
-            currentProjects: projects,
-            selectedProjectID: selectedProjectID
-        )
-        let submittedReminder = CreateReminder(
-            id: submission.reminder.id,
-            text: submission.reminder.text,
-            isCompleted: submission.reminder.isCompleted,
-            projectID: submittedProjectID
-        )
+        guard let updatedReminders = CreateReminderSubmissionPersistence.updatedRemindersAfterAppending(
+            sourceReminders: reminders,
+            submission: submission,
+            projects: projects,
+            selectedProjectID: selectedProjectID,
+            tier: subscriptionTier.tier
+        ) else { return }
+        guard let submittedReminder = updatedReminders.last else { return }
+
         message = CreateReminderDraftReconciliation.reconciledDraft(
             currentDraft: message,
             submittedText: submittedText,
@@ -164,11 +166,35 @@ extension CreateView {
         taskOrganization = nil
         hapticFeedback.play(.createTaskSubmit)
         withAnimation(.smooth(duration: NomaTiming.controlFeedback)) {
-            reminders.append(submittedReminder)
+            reminders = updatedReminders
         }
         saveCurrentReminders()
         pendingScrollTargetID = CreateReminderAutoScroll.targetAfterAppending(submittedReminder)
         organizeTasksWithAIAfterUserAddedTask()
+    }
+
+    func persistSubmittedReminderToOriginatingDay(
+        _ submission: CreateReminderSubmissionResult,
+        originatingDayID: String
+    ) {
+        let sourceReminders = dailyTaskGroups.reminders(forDayID: originatingDayID)
+        let sourceProjects = dailyTaskGroups.projects(forDayID: originatingDayID)
+        let sourceSelectedProjectID = dailyTaskGroups.selectedProjectID(forDayID: originatingDayID)
+
+        guard let updatedReminders = CreateReminderSubmissionPersistence.updatedRemindersAfterAppending(
+            sourceReminders: sourceReminders,
+            submission: submission,
+            projects: sourceProjects,
+            selectedProjectID: sourceSelectedProjectID,
+            tier: subscriptionTier.tier
+        ) else { return }
+
+        dailyTaskGroups.save(
+            reminders: updatedReminders,
+            projects: sourceProjects,
+            selectedProjectID: sourceSelectedProjectID,
+            forDayID: originatingDayID
+        )
     }
 
     var canAddSubmittedReminder: Bool {

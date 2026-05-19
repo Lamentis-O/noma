@@ -120,6 +120,45 @@ enum CreateReminderSubmittedProjectResolution {
     }
 }
 
+enum CreateReminderSubmissionPersistence {
+    static func submittedReminder(
+        from submission: CreateReminderSubmissionResult,
+        projects: [TaskProject],
+        selectedProjectID: TaskProject.ID?
+    ) -> CreateReminder {
+        let submittedProjectID = CreateReminderSubmittedProjectResolution.projectID(
+            submittedProjectID: submission.reminder.projectID,
+            currentProjects: projects,
+            selectedProjectID: selectedProjectID
+        )
+
+        return CreateReminder(
+            id: submission.reminder.id,
+            text: submission.reminder.text,
+            isCompleted: submission.reminder.isCompleted,
+            projectID: submittedProjectID
+        )
+    }
+
+    static func updatedRemindersAfterAppending(
+        sourceReminders: [CreateReminder],
+        submission: CreateReminderSubmissionResult,
+        projects: [TaskProject],
+        selectedProjectID: TaskProject.ID?,
+        tier: SubscriptionTier
+    ) -> [CreateReminder]? {
+        guard tier.canAddTask(toGroupWithTaskCount: sourceReminders.count) else { return nil }
+
+        return sourceReminders + [
+            submittedReminder(
+                from: submission,
+                projects: projects,
+                selectedProjectID: selectedProjectID
+            )
+        ]
+    }
+}
+
 enum CreateReminderCompletionFeedback {
     static func feedback(isCompleted: Bool) -> HapticFeedbackClass? {
         isCompleted ? .createTaskSubmit : nil

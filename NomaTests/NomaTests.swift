@@ -390,6 +390,45 @@ final class NomaTests: XCTestCase {
         )
     }
 
+    func testSubmittedReminderPersistenceAppendsToOriginatingDayAfterActiveDayChanges() {
+        let existingReminder = CreateReminder(text: "Existing source task")
+        let submittedReminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000069")!,
+            text: "Submitted while switching days"
+        )
+        let submission = CreateReminderSubmissionResult(reminder: submittedReminder, remainingText: "")
+
+        XCTAssertEqual(
+            CreateReminderSubmissionPersistence.updatedRemindersAfterAppending(
+                sourceReminders: [existingReminder],
+                submission: submission,
+                projects: [],
+                selectedProjectID: nil,
+                tier: .pro
+            ),
+            [existingReminder, submittedReminder]
+        )
+    }
+
+    func testCarryForwardTransferRemovesTransferredTasksFromSourceDay() {
+        let transferredReminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000070")!,
+            text: "Move invoice"
+        )
+        let remainingReminder = CreateReminder(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000071")!,
+            text: "Keep yesterday"
+        )
+
+        XCTAssertEqual(
+            CreateReminderCarryForwardTransfer.sourceRemindersAfterTransfer(
+                sourceReminders: [transferredReminder, remainingReminder],
+                transferredReminders: [transferredReminder]
+            ),
+            [remainingReminder]
+        )
+    }
+
     func testReminderInputRejectsSubmittedTextWrittenBackAfterClear() {
         var staleGuard = ReminderInputStaleTextGuard()
 
