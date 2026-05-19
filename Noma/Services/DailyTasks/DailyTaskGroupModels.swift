@@ -84,6 +84,10 @@ enum CommonProjectsSection {
     }
 }
 
+enum HomeTodaySection {
+    static let headerTitleKey = "home.today.section-header"
+}
+
 enum DailyTaskGroupsSection {
     static let headerTitleKey = "home.daily-groups.section-header"
 }

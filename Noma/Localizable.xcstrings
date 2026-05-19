@@ -33,7 +33,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Logout"
+            "value" : "Sign out"
           }
         }
       }
@@ -980,13 +980,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tagesgruppen"
+            "value" : "Gruppen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Daily Groups"
+            "value" : "Groups"
           }
         }
       }
@@ -1023,6 +1023,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "task"
+          }
+        }
+      }
+    },
+    "home.settings.close.accessibility-label" : {
+      "comment" : "Accessibility label for closing the Settings sheet from the Home screen.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen schließen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Settings"
+          }
+        }
+      }
+    },
+    "home.settings.menu.get-pro" : {
+      "comment" : "Home gear menu item title for opening or enabling the Pro tier.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Pro"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Pro"
+          }
+        }
+      }
+    },
+    "home.settings.menu.settings" : {
+      "comment" : "Home gear menu item title for opening app settings.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "home.settings.title" : {
+      "comment" : "Navigation title for the Settings sheet from the Home screen.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "home.today.section-header" : {
+      "comment" : "Section header above open tasks due today on the Home screen.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heute"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
           }
         }
       }

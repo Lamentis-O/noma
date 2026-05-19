@@ -31,17 +31,32 @@ struct HomeTopBar: View {
 struct HomeSettingsMenu: View {
     @Environment(AuthStateManager.self) private var authState
     @Environment(SubscriptionTierManager.self) private var subscriptionTier
+    @State private var isSettingsPresented = false
+    @State private var isUnlockMorePresented = false
 
     var body: some View {
         Menu {
-            #if DEBUG
-            Toggle(isOn: debugProBinding) {
+            if !subscriptionTier.isPro {
+                Button {
+                    getPro()
+                } label: {
+                    Label(
+                        "home.settings.menu.get-pro",
+                        systemImage: "flame"
+                    )
+                }
+            }
+
+            Button {
+                isSettingsPresented = true
+            } label: {
                 Label(
-                    "subscription.debug.pro.title",
-                    systemImage: "sparkles"
+                    "home.settings.menu.settings",
+                    systemImage: "gear"
                 )
             }
-            #endif
+
+            Divider()
 
             Button(role: .destructive) {
                 authState.signOut()
@@ -54,15 +69,33 @@ struct HomeSettingsMenu: View {
         } label: {
             Image(systemName: "gearshape")
         }
-    }
-
-    #if DEBUG
-    private var debugProBinding: Binding<Bool> {
-        Binding {
-            subscriptionTier.isPro
-        } set: { isPro in
-            subscriptionTier.updateTier(isPro ? .pro : .free)
+        .sheet(isPresented: $isSettingsPresented) {
+            HomeSettingsSheet()
+                .presentationDetents([.large])
+        }
+        .sheet(isPresented: $isUnlockMorePresented) {
+            UnlockMoreSheet(close: { isUnlockMorePresented = false })
+                .presentationDetents([.large])
         }
     }
-    #endif
+
+    private func getPro() {
+        #if DEBUG
+        subscriptionTier.updateTier(.pro)
+        #else
+        isUnlockMorePresented = true
+        #endif
+    }
+}
+
+struct HomeSettingsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        EmptyNavigationSheet(
+            titleKey: "home.settings.title",
+            closeAccessibilityLabelKey: "home.settings.close.accessibility-label",
+            close: { dismiss() }
+        )
+    }
 }
